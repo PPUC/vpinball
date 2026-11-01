@@ -4,6 +4,7 @@
 #include "plugins/VPXPlugin.h"
 #include "plugins/ControllerPlugin.h"
 #include "plugins/LoggingPlugin.h"
+#include "plugins/SerumPlugin.h"
 #include "pinmame/PinMAMEPlugin.h"
 #include "common.h"
 #include "serum-decode.h"
@@ -15,6 +16,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <filesystem>
+#include <memory>
 #include <mutex>
 #include <random>
 #include <algorithm>
@@ -43,6 +45,7 @@ static uint32_t endpointId;
 
 static unsigned int onDmdTrigger;
 static unsigned int onTriggerScene;
+static unsigned int onLightEffects;
 static std::minstd_rand std_rand;
 
 static std::unique_ptr<CtrlItemConsumer<ControllerDef>> controllers;
@@ -301,6 +304,7 @@ public:
             Serum_DisablePupTriggers();
          Serum_SetIgnoreUnknownFramesTimeout(static_cast<uint16_t>(serumIgnoreUnknownFramesTimeoutProp_Get()));
          Serum_SetMaximumUnknownFramesToSkip(static_cast<uint8_t>(serumMaxUnknownFramesToSkipProp_Get()));
+         PublishLightEffects(true);
 
          // Only when a size was actually disabled. The sizes finally published
          // are reported later, once a frame has been colorized and their widths
@@ -347,6 +351,37 @@ public:
    }
 
 private:
+   // Only ever on the thread running libserum: its pending effects are a global
+   // it also writes while colorizing. A libserum without speaker lights has no
+   // SERUM_LIGHT_CHANNELS, and there is nothing to publish.
+   void PublishLightEffects(bool isDefault)
+   {
+#ifdef SERUM_LIGHT_CHANNELS
+      static_assert(SERUM_LIGHT_CHANNELS == SERUMPI_LIGHT_CHANNELS);
+      Serum_Light_Effect effects[SERUM_LIGHT_CHANNELS] = {};
+      const uint32_t channels = isDefault ? Serum_GetDefaultLightEffects(effects) : Serum_GetLightEffects(effects);
+      if (channels == 0 && !isDefault)
+         return;
+      auto* const msg = new SerumLightEffectsMsg {};
+      msg->isDefault = isDefault ? 1 : 0;
+      msg->channels = channels;
+      for (int i = 0; i < SERUM_LIGHT_CHANNELS; i++)
+      {
+         const Serum_Light_Effect& effect = effects[i];
+         msg->effects[i] = { effect.mode, effect.options, effect.speed, effect.durationMs, { effect.colors[0], effect.colors[1], effect.colors[2] }, effect.brightness };
+      }
+      msgApi->RunOnMainThread(endpointId, 0,
+         [](void* userData)
+         {
+            const std::unique_ptr<SerumLightEffectsMsg> msg(static_cast<SerumLightEffectsMsg*>(userData));
+            msgApi->BroadcastMsg(endpointId, onLightEffects, msg.get());
+         },
+         msg);
+#else
+      (void)isDefault;
+#endif
+   }
+
    void FilterDmdSource(std::vector<DisplaySrcId>& items)
    {
       // Only keep dmd corresponding to selected controller (or overriden from selected controller to support alphanumeric rendered DMD for example)
@@ -589,6 +624,9 @@ private:
                animationNextTick = animationNextTick + std::chrono::milliseconds(delayMs);
             }
          }
+
+         // Whichever step above it was, a frame or a scene step can start effects.
+         PublishLightEffects(false);
 
          if (!updated)
             continue;
@@ -908,6 +946,7 @@ MSGPI_EXPORT void MSGPIAPI SerumPluginLoad(const uint32_t sessionId, const MsgPl
    // Installed before anything can load, so a load failure explains itself.
    Serum_SetLogCallback(OnSerumLog, nullptr);
    onTriggerScene = msgApi->GetMsgID("Serum", "TriggerScene:1");
+   onLightEffects = msgApi->GetMsgID(SERUMPI_NAMESPACE, SERUMPI_EVT_ON_LIGHT_EFFECTS);
    msgApi->SubscribeMsg(endpointId, onTriggerScene, OnTriggerScene, nullptr);
    dmdEventSrc = std::make_unique<CtrlItemProvider<DMDEventSrcId>>(msgApi, endpointId, dmdEventSrcGetMsgName, dmdEventSrcOnChangeMsgName);
    controllers = std::make_unique<CtrlItemConsumer<ControllerDef>>(
@@ -929,6 +968,7 @@ MSGPI_EXPORT void MSGPIAPI SerumPluginUnload()
    msgApi->UnsubscribeMsg(onTriggerScene, OnTriggerScene, nullptr);
    msgApi->ReleaseMsgID(onTriggerScene);
    msgApi->FlushPendingCallbacks(endpointId); // Deliver queued triggers while onDmdTrigger is still valid
+   msgApi->ReleaseMsgID(onLightEffects);
    msgApi->ReleaseMsgID(onDmdTrigger);
    msgApi = nullptr;
 }
