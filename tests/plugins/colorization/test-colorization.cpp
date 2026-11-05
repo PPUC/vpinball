@@ -1,7 +1,7 @@
 // license:GPLv3+
 
 // VNI and Serum colorization at every DMD size standalone supports natively:
-// 128x32, 128x16 and 192x64. The colorizations are synthetic one-frame files
+// 128x32, 128x16 and 192x64. The colorizations are synthetic one-frame ones
 // built in this file, no shipped colorization data is used.
 
 #include "core/stdafx.h"
@@ -28,116 +28,70 @@ uint32_t Crc32(const uint8_t* data, size_t size)
    return ~crc;
 }
 
-// --- Minimal Serum cROM writers -------------------------------------------
+// --- Minimal Serum colorizations -----------------------------------------
 //
-// The layouts below mirror what libserum's Serum_LoadFilev1Stream /
-// Serum_LoadFilev2Stream read, with all optional blocks empty and a header
-// size that ends before any extended block. One frame is stored, colorized to
-// a single flat color, identified by the CRC32 of the ROM frame (no mask, no
-// shape mode).
-
-void P8(std::vector<uint8_t>& out, uint8_t v) { out.push_back(v); }
-void P16(std::vector<uint8_t>& out, uint16_t v)
-{
-   out.push_back(static_cast<uint8_t>(v));
-   out.push_back(static_cast<uint8_t>(v >> 8));
-}
-void P32(std::vector<uint8_t>& out, uint32_t v)
-{
-   out.push_back(static_cast<uint8_t>(v));
-   out.push_back(static_cast<uint8_t>(v >> 8));
-   out.push_back(static_cast<uint8_t>(v >> 16));
-   out.push_back(static_cast<uint8_t>(v >> 24));
-}
-void Fill8(std::vector<uint8_t>& out, size_t count, uint8_t v) { out.insert(out.end(), count, v); }
-void Fill16(std::vector<uint8_t>& out, size_t count, uint16_t v)
-{
-   for (size_t i = 0; i < count; i++)
-      P16(out, v);
-}
+// libserum builds a colorization from the blocks an authoring tool hands over
+// through Serum_LoadFromSource(). FlatSource serves one frame, colorized to a
+// single flat color, identified by the CRC32 of the ROM frame (no mask, no
+// shape mode), with no extra plane, sprites, backgrounds, rotations or
+// settings.
 
 constexpr uint16_t kSerumColor = 0xf81f; // magenta, RGB565
 
-// Serum v1: palette-indexed output, no height restriction. cframes holds
-// palette index 1 pixels, cpal colors index 1 with a known RGB.
-std::vector<uint8_t> MakeSerumV1(uint32_t w, uint32_t h, const std::vector<uint8_t>& romFrame, uint8_t r, uint8_t g, uint8_t b)
-{
-   const size_t px = static_cast<size_t>(w) * h;
-   std::vector<uint8_t> out;
-   Fill8(out, 64, 0); // name
-   P32(out, 13 * sizeof(uint32_t)); // sizeheader: includes trigger/spriteBB/background blocks
-   P32(out, w);
-   P32(out, h);
-   P32(out, 1); // nframes
-   P32(out, 4); // nocolors
-   P32(out, 4); // nccolors
-   P32(out, 0);
-   P32(out, 0);
-   P32(out, 0); // ncompmasks, nmovmasks, nsprites
-   P16(out, 0); // nbackgrounds (uint16)
-   P32(out, Crc32(romFrame.data(), romFrame.size())); // hashcodes
-   P8(out, 0); // shapecompmode
-   P8(out, 255); // compmaskID: no mask
-   P8(out, 255); // movrctID
-   P8(out, 0);
-   P8(out, 0);
-   P8(out, 0);
-   P8(out, r);
-   P8(out, g);
-   P8(out, b); // cpal: index 0..3
-   P8(out, 0);
-   P8(out, 0);
-   P8(out, 0);
-   P8(out, 0);
-   P8(out, 0);
-   P8(out, 0);
-   Fill8(out, px, 1); // cframes: index 1
-   Fill8(out, px, 255); // dynamasks: none
-   Fill8(out, 16 * 4, 0); // dyna4cols
-   Fill8(out, 32, 255); // framesprites
-   P8(out, 1); // activeframes
-   Fill8(out, 24, 255); // colorrotations: all inactive
-   P32(out, 0xffffffff); // triggerIDs
-   Fill16(out, 32 * 4, 0xffff); // framespriteBB
-   P16(out, 0xffff); // backgroundIDs (uint16)
-   Fill16(out, 4, 0xffff); // backgroundBB (uint16 x4)
-   return out;
-}
-
-// Serum v2: RGB565 planes, base height must be 32 or 64. cframes_v2 holds
+// Serum v2: RGB565 planes, base height must be 32 or 64. FRAME_COLORS holds
 // `color` pixels everywhere.
-std::vector<uint8_t> MakeSerumV2(uint32_t w, uint32_t h, const std::vector<uint8_t>& romFrame, uint16_t color = kSerumColor)
+struct FlatSource
 {
-   const size_t px = static_cast<size_t>(w) * h;
-   std::vector<uint8_t> out;
-   Fill8(out, 64, 0); // name
-   P32(out, 14 * sizeof(uint32_t)); // sizeheader: smallest value that selects v2
-   P32(out, w);
-   P32(out, h);
-   P32(out, 0);
-   P32(out, 0); // fwidth, fheight, no extra plane
-   P32(out, 1); // nframes
-   P32(out, 4); // nocolors
-   P32(out, 0);
-   P32(out, 0);
-   P16(out, 0); // ncompmasks, nsprites (uint32), nbackgrounds (uint16)
-   P32(out, Crc32(romFrame.data(), romFrame.size())); // hashcodes
-   P8(out, 0); // shapecompmode
-   P8(out, 255); // compmaskID: no mask
-   P8(out, 0); // isextraframe
-   Fill16(out, px, color); // cframes_v2
-   Fill8(out, px, 255); // dynamasks: none
-   Fill16(out, 32 * 4, 0); // dyna4cols_v2
-   Fill16(out, 32 * 4, 0); // dyna4cols_v2_extra (read unconditionally)
-   Fill8(out, 32, 255); // framesprites
-   P8(out, 1); // activeframes
-   Fill16(out, 64 * 4, 0); // colorrotations_v2: empty
-   Fill16(out, 64 * 4, 0); // colorrotations_v2_extra: empty
-   P32(out, 0xffffffff); // triggerIDs
-   Fill16(out, 32 * 4, 0xffff); // framespriteBB
-   P16(out, 0xffff); // backgroundIDs (uint16)
-   Fill8(out, px, 0); // backgroundmask
-   return out;
+   Serum_Colorization_Source source {};
+   uint32_t hash = 0;
+   uint16_t color = kSerumColor;
+
+   FlatSource(uint32_t w, uint32_t h, const std::vector<uint8_t>& romFrame, uint16_t c = kSerumColor)
+      : hash(Crc32(romFrame.data(), romFrame.size()))
+      , color(c)
+   {
+      strncpy(source.romName, "flat", sizeof(source.romName) - 1);
+      source.width = w;
+      source.height = h;
+      source.frames = 1;
+      source.colors = 4;
+      source.spritesPerFrame = LEGACY_SPRITES_PER_FRAME;
+      source.fill = &Fill;
+      source.userData = this;
+   }
+
+   static void Fill16(void* out, size_t size, uint16_t v)
+   {
+      uint16_t* p = static_cast<uint16_t*>(out);
+      for (size_t i = 0; i < size / 2; i++)
+         p[i] = v;
+   }
+
+   static void SERUM_CALLBACK Fill(void* userData, Serum_Block block, uint32_t, void* out, size_t size)
+   {
+      const FlatSource& self = *static_cast<const FlatSource*>(userData);
+      memset(out, 0, size);
+      switch (block)
+      {
+      case SERUM_BLOCK_FRAME_HASH: memcpy(out, &self.hash, sizeof(self.hash)); break;
+      case SERUM_BLOCK_FRAME_MASK_ID: // no comparison mask
+      case SERUM_BLOCK_FRAME_DYNAMIC_MASK: // no dynamic zones
+      case SERUM_BLOCK_FRAME_DYNAMIC_MASK_EXTRA: memset(out, 255, size); break;
+      case SERUM_BLOCK_FRAME_COLORS: Fill16(out, size, self.color); break;
+      case SERUM_BLOCK_FRAME_SPRITES: Fill16(out, size, SERUM_NO_SPRITE); break;
+      case SERUM_BLOCK_FRAME_ACTIVE: memset(out, 1, size); break;
+      case SERUM_BLOCK_FRAME_TRIGGER: memset(out, 255, size); break; // no trigger
+      case SERUM_BLOCK_FRAME_SPRITE_BOUNDS: Fill16(out, size, 0xffff); break;
+      case SERUM_BLOCK_FRAME_BACKGROUND_ID: Fill16(out, size, 0xffff); break; // no background
+      default: break;
+      }
+   }
+};
+
+Serum_Frame_Struc* LoadFlat(uint32_t w, uint32_t h, const std::vector<uint8_t>& romFrame)
+{
+   FlatSource source(w, h, romFrame);
+   return Serum_LoadFromSource(&source.source, nullptr, FLAG_REQUEST_32P_FRAMES | FLAG_REQUEST_64P_FRAMES);
 }
 
 std::vector<uint8_t> Centered128x32(const std::vector<uint8_t>& frame128x16)
@@ -151,6 +105,7 @@ std::vector<uint8_t> Centered128x32(const std::vector<uint8_t>& frame128x16)
 //
 // One palette, no mappings, no masks: libvni colorizes every frame with it.
 
+void P8(std::vector<uint8_t>& out, uint8_t v) { out.push_back(v); }
 void PB16(std::vector<uint8_t>& out, uint16_t v)
 {
    out.push_back(static_cast<uint8_t>(v >> 8));
@@ -209,8 +164,7 @@ TEST_CASE("Serum colorization: 128x32")
 {
    SerumTestSetup();
    std::vector<uint8_t> rom(128 * 32, 3);
-   std::vector<uint8_t> crom = MakeSerumV2(128, 32, rom);
-   Serum_Frame_Struc* serum = Serum_LoadFromMemory(crom.data(), crom.size(), FLAG_REQUEST_32P_FRAMES | FLAG_REQUEST_64P_FRAMES);
+   Serum_Frame_Struc* serum = LoadFlat(128, 32, rom);
    INFO("load error: ", std::string(Serum_GetLastErrorMessage()));
    INFO("serum log:\n", g_serumLog);
    REQUIRE(serum != nullptr);
@@ -234,8 +188,7 @@ TEST_CASE("Serum colorization: 128x16")
    // stored hash is over that 128x32 frame.
    std::vector<uint8_t> rom16(128 * 16, 3);
    std::vector<uint8_t> rom32 = Centered128x32(rom16);
-   std::vector<uint8_t> crom = MakeSerumV2(128, 32, rom32);
-   Serum_Frame_Struc* serum = Serum_LoadFromMemory(crom.data(), crom.size(), FLAG_REQUEST_32P_FRAMES | FLAG_REQUEST_64P_FRAMES);
+   Serum_Frame_Struc* serum = LoadFlat(128, 32, rom32);
    INFO("load error: ", std::string(Serum_GetLastErrorMessage()));
    INFO("serum log:\n", g_serumLog);
    REQUIRE(serum != nullptr);
@@ -259,8 +212,7 @@ TEST_CASE("Serum colorization: 192x64")
 {
    SerumTestSetup();
    std::vector<uint8_t> rom(192 * 64, 3);
-   std::vector<uint8_t> crom = MakeSerumV2(192, 64, rom);
-   Serum_Frame_Struc* serum = Serum_LoadFromMemory(crom.data(), crom.size(), FLAG_REQUEST_32P_FRAMES | FLAG_REQUEST_64P_FRAMES);
+   Serum_Frame_Struc* serum = LoadFlat(192, 64, rom);
    INFO("load error: ", std::string(Serum_GetLastErrorMessage()));
    REQUIRE(serum != nullptr);
    CHECK(serum->SerumVersion == SERUM_V2);
@@ -274,25 +226,35 @@ TEST_CASE("Serum colorization: 192x64")
    Serum_Dispose();
 }
 
-TEST_CASE("Serum v1 colorization: 128x16 native")
+// The host loads a colorization through Serum_Load(), which takes
+// <altcolor>/<rom>/<rom>.cROMc, the file the author exports, and nothing else.
+TEST_CASE("Serum colorization: cROMc file")
 {
    SerumTestSetup();
-   std::vector<uint8_t> rom(128 * 16, 3);
-   std::vector<uint8_t> crom = MakeSerumV1(128, 16, rom, 10, 20, 30);
-   Serum_Frame_Struc* serum = Serum_LoadFromMemory(crom.data(), crom.size(), FLAG_REQUEST_32P_FRAMES | FLAG_REQUEST_64P_FRAMES);
-   INFO("load error: ", std::string(Serum_GetLastErrorMessage()));
+   const std::filesystem::path altcolor = std::filesystem::temp_directory_path() / "vpx_test_serum_altcolor";
+   std::filesystem::remove_all(altcolor);
+   std::filesystem::create_directories(altcolor / "flat");
+   std::vector<uint8_t> rom(128 * 32, 3);
+   FlatSource source(128, 32, rom);
+
+   // A raw cROM or cRZ beside it is not a colorization.
+   {
+      std::ofstream(altcolor / "flat" / "flat.cRZ", std::ios::binary) << "raw";
+   }
+   CHECK(Serum_Load(altcolor.string().c_str(), "flat", FLAG_REQUEST_32P_FRAMES | FLAG_REQUEST_64P_FRAMES) == nullptr);
+
+   REQUIRE_MESSAGE(Serum_ConcentrateFromSource(&source.source, (altcolor / "flat" / "flat.cROMc").string().c_str()), Serum_GetLastErrorMessage());
+   Serum_Frame_Struc* serum = Serum_Load(altcolor.string().c_str(), "flat", FLAG_REQUEST_32P_FRAMES | FLAG_REQUEST_64P_FRAMES);
+   INFO("serum log:\n", g_serumLog);
    REQUIRE(serum != nullptr);
-   CHECK(serum->SerumVersion == SERUM_V1);
+   CHECK(serum->SerumVersion == SERUM_V2);
 
    std::vector<uint8_t> frame = rom;
    CHECK(Serum_Colorize(frame.data()) != IDENTIFY_NO_FRAME);
-   REQUIRE(serum->frame != nullptr);
-   REQUIRE(serum->palette != nullptr);
-   CHECK(serum->frame[0] == 1);
-   CHECK(serum->palette[3] == 10);
-   CHECK(serum->palette[4] == 20);
-   CHECK(serum->palette[5] == 30);
+   REQUIRE(serum->frame32 != nullptr);
+   CHECK(serum->frame32[0] == kSerumColor);
    Serum_Dispose();
+   std::filesystem::remove_all(altcolor);
 }
 
 TEST_CASE("VNI colorization")

@@ -110,7 +110,7 @@ Table Name (Manufacturer Year)/              <= We created a dedicated folder to
 │   └── ...
 ├── serum/                                   <= Serum plugin will look here for colorization files
 │   └── xxx/
-│       └── xxx.crz
+│       └── xxx.cROMc
 ├── Table Name.UltraDMD/                     <= Folder with FlexDMD or UltraDMD content (name is directly defined in the table script)
 │   └── ...
 ├── user/                                    <= VPX stores values saved from script in this folder

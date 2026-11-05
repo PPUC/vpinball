@@ -51,7 +51,7 @@ static std::minstd_rand std_rand;
 static std::unique_ptr<CtrlItemConsumer<ControllerDef>> controllers;
 static std::unique_ptr<class SerumColorizer> colorizer;
 
-MSGPI_FOLDER_VAL_SETTING(serumPathProp, "SerumPath", "Serum Path", "Folder that cotains Serum colorization files (cROMc, cRZ)", true, "", 1024);
+MSGPI_FOLDER_VAL_SETTING(serumPathProp, "SerumPath", "Serum Path", "Folder that contains Serum colorization files (cROMc)", true, "", 1024);
 // Serum skips frames it cannot identify. How long to keep showing the last
 // known-good colorized frame before giving up on the unknown run, and how many
 // unknown frames to skip within it, are colorization- and ROM-dependent, so
@@ -452,8 +452,6 @@ private:
       m_colorizedDmd.ClearItems();
       m_advertisedWidth32 = 0;
       m_advertisedWidth64 = 0;
-      m_advertisedV1Size = 0;
-      m_publishedV1.Reset();
       m_published32.Reset();
       m_published64.Reset();
    }
@@ -527,8 +525,8 @@ private:
                // A Serum v2 project for a 16-row ROM is authored on 32-row frames: the 16 rows are stored centered
                // in a 128x32 frame (8 blank rows top and bottom) and every stored hash is computed over that padded
                // frame. libserum hashes fwidth*fheight of whatever it is given, so it has to be handed the padded
-               // frame the colorization was authored on. A v1 project is stored at the ROM's native size.
-               if (m_pSerum->SerumVersion == SERUM_V2 && dmdId.width == 128 && dmdId.height == 16)
+               // frame the colorization was authored on.
+               if (dmdId.width == 128 && dmdId.height == 16)
                {
                   memset(m_identifyFrame128x32, 0, sizeof(m_identifyFrame128x32));
                   memcpy(m_identifyFrame128x32 + 128 * 8, frame.frame, 128 * 16);
@@ -613,7 +611,7 @@ private:
             while (animationNextTick < now)
             {
                const uint32_t nextrot = Serum_Rotate();
-               updated |= (nextrot & (FLAG_RETURNED_V1_ROTATED | FLAG_RETURNED_V2_ROTATED32 | FLAG_RETURNED_V2_ROTATED64 | FLAG_RETURNED_V2_SCENE)) != 0;
+               updated |= (nextrot & (FLAG_RETURNED_V2_ROTATED32 | FLAG_RETURNED_V2_ROTATED64 | FLAG_RETURNED_V2_SCENE)) != 0;
                const uint32_t delayMs = nextrot & 0x0000ffff;
                if (delayMs == 0 || delayMs >= SERUM_MAX_ROTATION_DELAY_MS)
                {
@@ -632,96 +630,56 @@ private:
             continue;
 
          const unsigned int frameId = ++m_colorizedframeId;
-         if (m_pSerum->SerumVersion == SERUM_V1)
+         if (m_pSerum->width32 != 0 && m_pSerum->frame32 != nullptr)
+            m_published32.Publish(m_pSerum->frame32, static_cast<size_t>(m_pSerum->width32) * 32 * sizeof(uint16_t), frameId);
+         if (m_pSerum->width64 != 0 && m_pSerum->frame64 != nullptr)
+            m_published64.Publish(m_pSerum->frame64, static_cast<size_t>(m_pSerum->width64) * 64 * sizeof(uint16_t), frameId);
+         // Widths are per frame (0 when a size is missing), so advertise each size once and keep it
+         if ((m_pSerum->width32 != 0 && m_advertisedWidth32 != m_pSerum->width32) || (m_pSerum->width64 != 0 && m_advertisedWidth64 != m_pSerum->width64))
          {
-            const unsigned int size = dmdId.width * dmdId.height;
-            uint8_t* const out = m_publishedV1.Prepare(static_cast<size_t>(size) * 3);
-            for (unsigned int i = 0; i < size; i++)
-               memcpy(&out[i * 3], &m_pSerum->palette[m_pSerum->frame[i] * 3], 3);
-            m_publishedV1.CommitIfChanged(frameId);
-            // Advertised only once a frame has been published, so a consumer
-            // asking the moment the source appears is never handed an empty
-            // buffer. The buffers themselves belong to this thread now, which
-            // is what removes the invalid access the old FIXME described: the
-            // main thread no longer resizes memory a frame was handed out of.
-            if (m_advertisedV1Size != size)
-            {
-               AdvertiseContext context { this, dmdId };
-               msgApi->RunOnMainThread(
-                  endpointId, -1,
-                  [](void* userData)
+            AdvertiseContext context { this, dmdId };
+            msgApi->RunOnMainThread(
+               endpointId, -1,
+               [](void* userData)
+               {
+                  SerumColorizer* colorizer = static_cast<AdvertiseContext*>(userData)->colorizer;
+                  const DisplaySrcId& dmdId = static_cast<AdvertiseContext*>(userData)->dmdId;
+                  colorizer->m_colorizedDmd.ClearItems();
+                  if (colorizer->m_pSerum->width32 != 0)
+                     colorizer->m_advertisedWidth32 = colorizer->m_pSerum->width32;
+                  if (colorizer->m_pSerum->width64 != 0)
+                     colorizer->m_advertisedWidth64 = colorizer->m_pSerum->width64;
+                  LOGI(std::format("Publishing colorized output: {}{}",
+                     (colorizer->m_advertisedWidth32 > 0 && IsResolutionRequested(32)) ? std::format("{}x32 ", colorizer->m_advertisedWidth32) : ""s,
+                     (colorizer->m_advertisedWidth64 > 0 && IsResolutionRequested(64)) ? std::format("{}x64", colorizer->m_advertisedWidth64) : ""s));
+                  if (colorizer->m_advertisedWidth32 > 0 && IsResolutionRequested(32))
                   {
-                     SerumColorizer* colorizer = static_cast<AdvertiseContext*>(userData)->colorizer;
-                     const DisplaySrcId& dmdId = static_cast<AdvertiseContext*>(userData)->dmdId;
-                     colorizer->m_advertisedV1Size = dmdId.width * dmdId.height;
-                     colorizer->m_colorizedDmd.ClearItems();
                      colorizer->m_colorizedDmd.AddItem({
-                        .id = { { endpointId, 0 } }, //
+                        .id = { { endpointId, 1 } }, //
                         .overrideId = dmdId.id, //
-                        .width = dmdId.width, //
-                        .height = dmdId.height, //
+                        .width = colorizer->m_advertisedWidth32, //
+                        .height = 32, //
                         .hardware = CTLPI_DISPLAY_HARDWARE_RGB_LED, //
                         .callContext = colorizer, //
-                        .frameFormat = CTLPI_DISPLAY_FORMAT_SRGB888, //
-                        .GetRenderFrame = &Trampoline<&SerumColorizer::GetRenderFrameSerumV1>::Call //
+                        .frameFormat = CTLPI_DISPLAY_FORMAT_SRGB565, //
+                        .GetRenderFrame = &Trampoline<&SerumColorizer::GetRenderFrameSerumV2_32>::Call //
                      });
-                  },
-                  &context);
-            }
-         }
-         else
-         {
-            if (m_pSerum->width32 != 0 && m_pSerum->frame32 != nullptr)
-               m_published32.Publish(m_pSerum->frame32, static_cast<size_t>(m_pSerum->width32) * 32 * sizeof(uint16_t), frameId);
-            if (m_pSerum->width64 != 0 && m_pSerum->frame64 != nullptr)
-               m_published64.Publish(m_pSerum->frame64, static_cast<size_t>(m_pSerum->width64) * 64 * sizeof(uint16_t), frameId);
-            // Widths are per frame (0 when a size is missing), so advertise each size once and keep it
-            if ((m_pSerum->width32 != 0 && m_advertisedWidth32 != m_pSerum->width32) || (m_pSerum->width64 != 0 && m_advertisedWidth64 != m_pSerum->width64))
-            {
-               AdvertiseContext context { this, dmdId };
-               msgApi->RunOnMainThread(
-                  endpointId, -1,
-                  [](void* userData)
+                  }
+                  if (colorizer->m_advertisedWidth64 > 0 && IsResolutionRequested(64))
                   {
-                     SerumColorizer* colorizer = static_cast<AdvertiseContext*>(userData)->colorizer;
-                     const DisplaySrcId& dmdId = static_cast<AdvertiseContext*>(userData)->dmdId;
-                     colorizer->m_colorizedDmd.ClearItems();
-                     if (colorizer->m_pSerum->width32 != 0)
-                        colorizer->m_advertisedWidth32 = colorizer->m_pSerum->width32;
-                     if (colorizer->m_pSerum->width64 != 0)
-                        colorizer->m_advertisedWidth64 = colorizer->m_pSerum->width64;
-                     LOGI(std::format("Publishing colorized output: {}{}",
-                        (colorizer->m_advertisedWidth32 > 0 && IsResolutionRequested(32)) ? std::format("{}x32 ", colorizer->m_advertisedWidth32) : ""s,
-                        (colorizer->m_advertisedWidth64 > 0 && IsResolutionRequested(64)) ? std::format("{}x64", colorizer->m_advertisedWidth64) : ""s));
-                     if (colorizer->m_advertisedWidth32 > 0 && IsResolutionRequested(32))
-                     {
-                        colorizer->m_colorizedDmd.AddItem({
-                           .id = { { endpointId, 1 } }, //
-                           .overrideId = dmdId.id, //
-                           .width = colorizer->m_advertisedWidth32, //
-                           .height = 32, //
-                           .hardware = CTLPI_DISPLAY_HARDWARE_RGB_LED, //
-                           .callContext = colorizer, //
-                           .frameFormat = CTLPI_DISPLAY_FORMAT_SRGB565, //
-                           .GetRenderFrame = &Trampoline<&SerumColorizer::GetRenderFrameSerumV2_32>::Call //
-                        });
-                     }
-                     if (colorizer->m_advertisedWidth64 > 0 && IsResolutionRequested(64))
-                     {
-                        colorizer->m_colorizedDmd.AddItem({
-                           .id = { { endpointId, 2 } }, //
-                           .overrideId = dmdId.id, //
-                           .width = colorizer->m_advertisedWidth64, //
-                           .height = 64, //
-                           .hardware = CTLPI_DISPLAY_HARDWARE_RGB_LED, //
-                           .callContext = colorizer, //
-                           .frameFormat = CTLPI_DISPLAY_FORMAT_SRGB565, //
-                           .GetRenderFrame = &Trampoline<&SerumColorizer::GetRenderFrameSerumV2_64>::Call //
-                        });
-                     }
-                  },
-                  &context);
-            }
+                     colorizer->m_colorizedDmd.AddItem({
+                        .id = { { endpointId, 2 } }, //
+                        .overrideId = dmdId.id, //
+                        .width = colorizer->m_advertisedWidth64, //
+                        .height = 64, //
+                        .hardware = CTLPI_DISPLAY_HARDWARE_RGB_LED, //
+                        .callContext = colorizer, //
+                        .frameFormat = CTLPI_DISPLAY_FORMAT_SRGB565, //
+                        .GetRenderFrame = &Trampoline<&SerumColorizer::GetRenderFrameSerumV2_64>::Call //
+                     });
+                  }
+               },
+               &context);
          }
       }
       m_isRunning = false;
@@ -730,7 +688,6 @@ private:
    // These are the copies the colorize thread published, not libserum's own
    // buffers, so they are neither mutated while a consumer reads them nor
    // guarded by a lock the colorize thread holds across its work.
-   DisplayFrame GetRenderFrameSerumV1() { return m_publishedV1.Get(); }
    DisplayFrame GetRenderFrameSerumV2_32() { return m_published32.Get(); }
    DisplayFrame GetRenderFrameSerumV2_64() { return m_published64.Get(); }
 
@@ -754,7 +711,6 @@ private:
    std::vector<uint16_t> m_pendingScenes;
 
    // Written by the colorize thread, read by consumers on any thread.
-   PublishedFrame m_publishedV1;
    PublishedFrame m_published32;
    PublishedFrame m_published64;
 
@@ -762,7 +718,6 @@ private:
    // is identified against. Written and read on the colorize thread only.
    uint8_t m_identifyFrame128x32[128 * 32] = {};
 
-   unsigned int m_advertisedV1Size = 0;
    unsigned int m_advertisedWidth32 = 0;
    unsigned int m_advertisedWidth64 = 0;
 
@@ -778,12 +733,26 @@ private:
 // pinmame controllers, so it is searched for them alone, directly (the
 // pinmame folder already carries the namespace). Returns the rom directory
 // with its casing as found on disk.
+//
+// Only a <rom>.cROMc is a colorization: libserum no longer loads a raw <rom>.cRZ
+// or <rom>.cROM. Where one of those is found instead, the log says so, since a
+// player who kept an old file otherwise only sees nothing colorized.
 static std::filesystem::path GetColorization(const std::string_view& gameNs, const std::string_view& gameId)
 {
    const std::filesystem::path cromc = PluginStrings::PathFromUTF8(std::format("{}{}", gameId, ".cROMc"));
-   const std::filesystem::path crz = PluginStrings::PathFromUTF8(std::format("{}{}", gameId, ".cRZ"));
    const std::filesystem::path gameNsPath = PluginStrings::PathFromUTF8(gameNs);
    const std::filesystem::path gameIdPath = PluginStrings::PathFromUTF8(gameId);
+   const std::filesystem::path raws[] = { PluginStrings::PathFromUTF8(std::format("{}{}", gameId, ".cRZ")), PluginStrings::PathFromUTF8(std::format("{}{}", gameId, ".cROM")) };
+   std::filesystem::path raw;
+   const auto find = [&](const std::filesystem::path& base)
+   {
+      if (auto path = find_case_insensitive_file_path(base / gameIdPath / cromc); !path.empty())
+         return path.parent_path();
+      for (const std::filesystem::path& name : raws)
+         if (auto path = find_case_insensitive_file_path(base / gameIdPath / name); !path.empty() && raw.empty())
+            raw = path;
+      return std::filesystem::path();
+   };
 
    VPXPluginAPI* vpxApi = nullptr;
    unsigned int getVpxApiId = msgApi->GetMsgID(VPXPI_NAMESPACE, VPXPI_MSG_GET_API);
@@ -804,24 +773,23 @@ static std::filesystem::path GetColorization(const std::string_view& gameNs, con
       if (gameNs == "pinmame"sv)
          bases.push_back(tablePath.parent_path() / "pinmame"sv / "altcolor"sv);
       for (const std::filesystem::path& base : bases)
-      {
-         if (auto path = find_case_insensitive_file_path(base / gameIdPath / cromc); !path.empty())
-            return path.parent_path();
-         else if (path = find_case_insensitive_file_path(base / gameIdPath / crz); !path.empty())
-            return path.parent_path();
-      }
+         if (auto path = find(base); !path.empty())
+            return path;
    }
 
    // Priority 3: global setting path
    if (std::filesystem::path serumPath = PluginStrings::PathFromUTF8OrNative(serumPathProp_Get()); !serumPath.empty())
       for (const std::filesystem::path& base : { serumPath / gameNsPath, serumPath })
-      {
-         if (auto path = find_case_insensitive_file_path(base / gameIdPath / cromc); !path.empty())
-            return path.parent_path();
-         else if (path = find_case_insensitive_file_path(base / gameIdPath / crz); !path.empty())
-            return path.parent_path();
-      }
+         if (auto path = find(base); !path.empty())
+            return path;
 
+   // SelectController asks again on every controller change; one line per file is enough.
+   static std::filesystem::path reportedRaw;
+   if (!raw.empty() && raw != reportedRaw)
+   {
+      reportedRaw = raw;
+      LOGW(std::format("'{}' is not loaded: Serum colorizations are loaded from a .cROMc only. Ask the colorization's author for its .cROMc.", PluginStrings::PathToUTF8(raw)));
+   }
    return std::filesystem::path();
 }
 
@@ -870,8 +838,7 @@ static void OnControllerChanged()
          // is the one that matters -- to stand down and take ours instead of
          // matching every frame a second time. Publishing it after the load
          // would mean claiming an unbounded amount of time later: a large
-         // colorization is hundreds of megabytes once read, and a cRZ converted
-         // on the way in takes longer still. The consumer cannot wait for a
+         // colorization is hundreds of megabytes once read. The consumer cannot wait for a
          // signal that may never come, so it would conclude nobody is
          // identifying frames and say so, and every wait long enough to be safe
          // would be too long to be useful.
