@@ -37,7 +37,8 @@ The version used for these libraries is defined by the SHA of the head commit in
 ### libserum
 
 - Upstream: https://github.com/PPUC/libserum
-- License: GPLv2
+- Original: https://github.com/zesinger/libserum
+- License: GPLv2 or later
 
 ### libvni
 
