@@ -26,11 +26,21 @@ bool LiveRenderContext::IsShowInvisible() const
    return (m_player->m_ptable->m_liveBaseTable == nullptr) && (GetViewMode() != ViewMode::PreviewCam);
 }
 
+void LiveRenderContext::SetPaneProjection(const Matrix3D &mvp, const ImVec2 &origin, const ImVec2 &scale, const float halfW, const float halfH)
+{
+   m_paneMvp = mvp;
+   m_hasPaneMvp = true;
+   m_projOrigin = origin;
+   m_projScale = scale;
+   m_projHalfW = halfW;
+   m_projHalfH = halfH;
+}
+
 ImVec2 LiveRenderContext::Project(const Vertex3Ds &v) const
 {
-   const float rClipWidth = (float)m_player->m_playfieldWnd->GetWidth() * 0.5f;
-   const float rClipHeight = (float)m_player->m_playfieldWnd->GetHeight() * 0.5f;
-   const Matrix3D mvp = m_player->m_renderer->GetMVP().GetModelViewProj(0);
+   const float rClipWidth = m_hasPaneMvp ? m_projHalfW : (float)m_player->m_playfieldWnd->GetWidth() * 0.5f;
+   const float rClipHeight = m_hasPaneMvp ? m_projHalfH : (float)m_player->m_playfieldWnd->GetHeight() * 0.5f;
+   const Matrix3D mvp = m_hasPaneMvp ? m_paneMvp : m_player->m_renderer->GetMVP().GetModelViewProj(0);
    const float xp = mvp._11 * v.x + mvp._21 * v.y + mvp._31 * v.z + mvp._41;
    const float yp = mvp._12 * v.x + mvp._22 * v.y + mvp._32 * v.z + mvp._42;
    //const float zp = mvp._13 * v.x + mvp._23 * v.y + mvp._33 * v.z + mvp._43;
@@ -38,7 +48,7 @@ ImVec2 LiveRenderContext::Project(const Vertex3Ds &v) const
    if (wp <= 1e-10f) // behind camera (or degenerated)
       return ImVec2 { FLT_MAX, FLT_MAX };
    const float inv_wp = 1.0f / wp;
-   return ImVec2 { (wp + xp) * rClipWidth * inv_wp, (wp - yp) * rClipHeight * inv_wp };
+   return ImVec2 { m_projOrigin.x + (wp + xp) * rClipWidth * inv_wp * m_projScale.x, m_projOrigin.y + (wp - yp) * rClipHeight * inv_wp * m_projScale.y };
 }
 
 void LiveRenderContext::DrawLine(const Vertex3Ds &a, const Vertex3Ds &b, ImU32 color) const
@@ -94,8 +104,12 @@ void LiveRenderContext::DrawWireframe(IEditable *editable) const
 {
    if (IsSelected())
    {
-      // Selection overlay
-      g_pplayer->m_renderer->DrawWireframe(editable, convertColor(GetColor(true), 32.f / 255.f), convertColor(GetColor(true), 1.f), false);
+      // Selection overlay: like Blender's object mode, only the edges are drawn by default (the active part lighter), leaving the surface shading visible;
+      // the tint mode adds a faint fill over the whole surface
+      if (m_selectionDisplay == 2)
+         return;
+      const ImU32 color = m_selectionDisplay == 0 ? (m_isActive ? IM_COL32(255, 176, 64, 255) : IM_COL32(230, 110, 0, 255)) : GetColor(true);
+      g_pplayer->m_renderer->DrawWireframe(editable, convertColor(color, m_selectionDisplay == 1 ? 32.f / 255.f : 0.f), convertColor(color, 1.f), false);
    }
    else
    {

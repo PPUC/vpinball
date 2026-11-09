@@ -105,8 +105,11 @@ InputManager::InputManager(Player* player, Settings& appSettings)
       {
          int sdlScancode = deviceAndButtonId & 0x0000FFFFu;
          if (sdlScancode < nSDLKeys && sdlKeyStates[sdlScancode])
+         {
+            InputAction::ResolveChordPriority(m_inputActions, deviceAndButtonId, [](const ButtonMapping&) { return true; });
             for (auto& mapping : mappings)
                mapping->SetPressed(true);
+         }
       }
    }
 
@@ -221,6 +224,7 @@ void InputManager::SetDeviceDefaultMapping(uint16_t deviceId, const std::functio
          : m_manager(manager)
       {
       }
+      bool IsTestingMapping() const override { return true; };
       void MapAction(const vector<ButtonMapping>& input, unsigned int action) override { m_isAlreadyMapped &= m_manager.m_inputActions[action]->HasMapping(input); }
       void MapPlunger(std::unique_ptr<PlungerSensor> sensor) override { m_isAlreadyMapped &= m_manager.m_plungerHandler->HasSensor(sensor); }
       void MapNudge(std::unique_ptr<VPX::Physics::NudgeSensor> sensor) override { m_isAlreadyMapped &= m_manager.m_nudgeHandler->HasSensor(sensor); }
@@ -236,9 +240,16 @@ void InputManager::SetDeviceDefaultMapping(uint16_t deviceId, const std::functio
    }
 }
 
+bool InputManager::HasDeviceDefaultMapping(uint16_t deviceId) const
+{
+   assert(deviceId < m_inputDevices.size());
+   return static_cast<bool>(m_inputDevices[deviceId].m_defaultMapping);
+}
+
 void InputManager::ApplyDefaultDeviceMapping(uint16_t deviceId)
 {
    assert(deviceId < m_inputDevices.size());
+   assert(m_inputDevices[deviceId].m_defaultMapping);
    class ApplyMapping : public MappingSetupHandler
    {
    public:
@@ -246,6 +257,7 @@ void InputManager::ApplyDefaultDeviceMapping(uint16_t deviceId)
          : m_manager(manager)
       {
       }
+      bool IsTestingMapping() const override { return false; };
       void MapAction(const vector<ButtonMapping>& input, unsigned int action) override
       {
          m_manager.m_inputActions[action]->AddMapping(input);
@@ -258,6 +270,7 @@ void InputManager::ApplyDefaultDeviceMapping(uint16_t deviceId)
    ApplyMapping apply(*this);
    ClearDeviceMappings(deviceId);
    m_inputDevices[deviceId].m_defaultMapping(apply);
+   m_appSettings.Save();
 }
 
 void InputManager::LoadDevicesFromSettings()
@@ -542,17 +555,27 @@ void InputManager::PushButtonEvent(uint16_t deviceId, uint16_t buttonId, uint64_
    if (deviceId == m_keyboardDeviceId && ImGui::GetIO().WantCaptureKeyboard)
       return;
 
+   // Discard keyboard and mouse presses while editing the table (releases still flow so that no action stays pressed)
+   if (isPressed && (deviceId == m_keyboardDeviceId || deviceId == m_mouseDeviceId) && m_player->m_liveUI->IsEditorUIOpened() && m_player->m_ptable->m_liveBaseTable == nullptr)
+      return;
+
    uint32_t id = deviceId << 16 | buttonId;
    if (auto it = m_buttonMappings.find(id); it != m_buttonMappings.end())
+   {
+      // A press completing a chord wins over shorter bindings it also completes (longest binding wins)
+      if (isPressed && std::ranges::any_of(it->second, [](const ButtonMapping* m) { return !m->IsPressed(); }))
+         InputAction::ResolveChordPriority(m_inputActions, id, [](const ButtonMapping&) { return true; });
       for (ButtonMapping* mapping : it->second)
          mapping->SetPressed(isPressed);
+   }
 
    // Special handling for keyboard events to trigger custom KeyDown/KeyUp events in the script based on Windows DirectInput key codes
-   if (deviceId == m_keyboardDeviceId && !m_player->m_liveUI->IsInGameUIOpened())
+   if (deviceId == m_keyboardDeviceId)
    {
       const unsigned char dik = GetDirectInputKeyFromSDLScancode(static_cast<SDL_Scancode>(buttonId));
-      if (dik != 0)
+      if (dik != 0 && (isPressed ? !m_player->m_liveUI->IsInGameUIOpened() : m_scriptKeysDown.test(dik)))
       {
+         m_scriptKeysDown.set(dik, isPressed);
          CComVariant rgvar[1] = { CComVariant(dik) };
          DISPPARAMS dispparams = { rgvar, nullptr, 1, 0 };
          m_player->m_ptable->FireDispID(isPressed ? DISPID_GameEvents_KeyDown : DISPID_GameEvents_KeyUp, &dispparams);
@@ -590,8 +613,13 @@ void InputManager::PushAxisEvent(uint16_t deviceId, uint16_t axisId, uint64_t ti
          mapping->SetAxisPosition(timestampNs, position);
 
    if (auto it = m_buttonMappings.find(id); it != m_buttonMappings.end())
+   {
+      // Same longest-binding-wins priority as PushButtonEvent, with the per-mapping threshold state
+      if (std::ranges::any_of(it->second, [position](const ButtonMapping* m) { return !m->IsPressed() && m->ComputeAxisPressed(position); }))
+         InputAction::ResolveChordPriority(m_inputActions, id, [position](const ButtonMapping& m) { return m.ComputeAxisPressed(position); });
       for (ButtonMapping* mapping : it->second)
          mapping->SetAxisPosition(position);
+   }
 
    for (const auto& listener : m_axisListeners)
       listener();
@@ -716,7 +744,7 @@ void InputManager::CreateInputActions()
          {
             if (m_player->m_liveUI->IsInGameUIOpened())
                return;
-            if (isPressed && m_player->IsPlaying())
+            if (isPressed && m_player->IsPlaying() && m_player->ShouldHideDesktopCursor())
                SDL_HideCursor();
          
             if (action.GetActionId() == m_leftFlipperActionId)
@@ -783,20 +811,22 @@ void InputManager::CreateInputActions()
    m_extraBallActionId = addKeyAction("ExtraBall"s, "Extra Ball"s, SDL_SCANCODE_B);
    m_lockbarActionId = addKeyAction("Lockbar"s, "Lockbar"s, SDL_SCANCODE_LALT);
 
-   auto pause = AddAction(std::make_unique<InputAction>(this, "Pause"s, "Pause Game"s, keyMapping(SDL_SCANCODE_P),
-      [this](const InputAction&, bool, bool isPressed)
-      {
-         if (isPressed)
-            m_player->SetPlayState(!m_player->IsPlaying());
-      }));
+   m_pauseActionId = AddAction(
+      std::make_unique<InputAction>(this, "Pause"s, "Pause Game"s, keyMapping(SDL_SCANCODE_P),
+         [this](const InputAction&, bool, bool isPressed)
+         {
+            if (isPressed)
+               m_player->SetPlayState(!m_player->IsPlaying());
+         }))->GetActionId();
 
-   auto perfOverlay = AddAction(std::make_unique<InputAction>(this, "PerfOverlay"s, "Toggle Perf. Overlay"s, keyMapping(SDL_SCANCODE_F11),
-      [this](const InputAction&, bool, bool isPressed)
-      {
-         if (isPressed)
-            m_player->m_liveUI->ToggleFPS();
-      }));
-   
+   m_perfOverlayActionId = AddAction(
+      std::make_unique<InputAction>(this, "PerfOverlay"s, "Toggle Perf. Overlay"s, keyMapping(SDL_SCANCODE_F11),
+         [this](const InputAction&, bool, bool isPressed)
+         {
+            if (isPressed)
+               m_player->m_liveUI->ToggleFPS();
+         }))->GetActionId();
+
    m_exitGameActionId = AddAction(
       std::make_unique<InputAction>(this, "ExitGame"s, "Exit Game"s, keyMapping(SDL_SCANCODE_ESCAPE),
          [this](const InputAction& action, bool, bool isPressed)
@@ -855,19 +885,20 @@ void InputManager::CreateInputActions()
    volumeUp->SetRepeatPeriod(75);
    m_volumeUpActionId = volumeUp->GetActionId();
 
-   auto showRules = AddAction(std::make_unique<InputAction>(this, "ShowRules"s, "Show Rules"s, ""s,
-      [this](const InputAction&, bool, bool isPressed)
-      {
-         if (!isPressed)
-            return;
-         if (m_player->m_liveUI->m_inGameUI.IsOpened("table/rules"s))
-            m_player->m_liveUI->HideUI();
-         else
+   m_rulesActionId = AddAction(
+      std::make_unique<InputAction>(this, "ShowRules"s, "Show Rules"s, ""s,
+         [this](const InputAction&, bool, bool isPressed)
          {
-            m_player->m_liveUI->HideUI();
-            m_player->m_liveUI->OpenInGameUI("table/rules"s);
-         }
-      }));
+            if (!isPressed)
+               return;
+            if (m_player->m_liveUI->m_inGameUI.IsOpened("table/rules"s))
+               m_player->m_liveUI->HideUI();
+            else
+            {
+               m_player->m_liveUI->HideUI();
+               m_player->m_liveUI->OpenInGameUI("table/rules"s);
+            }
+         }))->GetActionId();
 
    m_slamTiltActionId = addKeyAction("SlamTilt"s, "Slam Tilt"s, SDL_SCANCODE_HOME);
    m_coinDoorActionId = addKeyAction("CoinDoor"s, "Coin Door"s, SDL_SCANCODE_END);
@@ -884,7 +915,7 @@ void InputManager::CreateInputActions()
             action.SetRepeatPeriod(-1);
          else
          {
-            m_player->m_vrDevice->RecenterTable();
+            m_player->m_vrDevice->RecenterRoom();
             action.SetRepeatPeriod(wasPressed ? 5 : 250); // Single recenter then continuous if kept pressed
          }
       }));
@@ -898,7 +929,7 @@ void InputManager::CreateInputActions()
             else
             {
                const float scale = wasPressed ? 0.1f : 1.f;
-               m_player->m_vrDevice->OffsetTable(scale * direction.x, scale * direction.y, scale * direction.z);
+               m_player->m_vrDevice->OffsetRoom(scale * direction.x, scale * direction.y, scale * direction.z);
                action.SetRepeatPeriod(wasPressed ? 5 : 250); // Single step then continuous slow move if kept pressed
             }
          }));
@@ -913,12 +944,16 @@ void InputManager::CreateInputActions()
    m_vrViewCenterActionId = vrCenter->GetActionId();
    m_vrViewUpActionId = vrUp;
    m_vrViewDownActionId = vrDown;
-   #ifdef ENABLE_XR
+   m_vrViewLeftActionId = vrLeft;
+   m_vrViewRightActionId = vrRight;
+   m_vrViewFrontActionId = vrFront;
+   m_vrViewBackActionId = vrBack;
+#ifdef ENABLE_XR
    auto vrControllerCalibration = AddAction(std::make_unique<InputAction>(this, "VRControllerCalibration"s, "Align VR view using controllers"s, ""s,
       [this](InputAction& action, bool wasPressed, bool isPressed)
       {
          if (isPressed && m_player->IsVR())
-            m_player->m_vrDevice->EnableControllerViewCentering(!m_player->m_vrDevice->IsControllerViewCenteringEnabled());
+            m_player->m_vrDevice->EnableControllerRecenter(!m_player->m_vrDevice->IsControllerRecenterEnabled());
       }));
    m_vrControllerViewCenteringActionId = vrControllerCalibration->GetActionId();
    #endif
@@ -969,6 +1004,14 @@ void InputManager::CreateInputActions()
                                                                                                               : "Desktop display switched to both eyes"s,
                2000);
          }
+         if (m_player->IsVR())
+         {
+            // The OS cursor is only hidden when the desktop display presents a game surface (scene render modes)
+            if (m_player->ShouldHideDesktopCursor())
+               SDL_HideCursor();
+            else
+               SDL_ShowCursor();
+         }
          m_player->m_renderer->InitLayout();
          m_player->m_renderer->UpdateStereoShaderState();
          if (m_player->m_renderer->IsUsingStaticPrepass())
@@ -995,6 +1038,34 @@ void InputManager::CreateInputActions()
    m_joyCustomActionId[1] = addJoyCustomAction("Custom2"s, "Custom Button #2"s);
    m_joyCustomActionId[2] = addJoyCustomAction("Custom3"s, "Custom Button #3"s);
    m_joyCustomActionId[3] = addJoyCustomAction("Custom4"s, "Custom Button #4"s);
+
+   auto addMouseClickAction = [this](const string& settingId, const string& label, const uint8_t sdlButton)
+   {
+      auto newAction = AddAction(std::make_unique<InputAction>(this, settingId, label, ""s,
+         [this, sdlButton](const InputAction&, bool, bool isPressed)
+         {
+            // Without an enumerated mouse (e.g. a cabinet or VR setup), the click is sent as coming from the global mouse (id 0)
+            int nMice = 0;
+            SDL_MouseID* mice = SDL_GetMice(&nMice);
+            const SDL_MouseID mouseId = (mice != nullptr && nMice > 0) ? mice[0] : 0;
+            if (mice)
+               SDL_free(mice);
+            SDL_Event event;
+            SDL_zero(event);
+            event.type = isPressed ? SDL_EVENT_MOUSE_BUTTON_DOWN : SDL_EVENT_MOUSE_BUTTON_UP;
+            event.common.timestamp = SDL_GetTicksNS();
+            event.button.which = mouseId;
+            event.button.button = sdlButton;
+            event.button.down = isPressed;
+            event.button.clicks = 1;
+            event.button.windowID = m_player->m_playfieldWnd->GetCore() ? SDL_GetWindowID(m_player->m_playfieldWnd->GetCore()) : 0;
+            SDL_GetMouseState(&event.button.x, &event.button.y);
+            SDL_PushEvent(&event);
+         }));
+      return newAction->GetActionId();
+   };
+   m_mouseLeftActionId = addMouseClickAction("MouseLeft"s, "Left Mouse Click"s, SDL_BUTTON_LEFT);
+   m_mouseRightActionId = addMouseClickAction("MouseRight"s, "Right Mouse Click"s, SDL_BUTTON_RIGHT);
 }
 
 InputAction* InputManager::AddAction(std::unique_ptr<InputAction>&& action)

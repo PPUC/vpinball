@@ -66,7 +66,9 @@ static int DPIValue(int value)
 BOOL SoundDialog::OnInitDialog()
 {
    m_audioPlayer = std::make_unique<VPX::AudioPlayer>(g_settingsService.GetAppSettings().GetPlayer_SoundDeviceBG(), g_settingsService.GetAppSettings().GetPlayer_SoundDevice(),
-      static_cast<VPX::SoundConfigTypes>(g_settingsService.GetAppSettings().GetPlayer_Sound3D()));
+      static_cast<VPX::SoundConfigTypes>(g_settingsService.GetAppSettings().GetPlayer_Sound3D()),
+      static_cast<VPX::BackglassConfigTypes>(g_settingsService.GetAppSettings().GetPlayer_Sound3DBackglass()), g_settingsService.GetAppSettings().GetPlayer_SoundDeviceHaptic(),
+      static_cast<VPX::SoundConfigTypes>(g_settingsService.GetAppSettings().GetPlayer_Sound3DHaptic()));
 
    const HWND toolTipHwnd = CreateWindowEx(0, TOOLTIPS_CLASS, nullptr, WS_POPUP | TTS_ALWAYSTIP | TTS_BALLOON, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, GetHwnd(), nullptr,
       GetApp()->GetInstanceHandle(), nullptr);
@@ -360,7 +362,7 @@ void SoundDialog::Import()
    const string& szInitialDir = g_settingsService.GetAppSettings().GetRecentDir_SoundDir();
 
    vector<string> szFileName;
-   if (m_tableEditor->m_vpxEditor->OpenFileDialog(szInitialDir, szFileName, "Sound Files (.wav/.ogg/.mp3/.flac)\0*.wav;*.ogg;*.mp3;*.flac\0", "mp3", OFN_EXPLORER | OFN_ALLOWMULTISELECT))
+   if (m_tableEditor->m_vpxEditor->OpenFileDialog(szInitialDir, szFileName, "Sound Files (.wav/.ogg/.opus/.mp3/.flac)\0*.wav;*.ogg;*.opus;*.mp3;*.flac\0", "mp3", OFN_EXPLORER | OFN_ALLOWMULTISELECT))
    {
       g_settingsService.GetAppSettings().SetRecentDir_SoundDir(PathToString(std::filesystem::path(szFileName[0]).parent_path()), false);
       for (const string &file : szFileName)
@@ -421,7 +423,7 @@ void SoundDialog::ReImportFrom()
          const string &szInitialDir = g_settingsService.GetAppSettings().GetRecentDir_SoundDir();
 
          vector<string> szFileName;
-         if (m_tableEditor->m_vpxEditor->OpenFileDialog(szInitialDir, szFileName, "Sound Files (.wav/.ogg/.mp3/.flac)\0*.wav;*.ogg;*.mp3;*.flac\0", "mp3", 0))
+         if (m_tableEditor->m_vpxEditor->OpenFileDialog(szInitialDir, szFileName, "Sound Files (.wav/.ogg/.opus/.mp3/.flac)\0*.wav;*.ogg;*.opus;*.mp3;*.flac\0", "mp3", 0))
          {
             LVITEM lvitem;
             lvitem.mask = LVIF_PARAM;
@@ -466,7 +468,7 @@ void SoundDialog::Export()
          ofn.lStructSize = sizeof(OPENFILENAME);
          ofn.hInstance = GetApp()->GetInstanceHandle();
          ofn.hwndOwner = m_tableEditor->m_vpxEditor->GetHwnd();
-         ofn.lpstrFilter = "Sound Files (.wav/.ogg/.mp3/.flac)\0*.wav;*.ogg;*.mp3;*.flac\0";
+         ofn.lpstrFilter = "Sound Files (.wav/.ogg/.opus/.mp3/.flac)\0*.wav;*.ogg;*.opus;*.mp3;*.flac\0";
 
          char filename[MAXSTRING];
          if (!renameOnExport)

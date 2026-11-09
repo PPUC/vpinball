@@ -87,6 +87,7 @@ public:
    void SetPlayState(const bool isPlaying, const uint32_t delayBeforePauseMs = 0); // Allow to play/pause during UI interaction or to perform timed simulation steps (still needs the player window to be focused).
    bool IsPlaying(const bool applyWndFocus = true) const { return (m_playMode == PlayMode::CaptureAttract) || (m_wantsToPlay && (applyWndFocus ? m_playfieldWnd->IsFocused() : true) && !IsEditorMode()); }
    void OnFocusChanged(); // On focus lost, pause player and show mouse cursor
+   bool ShouldHideDesktopCursor() const; // In VR, only hide the shared OS cursor when the desktop display presents a game surface (cabinet / cabinet+ancillary scene render)
 
    uint32_t m_pauseTimeTarget = 0;
    bool m_step = false; // If set to true, the physics engine will do a single physic step and stop simulation (turning this flag to false)
@@ -112,6 +113,7 @@ public:
       Stack    // Suspend the current table session and switch to the new table (restored when the new session ends, same base table / live copy pair only)
    };
    void SetTable(PinTable *table, TableTransition transition);
+   bool HasPendingTableTransition() const { return m_pendingTable; }
    bool HasStackedTableSession() const { return !m_tableStack.empty(); }
 
    // To be called by the host after the game loop has ended: if the session was ended by a SetTable
@@ -323,6 +325,7 @@ public:
 
    float m_backglassVolume;
    float m_playfieldVolume;
+   float m_hapticVolume;
 
    float GetAudioLaneMixerVolume(uint64_t laneId) const;
    void SetAudioLaneMixerVolume(uint64_t laneId, float volume);
@@ -334,9 +337,11 @@ private:
 
    static void OnAudioUpdated(const unsigned int msgId, void *userData, void *msgData);
    static void OnAudioSrcChanged(const unsigned int msgId, void *userData, void *msgData);
+   static void OnGetAudioOutput(const unsigned int msgId, void *userData, void *msgData);
    unsigned int m_onAudioUpdatedMsgId;
    unsigned int m_onAudioSrcChangedMsgId;
    unsigned int m_getAudioSrcMsgId;
+   unsigned int m_getAudioOutputMsgId;
    mutable std::mutex m_audioSourceMutex;
    struct AudioLane
    {
@@ -375,7 +380,6 @@ public:
    bool m_debugBalls = false;    // Draw balls in the foreground via 'O' key
 
    bool m_noTimeCorrect = false; // Used so the frame after debugging does not do normal time correction
-   uint64_t m_lastPhysicsUpdate = 0; // usec() of the last physics update, to detect main thread stalls
 
    bool m_detectScriptHang; // Arm the script interpreter's hang watchdog (a script call that does not return is interrupted)
 

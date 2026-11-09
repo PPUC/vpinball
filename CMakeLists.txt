@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.25)
 # Single build file for every target, selected by three cache variables (default to host BGFX):
 #   RENDERER  BGFX (default), GL, DX9
 #   PLATFORM  macos, linux, windows, windows-mingw, ios, ios-simulator, android, wasm
-#   ARCH      x64, x86, arm64, aarch64, arm64-v8a, wasm32
+#   ARCH      x64, x86, arm64, aarch64, arm64-v8a, wasm64
 
 if(CMAKE_HOST_APPLE)
    set(_vpx_host_platform "macos")
@@ -91,6 +91,8 @@ option(POST_BUILD_COPY_EXT_LIBS "Copy external libraries to build directory" ON)
 if(PLATFORM STREQUAL "macos")
    option(ENABLE_SANITIZERS "Enable AddressSanitizer and UBSan" OFF)
    message(STATUS "ENABLE_SANITIZERS: ${ENABLE_SANITIZERS}")
+   option(ENABLE_XR "Enable OpenXR support (BGFX only)" ON)
+   message(STATUS "ENABLE_XR: ${ENABLE_XR}")
 endif()
 if(PLATFORM STREQUAL "linux")
    option(BUILD_RPI "Build for Raspberry PI" OFF)
@@ -177,8 +179,8 @@ elseif(PLATFORM STREQUAL "linux")
 elseif(PLATFORM STREQUAL "ios" OR PLATFORM STREQUAL "ios-simulator" OR PLATFORM STREQUAL "android")
    add_compile_options(-fPIC)
 elseif(PLATFORM STREQUAL "wasm")
-   add_compile_options(-pthread -fwasm-exceptions)
-   add_link_options(-pthread -fwasm-exceptions)
+   add_compile_options(-pthread -fwasm-exceptions -m64)
+   add_link_options(-pthread -fwasm-exceptions -m64)
 endif()
 
 if(BUILD_APP)

@@ -15,11 +15,18 @@ PropBool(Editor, DisableHash, "Disable File Validation"s, "Disable file integrit
 // Audio settings
 PropInt(Player, MusicVolume, "Backglass Volume"s, "Main volume for music and sound played from the backglass speakers"s, 0, 100, 100);
 PropInt(Player, SoundVolume, "Playfield Volume"s, "Main volume for mechanical sounds coming from the playfield"s, 0, 100, 100);
+PropInt(Player, HapticVolume, "Haptic Volume"s, "Main volume for haptic feedback output"s, 0, 100, 100);
 PropStringDyn(Player, SoundDeviceBG, "Backglass Sound Device"s, "Select backglass sound device"s, ""s);
 PropStringDyn(Player, SoundDevice, "Playfield Sound Device"s, "Select playfield sound device"s, ""s);
+PropStringDyn(Player, SoundDeviceHaptic, "Haptic Sound Device"s, "Select haptic feedback sound device (output disabled when unset or the device is missing)"s, ""s);
 PropEnum(Player, Sound3D, "Playfield Output Mode"s, "Select how playfield sound is output to a speaker configuration"s, int /* VPX::SoundConfigTypes*/,
    0 /* VPX::SoundConfigTypes::SNDCFG_SND3D2CH */, "2 Front channels"s, "2 Rear channels"s, "Up to 6 channels. Rear at lockbar"s, "Up to 6 channels. Front at lockbar"s,
-   "6ch Side & Rear at lockbar. Legacy mixing"s, "6ch Side & Rear at lockbar. New mixing"s);
+   "6ch Side & Rear at lockbar. Legacy mixing"s, "6ch Side & Rear at lockbar. New mixing"s, "Front right channel only"s);
+PropEnum(Player, Sound3DBackglass, "Backglass Output Mode"s, "Select how backglass sound is output to a speaker configuration"s, int /* VPX::BackglassConfigTypes*/,
+   0 /* VPX::BackglassConfigTypes::SNDCFG_BG2CH */, "2 Front channels"s, "Front left channel only"s);
+PropEnum(Player, Sound3DHaptic, "Haptic Output Mode"s, "Select how haptic sound is output to a speaker configuration"s, int /* VPX::SoundConfigTypes*/,
+   0 /* VPX::SoundConfigTypes::SNDCFG_SND3D2CH */, "2 Front channels"s, "2 Rear channels"s, "Up to 6 channels. Rear at lockbar"s, "Up to 6 channels. Front at lockbar"s,
+   "6ch Side & Rear at lockbar. Legacy mixing"s, "6ch Side & Rear at lockbar. New mixing"s, "Front right channel only"s);
 
 // Output (windows) settings
 // Main window (a.k.a. playfield)
@@ -163,9 +170,9 @@ PropEnum(Player, CabinetAutofitMode, "Cabinet Autofit Mode"s, "Select between ma
 PropFloat(Player, CabinetAutofitPos, "Cabinet Autofit Pos"s, "Relative lower flipper bat position when using automatic view fitting (0% for bottom of screen, 100% for top)"s, 0.f, 0.2f, 0.05f);
 
 // Aliasing & sharpening
-PropFloat(Player, AAFactor, "Full Scene Anti Aliasing"s,
+PropFloatStepped(Player, AAFactor, "Full Scene Anti Aliasing"s,
    "Enables brute-force Up/Downsampling (similar to DSR).\nThis delivers very good quality but has a significant impact on performance.\n200% means twice the resolution to be handled while rendering"s,
-   0.5f, 2.f, 1.f);
+   0.5f, 2.f, 0.25f, 1.f);
 PropEnum(Player, MSAASamples, "MSAA level"s,
    "Set the amount of MSAA samples.\nMSAA can help reduce geometry aliasing at the cost of performance and GPU memory.\nThis can improve image quality if not using supersampling"s, int,
    0, "Disabled"s, "4 Samples"s, "6 Samples"s, "8 Samples"s);
@@ -237,10 +244,14 @@ PropEnum(PlayerVR, AskToTurnOn, "Enable VR"s, "Ask to turn on VR"s, int, 0, "Ena
 PropEnum(PlayerVR, AskToTurnOn, "Enable VR"s, "Ask to turn on VR"s, int, 2, "Enabled"s, "Autodetect"s, "Disabled"s);
 #endif
 PropEnum(PlayerVR, DisplayRefreshRate, "Headset Refresh Rate"s, "Refresh rate requested from the headset when supported. Lower rates give the renderer more time per frame and avoid reprojected frames on standalone headsets"s, int, 0, "Runtime default"s, "72 Hz"s, "80 Hz"s, "90 Hz"s, "120 Hz"s);
-PropFloatDyn(PlayerVR, Orientation, "View orientation"s, "VR view orientation"s, -180.f, 180.f, 0.f);
-PropFloatDyn(PlayerVR, TableX, "View Offset X"s, "VR view X offset"s, -100.f, 100.f, 0.f);
-PropFloatDyn(PlayerVR, TableY, "View Offset Y"s, "VR view Y offset"s, -100.f, 100.f, 0.f);
-PropFloatDyn(PlayerVR, TableZ, "View Offset Z"s, "VR view Z offset"s, -100.f, 100.f, 0.f);
+PropFloatDyn(PlayerVR, RoomYaw, "Room Yaw"s, "VR room orientation around the vertical axis (headset tracking calibration)"s, -180.f, 180.f, 0.f);
+PropFloatDyn(PlayerVR, RoomOffsetX, "Room Offset X"s, "VR room X offset to correct imprecise headset room positioning"s, -1000.f, 1000.f, 0.f);
+PropFloatDyn(PlayerVR, RoomOffsetY, "Room Offset Y"s, "VR room Y offset to correct imprecise headset room positioning"s, -1000.f, 1000.f, 0.f);
+PropFloatDyn(PlayerVR, RoomOffsetZ, "Room Offset Z"s, "VR room Z offset to correct imprecise headset room positioning (e.g. miscalibrated floor height)"s, -1000.f, 1000.f, 0.f);
+PropFloatDyn(PlayerVR, TableOffsetY, "Table Y Offset"s,
+   "Per table VR view Y offset to account for a non standard distance between end of playfield and end of lockbar border"s, -100.f, 100.f, 0.f);
+PropFloatDyn(
+   PlayerVR, TableOffsetZ, "Table Z Offset"s, "Per table VR view Z offset to account for undefined or imprecise glass height definition"s, -100.f, 100.f, 0.f);
 PropFloat(PlayerVR, SeatedTilt, "Seated Play Tilt"s,
    "Tilt the cabinet toward the player for seated or reclined play (only changes the view, physics are unchanged). When non zero, 'Lock Feet to Ground' is forced off"s,
    -90.f, 90.f, 0.f);
@@ -255,8 +266,12 @@ PropBool(PlayerVR, SpatialAudioBackglass, "Backglass Spatial Audio"s,
 PropBool(PlayerVR, SpatialAudioPlayfield, "Playfield Spatial Audio"s,
    "Render playfield sounds as spatially positioned sources, binauralized for the VR headset, instead of the legacy static pan/fade channel mixing"s, true);
 PropFloatDyn(PlayerVR, ControllerCabYOffset, "Cabinet Y Offset"s, "Y offset to apply when using controller view centering"s, -150.f, 50.f, 0.f);
-PropFloatDyn(PlayerVR, ControllerLockbarScale, "Lockbar size ratio"s, "Lockbar size ratio to apply when using controller view centering"s, 0.5f, 2.0f, 1.f);
+PropFloatDyn(PlayerVR, ControllerCabZOffset, "Cabinet Z Offset"s, "Z offset to apply when using controller view centering"s, -50.f, 50.f, 0.f);
 PropFloatUnbounded(PlayerVR, ResFactor, "ResFactor"s, ""s, -1.f);
+PropBool(PlayerVR, OverrideLockbarWidth, "Custom Lockbar Width"s,
+   "Scale the virtual cabinet so that its lockbar matches the user defined lockbar width. If disabled, the cabinet is rendered at its native (table defined) size."s, true);
+PropBool(PlayerVR, OverrideLockbarHeight, "Custom Lockbar Height"s,
+   "Position the virtual cabinet so that its lockbar matches the user defined lockbar height. If disabled, the cabinet stands at its native (table defined) height."s, true);
 PropBool(PlayerVR, LockFeetToGround, "Lock Feet to Ground"s, "Lock cabinet feet to ground. This usually feels more natural (avoid floating cabinet) but may be deactivated for example for playing mini flipper seated at a desk."s, true);
 
 // Physics override profiles
@@ -1377,6 +1392,31 @@ PropIntUnbounded(Editor, WindowTop, "WindowTop"s, "Main window top"s, -1);
 PropIntUnbounded(Editor, WindowRight, "WindowRight"s, "Main window right"s, -1);
 PropIntUnbounded(Editor, WindowBottom, "WindowBottom"s, "Main window bottom"s, -1);
 PropBool(Editor, WindowMaximized, "WindowMaximized"s, "Main window maximized"s, false);
+// Live editor navigation preferences
+#ifdef __APPLE__
+#define VPX_NAV_ALT_DEFAULT true
+#else
+#define VPX_NAV_ALT_DEFAULT false
+#endif
+PropBool(Editor, NavOrbitSelection, "Orbit Around Selection"s, "Orbit and zoom around the selected parts instead of the view center"s, true);
+PropBool(Editor, NavZoomToMouse, "Zoom To Mouse Position"s, "Mouse wheel zooms toward the cursor instead of the view center"s, true);
+PropBool(Editor, NavInvertZoom, "Invert Zoom"s, "Invert the direction of the mouse wheel zoom"s, false);
+PropFloat(Editor, NavOrbitSensitivity, "Orbit Sensitivity"s, "Speed of the camera orbit when dragging"s, 0.1f, 5.f, 1.f);
+PropFloat(Editor, NavFovY, "Field Of View"s, "Vertical field of view of the editor perspective camera, in degrees (39.6 is a 50 mm lens on a 24 mm sensor)"s, 15.f, 100.f, 39.6f);
+PropInt(Editor, NavSelectionDisplay, "Selection Display"s, "How selected parts are shown: 0 = edges only (surface shading untouched), 1 = edges and tint, 2 = not shown"s, 0, 2, 0);
+PropBool(Editor, NavAutoDepth, "Auto Depth"s, "With nothing selected, orbit around the 3D point under the cursor when the drag starts"s, true);
+PropBool(Editor, NavAltMiddleButton, "Alt Acts As Middle Button"s, "Alt + left drag orbits / pans like the middle button (for trackpads and mice without a middle button)"s, VPX_NAV_ALT_DEFAULT);
+PropBool(Editor, NavTrackpad, "Trackpad Scrolling"s, "Two finger scroll pans the view, Ctrl / Cmd + scroll zooms (instead of scroll zooming)"s, VPX_NAV_ALT_DEFAULT);
+PropBool(Editor, NavEmulateNumpad, "Emulate Numpad"s, "Top row digits act as the numpad view keys (1 front, 3 side, 7 top, 5 perspective/orthographic, 2/4/6/8 orbit step); edit mode only, while the table is not playing"s, VPX_NAV_ALT_DEFAULT);
+PropBool(Editor, NavBlenderTransform, "Blender Transform Keys"s, "G / R / S start a Blender style modal transform driven by the mouse instead of showing the gizmo"s, true);
+PropBool(Editor, SnapEnabled, "Snapping"s, "Snap gizmo and G / R / S transforms to the increments below (Ctrl inverts the snapping while transforming)"s, false);
+PropInt(Editor, SnapTarget, "Snap Target"s, "0 = increment (grid), 1 = points (drag points and centers of other parts, G only)"s, 0, 1, 0);
+PropFloat(Editor, SnapMove, "Snap Move Increment"s, "Move snapping increment, in VP units"s, 0.01f, 1000.f, 10.f);
+PropFloat(Editor, SnapRotate, "Snap Rotate Increment"s, "Rotation snapping increment, in degrees"s, 0.1f, 180.f, 15.f);
+PropFloat(Editor, SnapScale, "Snap Scale Increment"s, "Scale snapping increment (scale factor)"s, 0.001f, 10.f, 0.1f);
+PropBool(Editor, SnapAffectMove, "Snap Moves"s, "Snapping applies to moves"s, true);
+PropBool(Editor, SnapAffectRotate, "Snap Rotations"s, "Snapping applies to rotations"s, true);
+PropBool(Editor, SnapAffectScale, "Snap Scales"s, "Snapping applies to scales"s, true);
 PropIntUnbounded(Editor, ImageMngPosX, "ImageMngPosX"s, "Image Manager window X position"s, 0);
 PropIntUnbounded(Editor, ImageMngPosY, "ImageMngPosY"s, "Image Manager window Y position"s, 0);
 PropIntUnbounded(Editor, ImageMngWidth, "ImageMngWidth"s, "Image Manager window width"s, 1000);
@@ -1431,6 +1471,14 @@ PropString(Editor, ExternalScriptEditor, "ExternalScriptEditor"s, "Command used 
 PropFloatUnbounded(Editor, ThrowBallMass, "ThrowBallMass"s, "Mass of thrown ball in 'throw ball' debugging mode"s, 1.f);
 PropIntUnbounded(Editor, ThrowBallSize, "ThrowBallSize"s, "Size of thrown ball in 'throw ball' debugging mode"s, 50);
 PropBool(Editor, RenderSolid, "RenderSolid"s, "Render solid in viewport/editor"s, true);
+
+// Live Editor (ImGui based live table editor)
+PropString(LiveEditor, Layout1, "Layout1"s, "Editor area layout for layout slot 1 (JSON)"s, ""s);
+PropString(LiveEditor, Layout2, "Layout2"s, "Editor area layout for layout slot 2 (JSON)"s, ""s);
+PropString(LiveEditor, Layout3, "Layout3"s, "Editor area layout for layout slot 3 (JSON)"s, ""s);
+PropString(LiveEditor, Layout4, "Layout4"s, "Editor area layout for layout slot 4 (JSON)"s, ""s);
+PropString(LiveEditor, Layout5, "Layout5"s, "Editor area layout for layout slot 5 (JSON)"s, ""s);
+PropInt(LiveEditor, LayoutActive, "LayoutActive"s, "Active editor area layout slot (1-based)"s, 1, 5, 1);
 
 // Code View settings
 PropInt(CVEdit, BackGroundColor, "BackGroundColor"s, ""s, 0x000000, 0xFFFFFF, RGB(255, 255, 255));

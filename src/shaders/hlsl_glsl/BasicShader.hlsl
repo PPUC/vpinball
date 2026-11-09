@@ -134,6 +134,7 @@ struct VS_NOTEX_OUTPUT
    float3 worldPos : TEXCOORD0; // position in view space (vertex position * world matrix * view matrix)
    float3 tablePos : TEXCOORD1; // position in table space (vertex position * world matrix)
    float3 normal   : TEXCOORD2;
+   float2 tex0     : TEXCOORD3; // UVs are also needed by the notex variant as it may apply a normal map
 };
 
 struct VS_DEPTH_ONLY_NOTEX_OUTPUT
@@ -162,7 +163,7 @@ struct VS_UNSHADED_TEX_SHADOW_OUTPUT
 
 #include "BallShadows.fxh"
 
-float3x3 TBN_trafo(const float3 N, const float3 V, const float2 uv, const float3 dpx, const float3 dpy)
+float3x3 TBN_trafo(const float3 N, const float3 pos, const float2 uv, const float3 dpx, const float3 dpy)
 {
    // derivatives: edge vectors for tri-pos and tri-uv
    const float2 duvx = ddx(uv);
@@ -178,10 +179,10 @@ float3x3 TBN_trafo(const float3 N, const float3 V, const float2 uv, const float3
    return float3x3(T, B, N * sqrt( max(dot(T,T), dot(B,B)) )); // inverse scale, as will be normalized anyhow later-on (to save some mul's)
 }
 
-float3 normal_map(const float3 N, const float3 V, const float2 uv)
+float3 normal_map(const float3 N, const float3 pos, const float2 uv)
 {
-   const float3 dpx = ddx(V); //!! these 2 are declared here instead of TBN_trafo() to workaround a compiler quirk
-   const float3 dpy = ddy(V);
+   const float3 dpx = ddx(pos); //!! these 2 are declared here instead of TBN_trafo() to workaround a compiler quirk
+   const float3 dpy = ddy(pos);
 
    const float3 tn = tex2D(tex_base_normalmap, uv).xyz * (255. / 127.) - (128. / 127.);
    BRANCH if (objectSpaceNormalMap)
@@ -190,7 +191,7 @@ float3 normal_map(const float3 N, const float3 V, const float2 uv)
    }
    else
    { // Tangent space
-      return normalize(mul(tn, TBN_trafo(N, V, uv, dpx, dpy)));
+      return normalize(mul(tn, TBN_trafo(N, pos, uv, dpx, dpy)));
    }
 }
 
@@ -276,6 +277,7 @@ VS_NOTEX_OUTPUT vs_notex_main (const in float4 vPosition : POSITION0,
    Out.tablePos = mul(vPosition, matWorld).xyz;
    Out.worldPos = P;
    Out.normal = N;
+   Out.tex0 = tc;
    return Out; 
 }
 
@@ -316,7 +318,7 @@ VS_UNSHADED_TEX_SHADOW_OUTPUT vs_main_unshaded_with_texture_shadow(const in floa
     return Out;
 }
 
-float4 ps_main(const in VS_NOTEX_OUTPUT IN, float2 screenSpace : VPOS, uniform bool is_metal, uniform bool doReflections, uniform bool doRefractions) : COLOR
+float4 ps_main(const in VS_NOTEX_OUTPUT IN, float2 screenSpace : VPOS, uniform bool is_metal, uniform bool doNormalMapping, uniform bool doReflections, uniform bool doRefractions) : COLOR
 {
    const float3 diffuse  = cBase_Alpha.xyz;
    const float3 glossy   = is_metal ? cBase_Alpha.xyz : cGlossy_ImageLerp.xyz*0.08;
@@ -324,7 +326,9 @@ float4 ps_main(const in VS_NOTEX_OUTPUT IN, float2 screenSpace : VPOS, uniform b
    const float  edge     = is_metal ? 1.0 : Roughness_WrapL_Edge_Thickness.z;
 
    const float3 V = normalize( /*camera=0,0,0,1*/-IN.worldPos); //!! have a "real" view vector instead that mustn't assume that viewer is directly in front of monitor? (e.g. cab setup) -> viewer is always relative to playfield and/or user definable
-   const float3 N = normalize(IN.normal);
+   float3 N = normalize(IN.normal);
+   BRANCH if (doNormalMapping)
+      N = normal_map(N, -IN.worldPos, IN.tex0);
 
    float4 color = float4(lightLoop(IN.worldPos.xyz, N, V, diffuse, glossy, specular, edge, is_metal), cBase_Alpha.a);
 
@@ -376,7 +380,7 @@ float4 ps_main_texture(const in VS_OUTPUT IN, float2 screenSpace : VPOS, uniform
    const float3 V = normalize(/*camera=0,0,0,1*/-IN.worldPos);
    float3 N = normalize(IN.normal);
    BRANCH if (doNormalMapping)
-      N = normal_map(N, V, IN.tex0);
+      N = normal_map(N, -IN.worldPos, IN.tex0);
 
    float4 color = float4(lightLoop(IN.worldPos, N, V, diffuse, glossy, specular, edge, is_metal), pixel.a);
 
@@ -478,6 +482,7 @@ VS_NOTEX_OUTPUT vs_kicker (const in float4 vPosition : POSITION0,
    Out.worldPos = P;
    Out.tablePos = mul(vPosition, matWorld).xyz;
    Out.normal = N;
+   Out.tex0 = tc;
    // Offset projected position to always render kicker depth "above" playfield (legacy behavior that breaks VR use of the table, was needed since playfield transparency and under playfield objects used to be unsupported)
    float4 P2 = vPosition;
    P2.z -= 30.0;
@@ -489,14 +494,22 @@ VS_NOTEX_OUTPUT vs_kicker (const in float4 vPosition : POSITION0,
 // Techniques
 //
 
-technique basic_without_texture                   { pass P0 { VertexShader = compile vs_3_0 vs_notex_main(); PixelShader = compile ps_3_0 ps_main(0, 0, 0); } }
-technique basic_without_texture_isMetal           { pass P0 { VertexShader = compile vs_3_0 vs_notex_main(); PixelShader  = compile ps_3_0 ps_main(1, 0, 0); } }
-technique basic_without_texture_refl              { pass P0 { VertexShader = compile vs_3_0 vs_notex_main(); PixelShader = compile ps_3_0 ps_main(0, 1, 0); } }
-technique basic_without_texture_refl_isMetal      { pass P0 { VertexShader = compile vs_3_0 vs_notex_main(); PixelShader = compile ps_3_0 ps_main(1, 1, 0); } }
-technique basic_without_texture_refr              { pass P0 { VertexShader = compile vs_3_0 vs_notex_main(); PixelShader = compile ps_3_0 ps_main(0, 0, 1); } }
-technique basic_without_texture_refr_isMetal      { pass P0 { VertexShader = compile vs_3_0 vs_notex_main(); PixelShader = compile ps_3_0 ps_main(1, 0, 1); } }
-technique basic_without_texture_refr_refl         { pass P0 { VertexShader = compile vs_3_0 vs_notex_main(); PixelShader = compile ps_3_0 ps_main(0, 1, 1); } }
-technique basic_without_texture_refr_refl_isMetal { pass P0 { VertexShader = compile vs_3_0 vs_notex_main(); PixelShader = compile ps_3_0 ps_main(1, 1, 1); } }
+technique basic_without_texture                         { pass P0 { VertexShader = compile vs_3_0 vs_notex_main(); PixelShader = compile ps_3_0 ps_main(0, 0, 0, 0); } }
+technique basic_without_texture_isMetal                 { pass P0 { VertexShader = compile vs_3_0 vs_notex_main(); PixelShader  = compile ps_3_0 ps_main(1, 0, 0, 0); } }
+technique basic_without_texture_normal                  { pass P0 { VertexShader = compile vs_3_0 vs_notex_main(); PixelShader = compile ps_3_0 ps_main(0, 1, 0, 0); } }
+technique basic_without_texture_normal_isMetal          { pass P0 { VertexShader = compile vs_3_0 vs_notex_main(); PixelShader = compile ps_3_0 ps_main(1, 1, 0, 0); } }
+technique basic_without_texture_refl                    { pass P0 { VertexShader = compile vs_3_0 vs_notex_main(); PixelShader = compile ps_3_0 ps_main(0, 0, 1, 0); } }
+technique basic_without_texture_refl_isMetal            { pass P0 { VertexShader = compile vs_3_0 vs_notex_main(); PixelShader = compile ps_3_0 ps_main(1, 0, 1, 0); } }
+technique basic_without_texture_refl_normal             { pass P0 { VertexShader = compile vs_3_0 vs_notex_main(); PixelShader = compile ps_3_0 ps_main(0, 1, 1, 0); } }
+technique basic_without_texture_refl_normal_isMetal     { pass P0 { VertexShader = compile vs_3_0 vs_notex_main(); PixelShader = compile ps_3_0 ps_main(1, 1, 1, 0); } }
+technique basic_without_texture_refr                    { pass P0 { VertexShader = compile vs_3_0 vs_notex_main(); PixelShader = compile ps_3_0 ps_main(0, 0, 0, 1); } }
+technique basic_without_texture_refr_isMetal            { pass P0 { VertexShader = compile vs_3_0 vs_notex_main(); PixelShader = compile ps_3_0 ps_main(1, 0, 0, 1); } }
+technique basic_without_texture_refr_normal             { pass P0 { VertexShader = compile vs_3_0 vs_notex_main(); PixelShader = compile ps_3_0 ps_main(0, 1, 0, 1); } }
+technique basic_without_texture_refr_normal_isMetal     { pass P0 { VertexShader = compile vs_3_0 vs_notex_main(); PixelShader = compile ps_3_0 ps_main(1, 1, 0, 1); } }
+technique basic_without_texture_refr_refl               { pass P0 { VertexShader = compile vs_3_0 vs_notex_main(); PixelShader = compile ps_3_0 ps_main(0, 0, 1, 1); } }
+technique basic_without_texture_refr_refl_isMetal       { pass P0 { VertexShader = compile vs_3_0 vs_notex_main(); PixelShader = compile ps_3_0 ps_main(1, 0, 1, 1); } }
+technique basic_without_texture_refr_refl_normal        { pass P0 { VertexShader = compile vs_3_0 vs_notex_main(); PixelShader = compile ps_3_0 ps_main(0, 1, 1, 1); } }
+technique basic_without_texture_refr_refl_normal_isMetal { pass P0 { VertexShader = compile vs_3_0 vs_notex_main(); PixelShader = compile ps_3_0 ps_main(1, 1, 1, 1); } }
 
 technique basic_with_texture                          { pass P0 { VertexShader = compile vs_3_0 vs_main(); PixelShader = compile ps_3_0 ps_main_texture(0, 0, 0, 0, 0); } }
 technique basic_with_texture_isMetal                  { pass P0 { VertexShader = compile vs_3_0 vs_main(); PixelShader = compile ps_3_0 ps_main_texture(0, 1, 0, 0, 0); } }
@@ -542,7 +555,7 @@ technique unshaded_with_texture_shadow { pass P0 { VertexShader = compile vs_3_0
 technique bg_decal_without_texture { pass P0 { VertexShader = compile vs_3_0 vs_notex_main(); PixelShader  = compile ps_3_0 ps_main_bg_decal(); } }
 technique bg_decal_with_texture { pass P0 { VertexShader = compile vs_3_0 vs_main(); PixelShader  = compile ps_3_0 ps_main_bg_decal_texture(); } }
 
-technique kickerBoolean_isMetal { pass P0 { VertexShader = compile vs_3_0 vs_kicker(); PixelShader = compile ps_3_0 ps_main(1, 0, 0); } }
-technique kickerBoolean { pass P0 { VertexShader = compile vs_3_0 vs_kicker(); PixelShader = compile ps_3_0 ps_main(0, 0, 0); } }
+technique kickerBoolean_isMetal { pass P0 { VertexShader = compile vs_3_0 vs_kicker(); PixelShader = compile ps_3_0 ps_main(1, 0, 0, 0); } }
+technique kickerBoolean { pass P0 { VertexShader = compile vs_3_0 vs_kicker(); PixelShader = compile ps_3_0 ps_main(0, 0, 0, 0); } }
 
 #include "ClassicLightShader.hlsl"

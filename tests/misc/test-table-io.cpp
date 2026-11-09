@@ -3,6 +3,7 @@
 #include "core/stdafx.h"
 #include "../vpx-test.h"
 
+#include "core/AppCommands.h"
 #include "core/VPApp.h"
 #include "math/Mesh.h"
 #include "math/MeshUtils.h"
@@ -907,6 +908,102 @@ TEST_CASE("VPZ pack save/load round-trip")
 }
 
 
+TEST_CASE("Table file convert command")
+{
+   std::error_code ec;
+   const std::filesystem::path source = GetAssetPath() / "test000-default-table.vpx";
+   const std::filesystem::path zipPath = GetTmpDir() / "convert-target.vpz";
+   const std::filesystem::path folderPath = GetTmpDir() / "convert-pack";
+   const std::filesystem::path backPath = GetTmpDir() / "convert-back.vpx";
+   std::filesystem::remove(zipPath, ec);
+   std::filesystem::remove_all(folderPath, ec);
+   std::filesystem::remove(backPath, ec);
+
+   CComObject<PinTable> *original;
+   CComObject<PinTable>::CreateInstance(&original);
+   original->AddRef();
+   TestFileFeedback feedback;
+   REQUIRE(SUCCEEDED(original->LoadGameFromFilename(source, feedback)));
+
+   SUBCASE("vpx to vpz file and back")
+   {
+      {
+         ConvertTableCommand command(source, zipPath);
+         command.Execute();
+         REQUIRE(command.GetExitCode() == 0);
+      }
+      // A .vpz file is a zip archive
+      {
+         std::ifstream in(zipPath, std::ios::binary);
+         char header[2] = { 0, 0 };
+         in.read(header, 2);
+         CHECK(header[0] == 'P');
+         CHECK(header[1] == 'K');
+      }
+      {
+         ConvertTableCommand command(zipPath, backPath);
+         command.Execute();
+         REQUIRE(command.GetExitCode() == 0);
+      }
+      // A .vpx file is an OLE container
+      {
+         std::ifstream in(backPath, std::ios::binary);
+         char header[2] = { 0, 0 };
+         in.read(header, 2);
+         CHECK(header[0] == char(0xD0));
+         CHECK(header[1] == char(0xCF));
+      }
+      CComObject<PinTable> *reloaded;
+      CComObject<PinTable>::CreateInstance(&reloaded);
+      reloaded->AddRef();
+      TestFileFeedback loadFeedback;
+      REQUIRE(SUCCEEDED(reloaded->LoadGameFromFilename(backPath, loadFeedback)));
+      CheckSameTableContent(original, reloaded);
+      reloaded->Release();
+      std::filesystem::remove(zipPath, ec);
+      std::filesystem::remove(backPath, ec);
+   }
+
+   SUBCASE("vpx to vpz folder pack and back")
+   {
+      // Folder pack mode is selected by the target being an existing folder
+      REQUIRE(std::filesystem::create_directories(folderPath, ec));
+      {
+         ConvertTableCommand command(source, folderPath);
+         command.Execute();
+         REQUIRE(command.GetExitCode() == 0);
+      }
+      CHECK(std::filesystem::exists(folderPath / "manifest.json"));
+      CHECK(std::filesystem::exists(folderPath / "table.json"));
+      {
+         ConvertTableCommand command(folderPath, backPath);
+         command.Execute();
+         REQUIRE(command.GetExitCode() == 0);
+      }
+      CComObject<PinTable> *reloaded;
+      CComObject<PinTable>::CreateInstance(&reloaded);
+      reloaded->AddRef();
+      TestFileFeedback loadFeedback;
+      REQUIRE(SUCCEEDED(reloaded->LoadGameFromFilename(backPath, loadFeedback)));
+      CheckSameTableContent(original, reloaded);
+      reloaded->Release();
+      std::filesystem::remove_all(folderPath, ec);
+      std::filesystem::remove(backPath, ec);
+   }
+
+   SUBCASE("a missing source fails without producing a target")
+   {
+      const std::filesystem::path missing = GetTmpDir() / "no-such-table.vpx";
+      ConvertTableCommand command(missing, zipPath);
+      command.Execute();
+      CHECK(command.GetExitCode() != 0);
+      CHECK(!std::filesystem::exists(zipPath));
+   }
+
+   original->Release();
+}
+
+
 TEST_CASE("VPZ pack keeps fractional flipper rubber dimensions")
 {
    std::error_code ec;
@@ -1279,6 +1376,56 @@ TEST_CASE("VPZ partial pack export and import")
       std::filesystem::remove_all(packPath, ec);
    }
 
+   SUBCASE("repeated import of a pack with sanitized asset names keeps references resolvable")
+   {
+      // A material whose name cannot be used as a file name is saved under a sanitized file stem and
+      // carries a "name" field: importing the pack twice must not rename it (identical content) nor
+      // leave its document name stale, otherwise the part references would resolve to nothing
+      CComObject<PinTable> *source;
+      CComObject<PinTable>::CreateInstance(&source);
+      source->AddRef();
+      TestFileFeedback sourceFeedback;
+      REQUIRE(SUCCEEDED(source->LoadGameFromFilename(GetAssetPath() / "test000-default-table.vpx", sourceFeedback)));
+      // Rename a material and a part to names requiring filename sanitization
+      Material *const mat = source->GetMaterialList().front();
+      mat->m_name = "mat:al";
+      IEditable *const part = source->GetParts().front();
+      const std::filesystem::path packPath = GetTmpDir() / "sanitized.vpz";
+      std::filesystem::remove_all(packPath, ec);
+      TestFileFeedback saveFeedback;
+      REQUIRE(SUCCEEDED(source->SavePartsToJSONPack(packPath, { part }, saveFeedback)));
+
+      CComObject<PinTable> *target;
+      CComObject<PinTable>::CreateInstance(&target);
+      target->AddRef();
+      TestFileFeedback targetFeedback;
+      REQUIRE(SUCCEEDED(target->LoadGameFromFilename(GetAssetPath() / "test000-default-table.vpx", targetFeedback)));
+      target->GetMaterialList().front()->m_name = "mat:al"; // Same name, identical content
+
+      for (int i = 0; i < 2; i++)
+      {
+         const std::unique_ptr<JSONSerializer::Deserializer> reader = target->CreateImportDeserializer(packPath, PartImportMergeStrategy::RenameConflict);
+         REQUIRE(reader != nullptr);
+         CComObject<PinTable> *pack;
+         CComObject<PinTable>::CreateInstance(&pack);
+         pack->AddRef();
+         TestFileFeedback loadFeedback;
+         REQUIRE(SUCCEEDED(pack->LoadGameFromJSONPack(*reader, loadFeedback)));
+         REQUIRE(!pack->GetParts().empty());
+         const vector<IEditable *> imported = target->ImportParts(pack, nullptr);
+         pack->Release();
+         REQUIRE(!imported.empty());
+         // The imported part's material references resolve inside the edited table
+         for (IEditable *const p : imported)
+            if (p->GetItemType() == eItemSurface)
+               CHECK(target->GetMaterial(static_cast<Surface *>(p)->m_d.m_szTopMaterial) != target->GetMaterial(""s));
+      }
+
+      target->Release();
+      source->Release();
+      std::filesystem::remove_all(packPath, ec);
+   }
+
    table->Release();
 }
 
@@ -1324,6 +1471,12 @@ TEST_CASE("Mesh GLB round-trip")
    }
    // Morph target frame restores the vertex offsets
    CHECK(loaded.m_animationFrames[0].m_frameVerts[0].z == doctest::Approx(10.f));
+
+   // Resaving the loaded mesh must produce the exact same GLB: the VPU<->meters conversion
+   // uses a single double precision factor so saved values are fixed points of the round-trip
+   vector<uint8_t> glb2;
+   REQUIRE(loaded.SaveGLB(glb2));
+   CHECK(glb2 == glb);
 
    uint32_t jsonLength;
    memcpy(&jsonLength, glb.data() + 12, sizeof(jsonLength));

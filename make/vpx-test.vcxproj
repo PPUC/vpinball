@@ -61,6 +61,7 @@
     <ClCompile Include="../../tests/core/test-settings.cpp" />
     <ClCompile Include="../../tests/core/test-tabledb.cpp" />
     <ClCompile Include="../../tests/input/test-buttonmapping.cpp" />
+    <ClCompile Include="../../tests/input/test-inputaction.cpp" />
     <ClCompile Include="../../tests/input/test-plunger-kalman.cpp" />
     <ClCompile Include="../../tests/input/test-scancodes.cpp" />
     <ClCompile Include="../../tests/input/test-sensormapping.cpp" />
@@ -71,6 +72,7 @@
     <ClCompile Include="../../tests/misc/test-plugin-arrays.cpp" />
     <ClCompile Include="../../tests/misc/test-sound.cpp" />
     <ClCompile Include="../../tests/misc/test-table-io.cpp" />
+    <ClCompile Include="../../tests/misc/test-tbn-shader.cpp" />
     <ClCompile Include="../../tests/parts/test-ball.cpp" />
     <ClCompile Include="../../tests/parts/test-bumper.cpp" />
     <ClCompile Include="../../tests/parts/test-decal.cpp" />
@@ -112,7 +114,12 @@
     <ClCompile Include="../../tests/plugins/upscaledmd/test-upscalers.cpp" />
     <ClCompile Include="../../tests/render/test-base-render.cpp" />
     <ClCompile Include="../../tests/render/test-mirror-render.cpp" />
+    <ClCompile Include="../../tests/render/test-multiview-render.cpp" />
+    <ClCompile Include="../../tests/render/test-normalmap-render.cpp" />
     <ClCompile Include="../../tests/render/test-renderframe.cpp" />
+    <ClCompile Include="../../tests/render/test-vr-spaces.cpp" />
+    <ClCompile Include="../../tests/render/test-window.cpp" />
+    <ClCompile Include="../../tests/ui/test-arealayout.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="../../tests/physics/physics-harness.h" />
@@ -168,6 +175,22 @@
     <ContentWithTargetPath Include="$(SolutionDir)/../../tests/assets/test000-stereo-tb-Ref.webp">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <TargetPath>test-assets/%(Filename)%(Extension)</TargetPath>
+    </ContentWithTargetPath>
+    <ContentWithTargetPath Include="$(SolutionDir)/../../src/shaders/bgfx/common.sh">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <TargetPath>test-assets/shaders-src/%(Filename)%(Extension)</TargetPath>
+    </ContentWithTargetPath>
+    <ContentWithTargetPath Include="$(SolutionDir)/../../src/shaders/bgfx/fs_basic.sc">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <TargetPath>test-assets/shaders-src/%(Filename)%(Extension)</TargetPath>
+    </ContentWithTargetPath>
+    <ContentWithTargetPath Include="$(SolutionDir)/../../src/shaders/hlsl_glsl/BasicShader.hlsl">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <TargetPath>test-assets/shaders-src/%(Filename)%(Extension)</TargetPath>
+    </ContentWithTargetPath>
+    <ContentWithTargetPath Include="$(SolutionDir)/../../src/shaders/hlsl_glsl/BasicShader.glfx">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <TargetPath>test-assets/shaders-src/%(Filename)%(Extension)</TargetPath>
     </ContentWithTargetPath>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

@@ -57,6 +57,9 @@ set(SHADER_DEPS
    "${SRC_DIR}/SMAA.hlsl"
    "${SHADERC}"
    "${CMAKE_CURRENT_LIST_FILE}")
+# Shader bodies included by .sc files (fs_display.sc includes the CRT shaders)
+file(GLOB _shader_includes "${SRC_DIR}/*.fs")
+list(APPEND SHADER_DEPS ${_shader_includes})
 
 set(_tmp "")
 
@@ -276,6 +279,7 @@ function(group_postprocess)
       list(GET st_output ${k} st_o)
       process_shader(postprocess "vs_postprocess.sc" "vs_postprocess${st_o}" "vertex" "${st}")
       process_shader(postprocess "fs_pp_msaa_depth.sc" "fs_pp_msaa_depth${st_o}" "fragment" "${st}")
+      process_shader(postprocess "fs_pp_copy_depth.sc" "fs_pp_copy_depth${st_o}" "fragment" "${st}")
       process_shader(postprocess "fs_pp_mirror.sc" "fs_pp_mirror${st_o}" "fragment" "${st}")
       process_shader(postprocess "fs_pp_copy.sc" "fs_pp_copy${st_o}" "fragment" "${st}")
       process_shader(postprocess "fs_pp_bloom.sc" "fs_pp_bloom${st_o}" "fragment" "${st}")

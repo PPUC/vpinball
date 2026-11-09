@@ -214,6 +214,9 @@ if(PLATFORM STREQUAL "windows")
       hid.lib
       setupapi.lib
       dinput8.lib
+      opusfile.lib
+      opus.lib
+      ogg.lib
       spatialaudio.lib
       mysofa.lib
       zlibstatic.lib
@@ -384,6 +387,9 @@ elseif(PLATFORM STREQUAL "windows-mingw")
       hidapi64
       openxr_loader64
       winevbs64
+      opusfile
+      opus
+      ogg
       spatialaudio
       mysofa
       z
@@ -469,6 +475,7 @@ elseif(PLATFORM STREQUAL "macos")
    if(RENDERER STREQUAL "BGFX")
       target_compile_definitions(vpinball PRIVATE
          ENABLE_BGFX
+         $<$<BOOL:${ENABLE_XR}>:ENABLE_XR>
 
          $<IF:$<CONFIG:Debug>,BX_CONFIG_DEBUG=1,BX_CONFIG_DEBUG=0>
       )
@@ -506,6 +513,9 @@ elseif(PLATFORM STREQUAL "macos")
       freeimage
       hidapi
       winevbs
+      opusfile
+      opus
+      ogg
       spatialaudio
       mysofa
       z
@@ -513,6 +523,10 @@ elseif(PLATFORM STREQUAL "macos")
    )
 
    target_link_libraries(vpinball PUBLIC "$<IF:$<STREQUAL:${RENDERER},BGFX>,bgfx;bimg_encode,glad>")
+
+   if(ENABLE_XR AND RENDERER STREQUAL "BGFX")
+      target_link_libraries(vpinball PUBLIC openxr_loader)
+   endif()
 
    set(RUNTIME_OUTPUT_NAME "$<IF:$<STREQUAL:${RENDERER},BGFX>,VPinballX_BGFX,VPinballX_GL>")
 
@@ -644,6 +658,9 @@ elseif(PLATFORM STREQUAL "linux")
       freeimage
       hidapi-hidraw
       winevbs
+      opusfile
+      opus
+      ogg
       spatialaudio
       mysofa
       z
@@ -806,6 +823,9 @@ elseif(PLATFORM STREQUAL "ios" OR PLATFORM STREQUAL "ios-simulator" OR PLATFORM 
       swscale
       winevbs
       zip
+      opusfile
+      opus
+      ogg
       spatialaudio
       mysofa
       z
@@ -930,6 +950,9 @@ elseif(PLATFORM STREQUAL "wasm")
       -ffp-contract=off
       -Wno-shorten-64-to-32
       -msimd128
+      -msse
+      -msse2
+      -mssse3
    )
 
    set(BUILD_LIBS_DIR "${CMAKE_SOURCE_DIR}/third-party/build-libs/${PLATFORM}-${ARCH}")
@@ -951,6 +974,9 @@ elseif(PLATFORM STREQUAL "wasm")
       freeimage
       winevbs
       zip
+      opusfile
+      opus
+      ogg
       spatialaudio
       mysofa
       pinmame
@@ -984,13 +1010,13 @@ elseif(PLATFORM STREQUAL "wasm")
       -sJSPI
       -sOFFSCREENCANVAS_SUPPORT
       -sALLOW_MEMORY_GROWTH=1
-      -sMAXIMUM_MEMORY=4GB
+      -sMAXIMUM_MEMORY=16GB
       -sINITIAL_MEMORY=512MB
       -sSTACK_SIZE=8MB
       -sDEFAULT_PTHREAD_STACK_SIZE=2MB
       -sPTHREAD_POOL_SIZE=32
       -lidbfs.js
-      -sEXPORTED_RUNTIME_METHODS=FS,IDBFS,callMain,UTF8ToString
+      -sEXPORTED_RUNTIME_METHODS=FS,IDBFS,callMain,UTF8ToString,stringToUTF8,lengthBytesUTF8
       -Wl,--allow-multiple-definition
       "--preload-file=${CMAKE_SOURCE_DIR}/src/assets@/assets"
       "--preload-file=${CMAKE_SOURCE_DIR}/src/scripts@/scripts"
@@ -1007,6 +1033,13 @@ elseif(PLATFORM STREQUAL "wasm")
       COMMAND "${CMAKE_COMMAND}" -E copy "${CMAKE_SOURCE_DIR}/apps/web/favicon.png" "${CMAKE_SOURCE_DIR}/apps/web/vpinball-logo.png" "${CMAKE_SOURCE_DIR}/apps/web/sw.js" "${CMAKE_SOURCE_DIR}/src/assets/web/monaco-editor.js" "$<TARGET_FILE_DIR:vpinball>"
       COMMAND "${CMAKE_COMMAND}" -E copy_directory "${CMAKE_SOURCE_DIR}/src/assets/web/monaco" "$<TARGET_FILE_DIR:vpinball>/monaco"
    )
+
+   foreach(TEMPLATE blankTable strippedTable exampleTable lightSeqTable)
+      add_custom_command(TARGET vpinball POST_BUILD
+         COMMAND "${CMAKE_COMMAND}" -E tar cf "$<TARGET_FILE_DIR:vpinball>/${TEMPLATE}.zip" --format=zip ${TEMPLATE}.vpz
+         WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/src/assets"
+      )
+   endforeach()
 
    set_target_properties(vpinball PROPERTIES
       SUFFIX ".html"

@@ -24,7 +24,7 @@ namespace VPX
 class SoundPlayer
 {
 public:
-   static SoundPlayer* Create(const AudioPlayer* audioPlayer, Sound* sound);
+   static SoundPlayer* Create(const AudioPlayer* audioPlayer, Sound* sound, SoundOutTypes target);
    static SoundPlayer* Create(const AudioPlayer* audioPlayer, const std::filesystem::path& filename);
    ~SoundPlayer();
 
@@ -40,13 +40,13 @@ public:
 
    bool IsPlaying() const;
 
-   void SetMainVolume(float backglassVolume, float playfieldVolume);
+   void SetMainVolume(float backglassVolume, float playfieldVolume, float hapticVolume);
    void SetVolume(float volume);
 
    SoundOutTypes GetOutputTarget() const { return m_outputTarget; }
 
 private:
-   SoundPlayer(const AudioPlayer* audioPlayer, Sound* sound);
+   SoundPlayer(const AudioPlayer* audioPlayer, Sound* sound, SoundOutTypes target);
    SoundPlayer(const AudioPlayer* audioPlayer, const std::filesystem::path& filename);
 
    const class AudioPlayer* const m_audioPlayer;
@@ -61,6 +61,7 @@ private:
    void UpdateDoppler(float x, float y, float z);
 
    std::unique_ptr<ma_decoder> m_decoder;
+   uint32_t m_sourceSampleRate = 0; // Sample rate of the file decoded by m_decoder (which outputs the engine rate), 0 without m_decoder
    std::unique_ptr<ma_sound> m_sound;
    std::unique_ptr<SpatialAudioSource> m_spatialSource;
    std::unique_ptr<vpx_node> m_vpxMixNode; // Legacy channel mixing node, used when spatial audio is disabled
@@ -75,7 +76,11 @@ private:
    // Shared with the loop-restart task enqueued by OnSoundEnd on the audio thread, so a task
    // dispatched around destruction never calls ma_sound_start on an uninitialized/freed sound
    const std::shared_ptr<std::atomic<bool>> m_alive = std::make_shared<std::atomic<bool>>(true);
-   mutable progschj::ThreadPool m_commandQueue; // Worker thread on which all commands are dispatched
+   // A table keeps a player for each of its sounds played (and for each copy playing at once) until it
+   // ends, so all players dispatch to one shared worker thread which runs their commands in order.
+   // Each player holds a reference so the pool outlives the destructor's command barrier
+   static std::shared_ptr<progschj::ThreadPool> SharedCommandQueue();
+   const std::shared_ptr<progschj::ThreadPool> m_commandQueue = SharedCommandQueue();
 
    const string m_callbackId;
    static void OnSoundEnd(void* pUserData, ma_sound* pSound);

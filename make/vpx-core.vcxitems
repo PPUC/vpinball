@@ -54,6 +54,7 @@
     <ItemGroup>
       <_VpxShaderInputs Include="$(SolutionDir)..\..\src\shaders\bgfx\*.sc" />
       <_VpxShaderInputs Include="$(SolutionDir)..\..\src\shaders\bgfx\*.sh" />
+      <_VpxShaderInputs Include="$(SolutionDir)..\..\src\shaders\bgfx\*.fs" />
       <_VpxShaderInputs Include="$(SolutionDir)..\..\src\shaders\bgfx\*.hlsl" />
       <_VpxShaderInputs Include="$(SolutionDir)..\..\src\shaders\bgfx\shaders.cmake" />
       <_VpxShaderInputs Include="$(VpxShaderc)" />
@@ -73,7 +74,7 @@
   </Target>
   <ItemDefinitionGroup>
     <Link>
-      <AdditionalDependencies>spatialaudio.lib;mysofa.lib;zlibstatic.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>opusfile.lib;opus.lib;ogg.lib;spatialaudio.lib;mysofa.lib;zlibstatic.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup>
@@ -835,6 +836,7 @@
     </ClCompile>
     <ClCompile Include="$(SolutionDir)/../../src/audio/AudioPlayer.cpp" />
     <ClCompile Include="$(SolutionDir)/../../src/audio/AudioStreamPlayer.cpp" />
+    <ClCompile Include="$(SolutionDir)/../../src/audio/MixNode.cpp" />
     <ClCompile Include="$(SolutionDir)/../../src/audio/SoundPlayer.cpp" />
     <ClCompile Include="$(SolutionDir)/../../src/audio/SpatialAudio.cpp" />
     <ClCompile Include="$(SolutionDir)/../../src/core/stdafx.cpp">
@@ -928,6 +930,7 @@
     <ClCompile Include="$(SolutionDir)/../../src/renderer/RenderProbe.cpp" />
     <ClCompile Include="$(SolutionDir)/../../src/renderer/RenderState.cpp" />
     <ClCompile Include="$(SolutionDir)/../../src/renderer/RenderTarget.cpp" />
+    <ClCompile Include="$(SolutionDir)/../../src/renderer/RenderView.cpp" />
     <ClCompile Include="$(SolutionDir)/../../src/renderer/Renderer.cpp" />
     <ClCompile Include="$(SolutionDir)/../../src/renderer/Sampler.cpp" />
     <ClCompile Include="$(SolutionDir)/../../src/renderer/Shader.cpp" />
@@ -938,6 +941,7 @@
     <ClCompile Include="$(SolutionDir)/../../src/renderer/VertexBuffer.cpp" />
     <ClCompile Include="$(SolutionDir)/../../src/renderer/ViewSetup.cpp" />
     <ClCompile Include="$(SolutionDir)/../../src/renderer/VRDevice.cpp" />
+    <ClCompile Include="$(SolutionDir)/../../src/renderer/VRSpaces.cpp" />
     <ClCompile Include="$(SolutionDir)/../../src/renderer/Window.cpp" />
     <ClCompile Include="$(SolutionDir)/../../src/ui/EditorClipboard.cpp" />
     <ClCompile Include="$(SolutionDir)/../../src/ui/LoadProgress.cpp" />
@@ -949,38 +953,46 @@
     <ClCompile Include="$(SolutionDir)/../../src/ui/live/PlotData.cpp" />
     <ClCompile Include="$(SolutionDir)/../../src/ui/live/PlumbOverlay.cpp" />
     <ClCompile Include="$(SolutionDir)/../../src/ui/live/EditorUI.cpp" />
-    <ClCompile Include="$(SolutionDir)/../../src/ui/live/editor/BallUIPart.cpp" />
-    <ClCompile Include="$(SolutionDir)/../../src/ui/live/editor/BumperUIPart.cpp" />
-    <ClCompile Include="$(SolutionDir)/../../src/ui/live/editor/DecalUIPart.cpp" />
-    <ClCompile Include="$(SolutionDir)/../../src/ui/live/editor/DispReelUIPart.cpp" />
+    <ClCompile Include="$(SolutionDir)/../../src/ui/live/FileDialog.cpp" />
+    <ClCompile Include="$(SolutionDir)/../../src/ui/live/editor/AreaLayout.cpp" />
+    <ClCompile Include="$(SolutionDir)/../../src/ui/live/editor/BlueprintContextMenu.cpp" />
+    <ClCompile Include="$(SolutionDir)/../../src/ui/live/editor/BlueprintPane.cpp" />
+    <ClCompile Include="$(SolutionDir)/../../src/ui/live/editor/BlueprintRenderContext.cpp" />
+    <ClCompile Include="$(SolutionDir)/../../src/ui/live/editor/parts/BallUIPart.cpp" />
+    <ClCompile Include="$(SolutionDir)/../../src/ui/live/editor/parts/BumperUIPart.cpp" />
+    <ClCompile Include="$(SolutionDir)/../../src/ui/live/editor/parts/DecalUIPart.cpp" />
+    <ClCompile Include="$(SolutionDir)/../../src/ui/live/editor/parts/DispReelUIPart.cpp" />
     <ClCompile Include="$(SolutionDir)/../../src/ui/live/editor/EditorChrome.cpp" />
-    <ClCompile Include="$(SolutionDir)/../../src/ui/live/editor/EditorUIPart.cpp" />
-    <ClCompile Include="$(SolutionDir)/../../src/ui/live/editor/EditorUIPartRegistry.cpp" />
-    <ClCompile Include="$(SolutionDir)/../../src/ui/live/editor/FlasherUIPart.cpp" />
-    <ClCompile Include="$(SolutionDir)/../../src/ui/live/editor/FlipperUIPart.cpp" />
-    <ClCompile Include="$(SolutionDir)/../../src/ui/live/editor/GateUIPart.cpp" />
-    <ClCompile Include="$(SolutionDir)/../../src/ui/live/editor/HitTargetUIPart.cpp" />
-    <ClCompile Include="$(SolutionDir)/../../src/ui/live/editor/KickerUIPart.cpp" />
-    <ClCompile Include="$(SolutionDir)/../../src/ui/live/editor/LightUIPart.cpp" />
-    <ClCompile Include="$(SolutionDir)/../../src/ui/live/editor/LightSeqUIPart.cpp" />
+    <ClCompile Include="$(SolutionDir)/../../src/ui/live/editor/parts/EditorUIPart.cpp" />
+    <ClCompile Include="$(SolutionDir)/../../src/ui/live/editor/parts/EditorUIPartRegistry.cpp" />
+    <ClCompile Include="$(SolutionDir)/../../src/ui/live/editor/parts/FlasherUIPart.cpp" />
+    <ClCompile Include="$(SolutionDir)/../../src/ui/live/editor/parts/FlipperUIPart.cpp" />
+    <ClCompile Include="$(SolutionDir)/../../src/ui/live/editor/parts/GateUIPart.cpp" />
+    <ClCompile Include="$(SolutionDir)/../../src/ui/live/editor/parts/HitTargetUIPart.cpp" />
+    <ClCompile Include="$(SolutionDir)/../../src/ui/live/editor/parts/KickerUIPart.cpp" />
+    <ClCompile Include="$(SolutionDir)/../../src/ui/live/editor/ops/LayerSpaceChangeOp.cpp" />
+    <ClCompile Include="$(SolutionDir)/../../src/ui/live/editor/parts/LightUIPart.cpp" />
+    <ClCompile Include="$(SolutionDir)/../../src/ui/live/editor/parts/LightSeqUIPart.cpp" />
     <ClCompile Include="$(SolutionDir)/../../src/ui/live/editor/LiveRenderContext.cpp" />
     <ClCompile Include="$(SolutionDir)/../../src/ui/live/editor/OutlinerPanel.cpp" />
     <ClCompile Include="$(SolutionDir)/../../src/ui/live/editor/PartLibraryPanel.cpp" />
-    <ClCompile Include="$(SolutionDir)/../../src/ui/live/editor/PartGroupUIPart.cpp" />
-    <ClCompile Include="$(SolutionDir)/../../src/ui/live/editor/PlungerUIPart.cpp" />
-    <ClCompile Include="$(SolutionDir)/../../src/ui/live/editor/PrimitiveUIPart.cpp" />
+    <ClCompile Include="$(SolutionDir)/../../src/ui/live/editor/parts/PartGroupUIPart.cpp" />
+    <ClCompile Include="$(SolutionDir)/../../src/ui/live/editor/parts/PlungerUIPart.cpp" />
+    <ClCompile Include="$(SolutionDir)/../../src/ui/live/editor/parts/PrimitiveUIPart.cpp" />
     <ClCompile Include="$(SolutionDir)/../../src/ui/live/editor/PropertiesPanel.cpp" />
     <ClCompile Include="$(SolutionDir)/../../src/ui/live/editor/PropertyPane.cpp" />
-    <ClCompile Include="$(SolutionDir)/../../src/ui/live/editor/RampUIPart.cpp" />
+    <ClCompile Include="$(SolutionDir)/../../src/ui/live/editor/parts/RampUIPart.cpp" />
     <ClCompile Include="$(SolutionDir)/../../src/ui/live/editor/RendererInspectionModal.cpp" />
     <ClCompile Include="$(SolutionDir)/../../src/ui/live/editor/ResURIPicker.cpp" />
-    <ClCompile Include="$(SolutionDir)/../../src/ui/live/editor/RubberUIPart.cpp" />
+    <ClCompile Include="$(SolutionDir)/../../src/ui/live/editor/parts/RubberUIPart.cpp" />
     <ClCompile Include="$(SolutionDir)/../../src/ui/live/editor/ScriptPanel.cpp" />
-    <ClCompile Include="$(SolutionDir)/../../src/ui/live/editor/SpinnerUIPart.cpp" />
-    <ClCompile Include="$(SolutionDir)/../../src/ui/live/editor/SurfaceUIPart.cpp" />
-    <ClCompile Include="$(SolutionDir)/../../src/ui/live/editor/TextBoxUIPart.cpp" />
-    <ClCompile Include="$(SolutionDir)/../../src/ui/live/editor/TimerUIPart.cpp" />
-    <ClCompile Include="$(SolutionDir)/../../src/ui/live/editor/TriggerUIPart.cpp" />
+    <ClCompile Include="$(SolutionDir)/../../src/ui/live/editor/ops/SetOriginOp.cpp" />
+    <ClCompile Include="$(SolutionDir)/../../src/ui/live/editor/parts/SpinnerUIPart.cpp" />
+    <ClCompile Include="$(SolutionDir)/../../src/ui/live/editor/parts/SurfaceUIPart.cpp" />
+    <ClCompile Include="$(SolutionDir)/../../src/ui/live/editor/parts/TextBoxUIPart.cpp" />
+    <ClCompile Include="$(SolutionDir)/../../src/ui/live/editor/parts/TimerUIPart.cpp" />
+    <ClCompile Include="$(SolutionDir)/../../src/ui/live/editor/parts/TriggerUIPart.cpp" />
+    <ClCompile Include="$(SolutionDir)/../../src/ui/live/editor/ViewportPane.cpp" />
     <ClCompile Include="$(SolutionDir)/../../src/ui/live/ingameui/InGameUI.cpp" />
     <ClCompile Include="$(SolutionDir)/../../src/ui/live/ingameui/AudioSettingsPage.cpp" />
     <ClCompile Include="$(SolutionDir)/../../src/ui/live/ingameui/CabinetRender.cpp" />
@@ -1343,6 +1355,9 @@
       <FileType>Document</FileType>
     </None>
     <None Include="$(SolutionDir)/../../src/shaders/bgfx/fs_pp_copy.sc">
+      <FileType>Document</FileType>
+    </None>
+    <None Include="$(SolutionDir)/../../src/shaders/bgfx/fs_pp_copy_depth.sc">
       <FileType>Document</FileType>
     </None>
     <None Include="$(SolutionDir)/../../src/shaders/bgfx/fs_pp_dlaa.sc">
@@ -1730,6 +1745,8 @@
     <ClInclude Include="../gen/vpinball.h" />
     <ClInclude Include="$(SolutionDir)/../../src/audio/AudioPlayer.h" />
     <ClInclude Include="$(SolutionDir)/../../src/audio/AudioStreamPlayer.h" />
+    <ClInclude Include="$(SolutionDir)/../../src/audio/MixNode.h" />
+    <ClInclude Include="$(SolutionDir)/../../src/audio/OpusDecoder.h" />
     <ClInclude Include="$(SolutionDir)/../../src/audio/SoundPlayer.h" />
     <ClInclude Include="$(SolutionDir)/../../src/audio/SpatialAudio.h" />
     <ClInclude Include="$(SolutionDir)/../../plugins/plugins/ResURIBuilder.h" />
@@ -1874,6 +1891,7 @@
     <ClInclude Include="$(SolutionDir)/../../src/renderer/RenderProbe.h" />
     <ClInclude Include="$(SolutionDir)/../../src/renderer/RenderState.h" />
     <ClInclude Include="$(SolutionDir)/../../src/renderer/RenderTarget.h" />
+    <ClInclude Include="$(SolutionDir)/../../src/renderer/RenderView.h" />
     <ClInclude Include="$(SolutionDir)/../../src/renderer/Renderer.h" />
     <ClInclude Include="$(SolutionDir)/../../src/renderer/Sampler.h" />
     <ClInclude Include="$(SolutionDir)/../../src/renderer/SearchTex.h" />
@@ -1885,6 +1903,7 @@
     <ClInclude Include="$(SolutionDir)/../../src/renderer/VertexBuffer.h" />
     <ClInclude Include="$(SolutionDir)/../../src/renderer/ViewSetup.h" />
     <ClInclude Include="$(SolutionDir)/../../src/renderer/VRDevice.h" />
+    <ClInclude Include="$(SolutionDir)/../../src/renderer/VRSpaces.h" />
     <ClInclude Include="$(SolutionDir)/../../src/renderer/Window.h" />
     <ClInclude Include="$(SolutionDir)/../../src/renderer/XRGraphicBackend.h" />
     <ClInclude Include="$(SolutionDir)/../../src/renderer/XRD3D11Backend.h" />
@@ -1897,44 +1916,56 @@
     <ClInclude Include="$(SolutionDir)/../../src/ui/live/BallControl.h" />
     <ClInclude Include="$(SolutionDir)/../../src/ui/live/DebuggerUI.h" />
     <ClInclude Include="$(SolutionDir)/../../src/ui/live/LiveUI.h" />
+    <ClInclude Include="$(SolutionDir)/../../src/ui/live/ImGuiHelpers.h" />
     <ClInclude Include="$(SolutionDir)/../../src/ui/live/NotificationOverlay.h" />
     <ClInclude Include="$(SolutionDir)/../../src/ui/live/PerfUI.h" />
     <ClInclude Include="$(SolutionDir)/../../src/ui/live/PlotData.h" />
     <ClInclude Include="$(SolutionDir)/../../src/ui/live/PlumbOverlay.h" />
     <ClInclude Include="$(SolutionDir)/../../src/ui/live/EditorUI.h" />
-    <ClInclude Include="$(SolutionDir)/../../src/ui/live/editor/BallUIPart.h" />
-    <ClInclude Include="$(SolutionDir)/../../src/ui/live/editor/BumperUIPart.h" />
-    <ClInclude Include="$(SolutionDir)/../../src/ui/live/editor/DecalUIPart.h" />
-    <ClInclude Include="$(SolutionDir)/../../src/ui/live/editor/DispReelUIPart.h" />
+    <ClInclude Include="$(SolutionDir)/../../src/ui/live/FileDialog.h" />
+    <ClInclude Include="$(SolutionDir)/../../src/ui/live/editor/AreaLayout.h" />
+    <ClInclude Include="$(SolutionDir)/../../src/ui/live/editor/BlueprintPane.h" />
+    <ClInclude Include="$(SolutionDir)/../../src/ui/live/editor/BlueprintRenderContext.h" />
+    <ClInclude Include="$(SolutionDir)/../../src/ui/live/editor/parts/BallUIPart.h" />
+    <ClInclude Include="$(SolutionDir)/../../src/ui/live/editor/parts/BumperUIPart.h" />
+    <ClInclude Include="$(SolutionDir)/../../src/ui/live/editor/parts/DecalUIPart.h" />
+    <ClInclude Include="$(SolutionDir)/../../src/ui/live/editor/parts/DispReelUIPart.h" />
+    <ClInclude Include="$(SolutionDir)/../../src/ui/live/editor/EditorAreaView.h" />
     <ClInclude Include="$(SolutionDir)/../../src/ui/live/editor/EditorChrome.h" />
-    <ClInclude Include="$(SolutionDir)/../../src/ui/live/editor/EditorUIPart.h" />
-    <ClInclude Include="$(SolutionDir)/../../src/ui/live/editor/EditorUIPartRegistry.h" />
-    <ClInclude Include="$(SolutionDir)/../../src/ui/live/editor/FlasherUIPart.h" />
-    <ClInclude Include="$(SolutionDir)/../../src/ui/live/editor/FlipperUIPart.h" />
-    <ClInclude Include="$(SolutionDir)/../../src/ui/live/editor/GateUIPart.h" />
-    <ClInclude Include="$(SolutionDir)/../../src/ui/live/editor/HitTargetUIPart.h" />
-    <ClInclude Include="$(SolutionDir)/../../src/ui/live/editor/KickerUIPart.h" />
-    <ClInclude Include="$(SolutionDir)/../../src/ui/live/editor/LightUIPart.h" />
-    <ClInclude Include="$(SolutionDir)/../../src/ui/live/editor/LightSeqUIPart.h" />
+    <ClInclude Include="$(SolutionDir)/../../src/ui/live/editor/EditorTheme.h" />
+    <ClInclude Include="$(SolutionDir)/../../src/ui/live/editor/parts/EditorUIPart.h" />
+    <ClInclude Include="$(SolutionDir)/../../src/ui/live/editor/parts/EditorUIPartRegistry.h" />
+    <ClInclude Include="$(SolutionDir)/../../src/ui/live/editor/parts/FlasherUIPart.h" />
+    <ClInclude Include="$(SolutionDir)/../../src/ui/live/editor/parts/FlipperUIPart.h" />
+    <ClInclude Include="$(SolutionDir)/../../src/ui/live/editor/parts/GateUIPart.h" />
+    <ClInclude Include="$(SolutionDir)/../../src/ui/live/editor/parts/HitTargetUIPart.h" />
+    <ClInclude Include="$(SolutionDir)/../../src/ui/live/IconsLucide.h" />
+    <ClInclude Include="$(SolutionDir)/../../src/ui/live/editor/parts/KickerUIPart.h" />
+    <ClInclude Include="$(SolutionDir)/../../src/ui/live/editor/ops/LayerSpaceChangeOp.h" />
+    <ClInclude Include="$(SolutionDir)/../../src/ui/live/editor/parts/LightUIPart.h" />
+    <ClInclude Include="$(SolutionDir)/../../src/ui/live/editor/parts/LightSeqUIPart.h" />
+    <ClInclude Include="$(SolutionDir)/../../src/ui/live/LucideFont.h" />
     <ClInclude Include="$(SolutionDir)/../../src/ui/live/editor/LiveRenderContext.h" />
     <ClInclude Include="$(SolutionDir)/../../src/ui/live/editor/OutlinerPanel.h" />
     <ClInclude Include="$(SolutionDir)/../../src/ui/live/editor/PartLibraryPanel.h" />
-    <ClInclude Include="$(SolutionDir)/../../src/ui/live/editor/PartGroupUIPart.h" />
-    <ClInclude Include="$(SolutionDir)/../../src/ui/live/editor/PlungerUIPart.h" />
-    <ClInclude Include="$(SolutionDir)/../../src/ui/live/editor/PrimitiveUIPart.h" />
+    <ClInclude Include="$(SolutionDir)/../../src/ui/live/editor/parts/PartGroupUIPart.h" />
+    <ClInclude Include="$(SolutionDir)/../../src/ui/live/editor/parts/PlungerUIPart.h" />
+    <ClInclude Include="$(SolutionDir)/../../src/ui/live/editor/parts/PrimitiveUIPart.h" />
     <ClInclude Include="$(SolutionDir)/../../src/ui/live/editor/PropertiesPanel.h" />
     <ClInclude Include="$(SolutionDir)/../../src/ui/live/editor/PropertyPane.h" />
-    <ClInclude Include="$(SolutionDir)/../../src/ui/live/editor/RampUIPart.h" />
+    <ClInclude Include="$(SolutionDir)/../../src/ui/live/editor/parts/RampUIPart.h" />
     <ClInclude Include="$(SolutionDir)/../../src/ui/live/editor/RendererInspectionModal.h" />
     <ClInclude Include="$(SolutionDir)/../../src/ui/live/editor/ResURIPicker.h" />
-    <ClInclude Include="$(SolutionDir)/../../src/ui/live/editor/RubberUIPart.h" />
+    <ClInclude Include="$(SolutionDir)/../../src/ui/live/editor/parts/RubberUIPart.h" />
     <ClInclude Include="$(SolutionDir)/../../src/ui/live/editor/ScriptPanel.h" />
     <ClInclude Include="$(SolutionDir)/../../src/ui/live/editor/Selection.h" />
-    <ClInclude Include="$(SolutionDir)/../../src/ui/live/editor/SpinnerUIPart.h" />
-    <ClInclude Include="$(SolutionDir)/../../src/ui/live/editor/SurfaceUIPart.h" />
-    <ClInclude Include="$(SolutionDir)/../../src/ui/live/editor/TextBoxUIPart.h" />
-    <ClInclude Include="$(SolutionDir)/../../src/ui/live/editor/TimerUIPart.h" />
-    <ClInclude Include="$(SolutionDir)/../../src/ui/live/editor/TriggerUIPart.h" />
+    <ClInclude Include="$(SolutionDir)/../../src/ui/live/editor/ops/SetOriginOp.h" />
+    <ClInclude Include="$(SolutionDir)/../../src/ui/live/editor/parts/SpinnerUIPart.h" />
+    <ClInclude Include="$(SolutionDir)/../../src/ui/live/editor/parts/SurfaceUIPart.h" />
+    <ClInclude Include="$(SolutionDir)/../../src/ui/live/editor/parts/TextBoxUIPart.h" />
+    <ClInclude Include="$(SolutionDir)/../../src/ui/live/editor/parts/TimerUIPart.h" />
+    <ClInclude Include="$(SolutionDir)/../../src/ui/live/editor/parts/TriggerUIPart.h" />
+    <ClInclude Include="$(SolutionDir)/../../src/ui/live/editor/ViewportPane.h" />
     <ClInclude Include="$(SolutionDir)/../../src/ui/live/ingameui/InGameUI.h" />
     <ClInclude Include="$(SolutionDir)/../../src/ui/live/ingameui/AudioSettingsPage.h" />
     <ClInclude Include="$(SolutionDir)/../../src/ui/live/ingameui/CabinetRender.h" />

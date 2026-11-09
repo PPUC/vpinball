@@ -3,6 +3,7 @@
 #include "core/stdafx.h"
 #include "SoundPlayer.h"
 
+#include "MixNode.h"
 #include "SpatialAudio.h"
 
 #include "plugins/MsgPluginManager.h"
@@ -10,194 +11,49 @@
 #include "parts/pintable.h"
 #include "utils/denormals.h"
 
-#define MA_ENABLE_ONLY_SPECIFIC_BACKENDS
-#define MA_ENABLE_CUSTOM
-#include "miniaudio/miniaudio.h"
+#include "OpusDecoder.h"
 
 // VPU (table unit) to meters, matching the scale used by the VR renderer
 static constexpr float kVPUToMeters = static_cast<float>(0.0254 * 1.0625 / 50.);
 
-// Simple custom node (used when spatial audio is disabled in the settings):
-// - SSF processing: output according to table author supplied left/right & rear/front setup against user speaker layout setting
-// - Backglass processing: expand channels
+// Doppler on spatial playfield sources is disabled: estimating radial velocity
+// from script-driven position updates is too noisy to sound right (the code is
+// kept for future re-evaluation)
+static constexpr bool kDopplerEnabled = false;
 
-typedef struct
-{
-   ma_node_config nodeConfig;
-   ma_uint32 inChannels;
-   ma_uint32 outChannels;
-} vpx_node_config;
-
-typedef struct vpx_node vpx_node;
-struct vpx_node
-{
-   ma_node_base baseNode;
-   float volume;
-   float pan;
-   float rearFrontFade; // SSF only
-   enum Mode
-   {
-      PF,          // Mix mono sound to playfield device channels
-      PF_NO_FRONT, // Mix mono sound to playfield device channels, keeping front channels free
-      BG           // Mix stereo sound to backglass channels
-   } mode;
-};
-
-static void vpx_node_process_pcm_frames(ma_node* pNode, const float** ppFramesIn, ma_uint32* pFrameCountIn, float** ppFramesOut, ma_uint32* pFrameCountOut)
-{
-   const float* __restrict pFramesIn = ppFramesIn[0]; // Input bus @ index 0.
-   float* __restrict pFramesOut = ppFramesOut[0]; // Output bus @ index 0.
-   vpx_node* const pVPXNode = reinterpret_cast<vpx_node*>(pNode);
-   const ma_uint32 nInChannels = ma_node_get_input_channels(pNode, 0);
-   const ma_uint32 nOutChannels = ma_node_get_output_channels(pNode, 0);
-   const unsigned int count = *pFrameCountOut;
-   if (nOutChannels > 2)
-      memset(pFramesOut, 0, count * nOutChannels * sizeof(float));
-
-   // SDL audio channel layout is the following:
-   // 1 channel (mono) layout: FRONT
-   // 2 channels (stereo) layout: FL, FR
-   // 3 channels (2.1) layout: FL, FR, LFE
-   // 4 channels (quad) layout: FL, FR, BL, BR
-   // 5 channels (4.1) layout: FL, FR, LFE, BL, BR
-   // 6 channels (5.1) layout: FL, FR, FC, LFE, BL, BR (last two can also be SL, SR)
-   // 7 channels (6.1) layout: FL, FR, FC, LFE, BC, SL, SR
-   // 8 channels (7.1) layout: FL, FR, FC, LFE, BL, BR, SL, SR
-   //
-   // Where:
-   // FRONT = single mono speaker
-   // FL/FR = front speakers
-   // FC = front center speaker
-   // BL/BR = back speakers
-   // SR/SL = surround speakers
-   // BC = back center speaker
-   // LFE = low-frequency speaker
-
-   // Backglass: Stereo to mono
-   if (pVPXNode->mode == vpx_node::Mode::BG && nOutChannels == 1)
-   {
-      assert(nInChannels == 2);
-      const float weight = pVPXNode->volume * 0.5f;
-      for (unsigned int i = 0; i < count; i++, pFramesIn += nInChannels, pFramesOut += nOutChannels)
-         pFramesOut[0] = weight * (pFramesIn[0] + pFramesIn[1]);
-   }
-   // Backglass: Panned stereo to front channels (other channels are not used for backglass)
-   else if (pVPXNode->mode == vpx_node::Mode::BG)
-   {
-      assert(nInChannels == 2);
-      // This is a balanced panning (lower the opposite channel but does not increase nor blend channels). Not sure if this should be true panning (but is this really used ?)
-      const float left = pVPXNode->volume * (pVPXNode->pan < 0 ? 1.f : 1.f - pVPXNode->pan);
-      const float right = pVPXNode->volume * (pVPXNode->pan > 0 ? 1.f : 1.f + pVPXNode->pan);
-      for (unsigned int i = 0; i < count; i++, pFramesIn += nInChannels, pFramesOut += nOutChannels)
-      {
-         pFramesOut[0] = left * pFramesIn[0];
-         pFramesOut[1] = right * pFramesIn[1];
-      }
-   }
-   // Playfield: Mono mode (surprisingly this happens, for example with bluetooth LE devices)
-   else if (nOutChannels == 1)
-   {
-      assert(nInChannels == 1);
-      for (unsigned int i = 0; i < count; i++, pFramesIn += nInChannels, pFramesOut += nOutChannels)
-         pFramesOut[0] = pVPXNode->volume * pFramesIn[0];
-   }
-   // Playfield: Stereo mode
-   else if (nOutChannels < 4 || (pVPXNode-> mode == vpx_node::Mode::PF_NO_FRONT && nOutChannels < 8))
-   {
-      assert(nInChannels == 1);
-      const float left = pVPXNode->volume * 0.5f * (1.f - pVPXNode->pan);
-      const float right = pVPXNode->volume * 0.5f * (1.f + pVPXNode->pan);
-      const int leftCh = nOutChannels < 4 ? 0 : nOutChannels - 2;
-      const int rightCh = leftCh + 1;
-      for (unsigned int i = 0; i < count; i++, pFramesIn += nInChannels, pFramesOut += nOutChannels)
-      {
-         const float sample = *pFramesIn;
-         pFramesOut[leftCh] = left * sample;
-         pFramesOut[rightCh] = right * sample;
-      }
-   }
-   // Playfield: 4 channels mode
-   else if (nOutChannels < 8 || (pVPXNode->mode == vpx_node::Mode::PF_NO_FRONT && nOutChannels == 8))
-   {
-      assert(nInChannels == 1);
-      const float left = pVPXNode->volume * 0.5f * (1.f - pVPXNode->pan);
-      const float right = pVPXNode->volume * 0.5f * (1.f + pVPXNode->pan);
-      const float front = 0.5f * (1.f + pVPXNode->rearFrontFade);
-      const float rear = 1.f - front;
-      const float fl = front * left;
-      const float fr = front * right;
-      const float rl = rear * left;
-      const float rr = rear * right;
-      const int flCh = nOutChannels == 8 ? 4 : 0;
-      const int frCh = flCh + 1;
-      const int rlCh = nOutChannels == 8 ? 6 : nOutChannels - 2;
-      const int rrCh = rlCh + 1;
-      for (unsigned int i = 0; i < count; i++, pFramesIn += nInChannels, pFramesOut += nOutChannels)
-      {
-         const float sample = *pFramesIn;
-         pFramesOut[flCh] = fl * sample;
-         pFramesOut[frCh] = fr * sample;
-         pFramesOut[rlCh] = rl * sample;
-         pFramesOut[rrCh] = rr * sample;
-      }
-   }
-   // Playfield: 6 channels mode
-   else if (nOutChannels == 8)
-   {
-      assert(nInChannels == 1);
-      const float left = pVPXNode->volume * 0.5f * (1.f - pVPXNode->pan);
-      const float right = pVPXNode->volume * 0.5f * (1.f + pVPXNode->pan);
-      const float front = max(0.f, pVPXNode->rearFrontFade);
-      const float center = 1.f - fabsf(pVPXNode->rearFrontFade);
-      const float rear = max(0.f, -pVPXNode->rearFrontFade);
-      const float fl = front * left;
-      const float fr = front * right;
-      const float cl = center * left;
-      const float cr = center * right;
-      const float rl = rear * left;
-      const float rr = rear * right;
-      for (unsigned int i = 0; i < count; i++, pFramesIn += nInChannels, pFramesOut += nOutChannels)
-      {
-         const float sample = *pFramesIn;
-         pFramesOut[0] = fl * sample;
-         pFramesOut[1] = fr * sample;
-         pFramesOut[4] = cl * sample;
-         pFramesOut[5] = cr * sample;
-         pFramesOut[6] = rl * sample;
-         pFramesOut[7] = rr * sample;
-      }
-   }
-}
-
-static ma_node_vtable vpx_node_vtable = { vpx_node_process_pcm_frames, nullptr, 1, 1, 0 };
-
-MA_API ma_result vpx_node_init(ma_node_graph* pNodeGraph, const vpx_node_config* pConfig, const ma_allocation_callbacks* pAllocationCallbacks, vpx_node* pNode)
-{
-   if (pNode == nullptr)
-      return MA_INVALID_ARGS;
-   memset(pNode, 0, sizeof(vpx_node));
-   ma_node_config baseConfig = pConfig->nodeConfig;
-   baseConfig.vtable = &vpx_node_vtable;
-   baseConfig.pInputChannels = &pConfig->inChannels;
-   baseConfig.pOutputChannels = &pConfig->outChannels;
-   return ma_node_init(pNodeGraph, &baseConfig, pAllocationCallbacks, &pNode->baseNode);
-}
-
-MA_API void vpx_node_uninit(vpx_node* pNode, const ma_allocation_callbacks* pAllocationCallbacks)
-{
-   if (pNode == nullptr)
-      return;
-   ma_node_uninit(pNode, pAllocationCallbacks);
-}
-
+// Gain applied to spatial playfield sources. On desktop, a playfield sound is
+// capped at 0.5 amplitude per output channel, while in VR it would reach each
+// ear at full gain: this factor keeps playfield sources at-or-below the levels
+// tables were authored for (avoiding saturation) and preserves the balance
+// between backglass and near playfield sounds
+static constexpr float kSpatialPlayfieldGain = 0.5f;
 
 namespace VPX
 {
 
-SoundPlayer* SoundPlayer::Create(const AudioPlayer* audioPlayer, Sound* sound)
+std::shared_ptr<progschj::ThreadPool> SoundPlayer::SharedCommandQueue()
+{
+   // Only weakly referenced: the pool is destroyed when the last player is
+   static std::weak_ptr<progschj::ThreadPool> weakQueue;
+   std::shared_ptr<progschj::ThreadPool> queue = weakQueue.lock();
+   if (queue == nullptr)
+   {
+      queue = std::make_shared<progschj::ThreadPool>(1);
+      queue->enqueue_block(
+         []()
+         {
+            SetThreadName("VPX.SoundPlayer");
+            set_denormals_flush_to_zero(); // FPU mode is per thread
+         });
+      weakQueue = queue;
+   }
+   return queue;
+}
+
+SoundPlayer* SoundPlayer::Create(const AudioPlayer* audioPlayer, Sound* sound, SoundOutTypes target)
 {
    // Decode and resample the sound on the ancillary thread as this is fairly heavy
-   return new SoundPlayer(audioPlayer, sound);
+   return new SoundPlayer(audioPlayer, sound, target);
 }
 
 SoundPlayer* SoundPlayer::Create(const AudioPlayer* audioPlayer, const std::filesystem::path& filename)
@@ -209,15 +65,11 @@ SoundPlayer* SoundPlayer::Create(const AudioPlayer* audioPlayer, const std::file
 SoundPlayer::SoundPlayer(const AudioPlayer* audioPlayer, const std::filesystem::path& filename)
    : m_audioPlayer(audioPlayer)
    , m_outputTarget(SoundOutTypes::SNDOUT_BACKGLASS)
-   , m_commandQueue(1)
    , m_callbackId(""s) // Music: no callback information as there is at most one music playing
 {
-   m_commandQueue.enqueue(
+   m_commandQueue->enqueue(
       [this, filename]()
       {
-         SetThreadName("VPX.SoundPlayer ["s.append(PathToUTF8(filename.filename())).append(1, ']'));
-         set_denormals_flush_to_zero(); // FPU mode is per thread
-
          ma_engine* engine = m_audioPlayer->GetEngine(m_outputTarget);
          if (engine == nullptr)
             return;
@@ -230,30 +82,21 @@ SoundPlayer::SoundPlayer(const AudioPlayer* audioPlayer, const std::filesystem::
             if (m_spatialSource->GetNode() == nullptr)
                m_spatialSource = nullptr;
             else
-            {
-               m_spatialSource->SetPositionPolar(0.f, 15.f, 1.f);
-               m_spatialSource->SetReferenceDistance(1.f);
-            }
+               m_audioPlayer->PositionBackglassSource(*m_spatialSource);
          }
          if (m_spatialSource == nullptr)
          {
             // Add custom node for channel mixing
             m_vpxMixNode = std::make_unique<vpx_node>();
-            vpx_node_config customNodeConfig;
-            customNodeConfig.nodeConfig = ma_node_config_init();
-            customNodeConfig.inChannels = 2;
-            customNodeConfig.outChannels = ma_engine_get_channels(engine);
-            const ma_result result = vpx_node_init(ma_engine_get_node_graph(engine), &customNodeConfig, nullptr, m_vpxMixNode.get());
+            const ma_result result = vpx_node_init(ma_engine_get_node_graph(engine), 2, ma_engine_get_channels(engine), nullptr, m_vpxMixNode.get());
             if (result != MA_SUCCESS)
             {
                PLOGE << "Failed to initialize custom mixer.";
                m_vpxMixNode = nullptr;
                return;
             }
-            m_vpxMixNode->mode = m_outputTarget == SNDOUT_BACKGLASS ? vpx_node::Mode::BG // Output to stereo
-               : (m_audioPlayer->GetSoundMode3D() == SNDCFG_SND3D6CH || m_audioPlayer->GetSoundMode3D() == SNDCFG_SND3DSSF)
-               ? vpx_node::Mode::PF_NO_FRONT // Output to multi channel, keeping front empty
-               : vpx_node::Mode::PF; // Output to multi channel
+            m_vpxMixNode->mode = m_audioPlayer->GetBackglassMode() == SNDCFG_BGFRONTLEFT ? SoundMixMode::BackglassFrontLeft // Downmix to front left
+                                                                                         : SoundMixMode::Backglass; // Output to front channels
             ma_node_attach_output_bus(m_vpxMixNode.get(), 0, ma_engine_get_endpoint(engine), 0);
          }
 
@@ -272,9 +115,37 @@ SoundPlayer::SoundPlayer(const AudioPlayer* audioPlayer, const std::filesystem::
          config.pInitialAttachment = m_spatialSource ? static_cast<ma_node*>(m_spatialSource->GetNode()) : m_vpxMixNode.get();
          if (ma_sound_init_ex(engine, &config, m_sound.get()))
          {
-            m_decoder = nullptr;
-            m_sound = nullptr;
-            return;
+            // Not a format the engine's resource manager decodes (Opus): play it through a decoder with the Opus backend
+            m_decoder = std::make_unique<ma_decoder>();
+            // Decoded at the engine rate like the resource manager does: the decoder's resampler low-pass filters, the engine's (pitch) one does not
+            ma_decoder_config decoderConfig = ma_decoder_config_init(ma_format_f32, 0, ma_engine_get_sample_rate(engine));
+            AddOpusDecoder(decoderConfig);
+#ifdef _WIN32
+            const ma_result result = ma_decoder_init_file_w(filename.c_str(), &decoderConfig, m_decoder.get());
+#else
+            const ma_result result = ma_decoder_init_file(filename.c_str(), &decoderConfig, m_decoder.get());
+#endif
+            if (result != MA_SUCCESS)
+            {
+               m_decoder = nullptr;
+               m_sound = nullptr;
+               return;
+            }
+            m_sourceSampleRate = m_decoder->converter.sampleRateIn;
+#ifdef _WIN32
+            config.pFilePathW = nullptr;
+#else
+            config.pFilePath = nullptr;
+#endif
+            config.pDataSource = m_decoder.get();
+            config.flags = MA_SOUND_FLAG_NO_SPATIALIZATION;
+            if (ma_sound_init_ex(engine, &config, m_sound.get()))
+            {
+               ma_decoder_uninit(m_decoder.get()); // Closes the file
+               m_decoder = nullptr;
+               m_sound = nullptr;
+               return;
+            }
          }
 
          if (!IsPlaying())
@@ -282,18 +153,14 @@ SoundPlayer::SoundPlayer(const AudioPlayer* audioPlayer, const std::filesystem::
       });
 }
 
-SoundPlayer::SoundPlayer(const AudioPlayer* audioPlayer, Sound* sound)
+SoundPlayer::SoundPlayer(const AudioPlayer* audioPlayer, Sound* sound, SoundOutTypes target)
    : m_audioPlayer(audioPlayer)
-   , m_outputTarget(sound->GetOutputTarget())
-   , m_commandQueue(1)
+   , m_outputTarget(target)
    , m_callbackId(sound->GetName())
 {
-   m_commandQueue.enqueue(
+   m_commandQueue->enqueue(
       [this, sound]()
       {
-         SetThreadName("VPX.SoundPlayer ["s.append(sound->GetName()).append(1, ']'));
-         set_denormals_flush_to_zero(); // FPU mode is per thread
-
          ma_engine* engine = m_audioPlayer->GetEngine(m_outputTarget);
          if (engine == nullptr)
             return;
@@ -306,10 +173,7 @@ SoundPlayer::SoundPlayer(const AudioPlayer* audioPlayer, Sound* sound)
             if (m_spatialSource->GetNode() == nullptr)
                m_spatialSource = nullptr;
             else if (m_outputTarget == SNDOUT_BACKGLASS)
-            {
-               m_spatialSource->SetPositionPolar(0.f, 15.f, 1.f);
-               m_spatialSource->SetReferenceDistance(1.f);
-            }
+               m_audioPlayer->PositionBackglassSource(*m_spatialSource);
             else
                m_spatialSource->SetPosition(m_audioPlayer->GetTableWidth() * 0.5f, m_audioPlayer->GetTableHeight() * 0.5f, 0.f);
          }
@@ -317,21 +181,19 @@ SoundPlayer::SoundPlayer(const AudioPlayer* audioPlayer, Sound* sound)
          {
             // Add custom node for channel mixing
             m_vpxMixNode = std::make_unique<vpx_node>();
-            vpx_node_config customNodeConfig;
-            customNodeConfig.nodeConfig = ma_node_config_init();
-            customNodeConfig.inChannels = m_outputTarget == SNDOUT_BACKGLASS ? 2 : 1;
-            customNodeConfig.outChannels = ma_engine_get_channels(engine);
-            const ma_result result = vpx_node_init(ma_engine_get_node_graph(engine), &customNodeConfig, nullptr, m_vpxMixNode.get());
+            const ma_result result = vpx_node_init(ma_engine_get_node_graph(engine), m_outputTarget == SNDOUT_BACKGLASS ? 2 : 1, ma_engine_get_channels(engine), nullptr, m_vpxMixNode.get());
             if (result != MA_SUCCESS)
             {
                PLOGE << "Failed to initialize custom mixer.";
                m_vpxMixNode = nullptr;
                return;
             }
-            m_vpxMixNode->mode = m_outputTarget == SNDOUT_BACKGLASS ? vpx_node::Mode::BG // Output to stereo
-               : (m_audioPlayer->GetSoundMode3D() == SNDCFG_SND3D6CH || m_audioPlayer->GetSoundMode3D() == SNDCFG_SND3DSSF)
-               ? vpx_node::Mode::PF_NO_FRONT // Output to multi channel, keeping front empty
-               : vpx_node::Mode::PF; // Output to multi channel
+            m_vpxMixNode->mode = m_outputTarget == SNDOUT_BACKGLASS
+               ? (m_audioPlayer->GetBackglassMode() == SNDCFG_BGFRONTLEFT ? SoundMixMode::BackglassFrontLeft : SoundMixMode::Backglass) // Backglass output mode
+               : (m_audioPlayer->GetSoundMode3D(m_outputTarget) == SNDCFG_SND3D6CH || m_audioPlayer->GetSoundMode3D(m_outputTarget) == SNDCFG_SND3DSSF)
+               ? SoundMixMode::PlayfieldNoFront // Output to multi channel, keeping front empty
+               : m_audioPlayer->GetSoundMode3D(m_outputTarget) == SNDCFG_SND3DFRONTRIGHT ? SoundMixMode::PlayfieldFrontRight // Output to front right channel only
+                                                                                         : SoundMixMode::Playfield; // Output to multi channel
             ma_node_attach_output_bus(m_vpxMixNode.get(), 0, ma_engine_get_endpoint(engine), 0);
          }
 
@@ -339,14 +201,17 @@ SoundPlayer::SoundPlayer(const AudioPlayer* audioPlayer, Sound* sound)
          // . decode and convert playfield sounds to a mono channel
          // . decode and convert backglass sound to their native encoding with zeroed out additional channels
          // TODO we should convert mono backglass stream to stereo streams with zeroed out additional channels
+         // . resample to the engine rate while decoding: the decoder's resampler low-pass filters, the engine's (pitch) one does not
          m_decoder = std::make_unique<ma_decoder>();
-         ma_decoder_config decoderConfig = ma_decoder_config_init(ma_format_unknown, m_outputTarget == SNDOUT_BACKGLASS ? 2 : 1, 0);
+         ma_decoder_config decoderConfig = ma_decoder_config_init(ma_format_unknown, m_outputTarget == SNDOUT_BACKGLASS ? 2 : 1, ma_engine_get_sample_rate(engine));
          decoderConfig.channelMixMode = ma_channel_mix_mode_simple;
+         AddOpusDecoder(decoderConfig);
          if (ma_decoder_init_memory(sound->GetFileRaw(), sound->GetFileSize(), &decoderConfig, m_decoder.get()) != MA_SUCCESS)
          {
             m_decoder = nullptr;
             return;
          }
+         m_sourceSampleRate = m_decoder->converter.sampleRateIn;
          // When converting to mono, miniaudio averages the source channels instead of
          // summing them, so a stereo source loses half its energy. Multiply back by the
          // source channel count to keep a stereo-source playfield sound as loud as a mono
@@ -368,6 +233,7 @@ SoundPlayer::SoundPlayer(const AudioPlayer* audioPlayer, Sound* sound)
 
          if (ma_sound_init_ex(engine, &config, m_sound.get()))
          {
+            ma_decoder_uninit(m_decoder.get());
             m_decoder = nullptr;
             m_sound = nullptr;
             return;
@@ -385,8 +251,8 @@ SoundPlayer::~SoundPlayer()
    m_alive->store(false);
    if (m_sound)
       m_sound->endCallback = nullptr;
-   m_commandQueue.wait_until_empty();
-   m_commandQueue.wait_until_nothing_in_flight();
+   // The queue is shared: wait for the commands this player sent, which its one thread runs in order
+   m_commandQueue->enqueue_block([] { }).wait();
    if (m_sound)
    {
       ma_sound_stop(m_sound.get());
@@ -396,18 +262,18 @@ SoundPlayer::~SoundPlayer()
       ma_decoder_uninit(m_decoder.get());
    m_spatialSource = nullptr;
    if (m_vpxMixNode)
-      ma_node_uninit(m_vpxMixNode.get(), nullptr);
+      vpx_node_uninit(m_vpxMixNode.get(), nullptr);
 }
 
-void SoundPlayer::SetMainVolume(float backglassVolume, float playfieldVolume)
+void SoundPlayer::SetMainVolume(float backglassVolume, float playfieldVolume, float hapticVolume)
 {
-   m_mainVolume = m_outputTarget == SNDOUT_BACKGLASS ? backglassVolume : playfieldVolume;
-   m_commandQueue.enqueue([this]() { ApplyVolume(); });
+   m_mainVolume = m_outputTarget == SNDOUT_BACKGLASS ? backglassVolume : m_outputTarget == SNDOUT_HAPTIC ? hapticVolume : playfieldVolume;
+   m_commandQueue->enqueue([this]() { ApplyVolume(); });
 }
 
 void SoundPlayer::SetVolume(float volume) {
    m_soundVolume = volume;
-   m_commandQueue.enqueue([this]() { ApplyVolume(); });
+   m_commandQueue->enqueue([this]() { ApplyVolume(); });
 }
 
 void SoundPlayer::ApplyVolume()
@@ -423,7 +289,7 @@ void SoundPlayer::ApplyVolume()
       // const float linearvolume = powf(10.f, log10f(sqrt(totalvolume)) - 1.f);
       // const float linearvolume = sqrt(totalvolume) / 10.f; // we don't keep the 1/10 factor as this is better placed as part of the main volume mixer setup (this create a setup regression when updating from 10.8 to later version)
       if (m_spatialSource)
-         m_spatialSource->SetVolume(m_monoCompensation * sqrtf(totalvolume));
+         m_spatialSource->SetVolume(m_monoCompensation * sqrtf(totalvolume) * (m_outputTarget == SNDOUT_TABLE ? kSpatialPlayfieldGain : 1.f));
       else if (m_vpxMixNode)
          m_vpxMixNode->volume = m_monoCompensation * sqrtf(totalvolume);
    }
@@ -432,7 +298,7 @@ void SoundPlayer::ApplyVolume()
 void SoundPlayer::Play(
    float volume, const float randompitch, const int pitch, float pan, float frontRearFade, const int loopcount, const bool hasPos, const float posX, const float posY, const float posZ)
 {
-   m_commandQueue.enqueue(
+   m_commandQueue->enqueue(
       [this, volume, randompitch, pitch, pan, frontRearFade, loopcount, hasPos, posX, posY, posZ]()
       {
          if (m_sound == nullptr)
@@ -457,7 +323,8 @@ void SoundPlayer::Play(
                const float y = hasPos ? posY : (curvedFade + 1.f) * 0.5f * m_audioPlayer->GetTableHeight();
                const float z = hasPos ? posZ : 0.f;
                m_spatialSource->SetPosition(x, y, z);
-               UpdateDoppler(x, y, z);
+               if (kDopplerEnabled)
+                  UpdateDoppler(x, y, z);
             }
          }
          else
@@ -475,12 +342,12 @@ void SoundPlayer::Play(
             // This is designed to support existing tables which appends to apply x^10 to pan and front/rear fade, so we have to undo it
             m_vpxMixNode->pan = clamp(localPan, -1.f, 1.f);
             m_vpxMixNode->pan = (m_vpxMixNode->pan < 0.0f) ? -powf(-m_vpxMixNode->pan, 0.1f) : powf(m_vpxMixNode->pan, 0.1f);
-            if (m_outputTarget == SNDOUT_TABLE)
+            if (m_outputTarget != SNDOUT_BACKGLASS)
             {
                // Diffuse the (mono) playfield sound to 2 or 4 speakers spread on the playfield
                m_vpxMixNode->rearFrontFade = clamp(localFade, -1.f, 1.f);
                m_vpxMixNode->rearFrontFade = (m_vpxMixNode->rearFrontFade < 0.0f) ? -powf(-m_vpxMixNode->rearFrontFade, 0.1f) : powf(m_vpxMixNode->rearFrontFade, 0.1f);
-               switch (m_audioPlayer->GetSoundMode3D())
+               switch (m_audioPlayer->GetSoundMode3D(m_outputTarget))
                {
                case SNDCFG_SND3D2CH: m_vpxMixNode->rearFrontFade = 0.f; break; // Stereo output to front channels
                case SNDCFG_SND3DALLREAR: m_vpxMixNode->rearFrontFade = 1.f; break; // Stereo output to rear channels
@@ -489,6 +356,7 @@ void SoundPlayer::Play(
                case SNDCFG_SND3D6CH:
                   break; // Keep front empty (performed when mixing) Not clear what would be the correct way of porting this (use a less effective pan & rearfade ?), so fallback to SSF
                case SNDCFG_SND3DSSF: break; // Keep front empty (performed when mixing)
+               case SNDCFG_SND3DFRONTRIGHT: break; // Single channel output (performed when mixing)
                default: assert(false); return;
                }
                //Legacy hacked 3d audio, for reference:
@@ -509,7 +377,8 @@ void SoundPlayer::Play(
          ma_uint32 channels;
          ma_uint32 sampleRate;
          ma_sound_get_data_format(m_sound.get(), &format, &channels, &sampleRate, nullptr, 0);
-         const float sampleFreq = static_cast<float>(sampleRate);
+         // The pitch is an offset to the file's own sample rate, not to the rate it is decoded at
+         const float sampleFreq = static_cast<float>(m_sourceSampleRate != 0 ? m_sourceSampleRate : sampleRate);
          float newFreq = sampleFreq + (float)pitch;
          if (randompitch > 0.f)
          {
@@ -530,32 +399,35 @@ void SoundPlayer::Play(
 
 void SoundPlayer::Pause()
 {
-   m_commandQueue.enqueue([this]()
-   {
-      if (m_sound)
-         ma_sound_stop(m_sound.get());
-   });
+   m_commandQueue->enqueue(
+      [this]()
+      {
+         if (m_sound)
+            ma_sound_stop(m_sound.get());
+      });
 }
 
 void SoundPlayer::Unpause()
 {
-   m_commandQueue.enqueue([this]()
-   {
-      if (m_sound)
-         ma_sound_start(m_sound.get());
-   });
+   m_commandQueue->enqueue(
+      [this]()
+      {
+         if (m_sound)
+            ma_sound_start(m_sound.get());
+      });
 }
 
 void SoundPlayer::Stop()
 {
-   m_commandQueue.enqueue([this]()
-   {
-      if (m_sound)
+   m_commandQueue->enqueue(
+      [this]()
       {
-         ma_sound_stop(m_sound.get());
-         ma_sound_seek_to_pcm_frame(m_sound.get(), 0);
-      }
-   });
+         if (m_sound)
+         {
+            ma_sound_stop(m_sound.get());
+            ma_sound_seek_to_pcm_frame(m_sound.get(), 0);
+         }
+      });
 }
 
 float SoundPlayer::GetPosition() const
@@ -568,11 +440,12 @@ float SoundPlayer::GetPosition() const
 
 void SoundPlayer::SetPosition(float pos)
 {
-   m_commandQueue.enqueue([this, pos]()
-   {
-      if (m_sound)
-         ma_sound_seek_to_second(m_sound.get(), pos);
-   });
+   m_commandQueue->enqueue(
+      [this, pos]()
+      {
+         if (m_sound)
+            ma_sound_seek_to_second(m_sound.get(), pos);
+      });
 }
 
 bool SoundPlayer::IsPlaying() const
@@ -585,7 +458,8 @@ void SoundPlayer::OnSoundEnd(void* pUserData, ma_sound* pSound)
    SoundPlayer* me = static_cast<SoundPlayer*>(pUserData);
    if (me->m_loopCount == 0)
    {
-      if (g_pplayer)
+      // The haptic mirror does not emit script events: the playfield player already does
+      if (me->m_outputTarget != SoundOutTypes::SNDOUT_HAPTIC && g_pplayer)
          g_pplayer->m_pluginManager.GetMsgAPI().RunOnMainThread(
             g_pplayer->m_pluginAPI.GetVPXEndPointId(), 0.0,
             [](void* callbackInfo)
@@ -611,7 +485,7 @@ void SoundPlayer::OnSoundEnd(void* pUserData, ma_sound* pSound)
       me->m_loopCount--;
    // Dispatch through the command queue since we can not restart the sound from the callback as the sound is still playing and command would be discarded
    // The task may be dispatched while ~SoundPlayer is running, so it must not touch the sound once destruction started
-   me->m_commandQueue.enqueue(
+   me->m_commandQueue->enqueue(
       [pSound, alive = me->m_alive]()
       {
          if (alive->load())

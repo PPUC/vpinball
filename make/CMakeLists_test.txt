@@ -25,6 +25,7 @@ set(VPX_TEST_SOURCES
    tests/core/test-settings.cpp
    tests/core/test-tabledb.cpp
    tests/input/test-buttonmapping.cpp
+   tests/input/test-inputaction.cpp
    tests/input/test-plunger-kalman.cpp
    tests/input/test-scancodes.cpp
    tests/input/test-sensormapping.cpp
@@ -35,6 +36,7 @@ set(VPX_TEST_SOURCES
    tests/misc/test-plugin-arrays.cpp
    tests/misc/test-sound.cpp
    tests/misc/test-table-io.cpp
+   tests/misc/test-tbn-shader.cpp
    tests/parts/test-ball.cpp
    tests/parts/test-bumper.cpp
    tests/parts/test-decal.cpp
@@ -77,7 +79,12 @@ set(VPX_TEST_SOURCES
    tests/plugins/upscaledmd/test-upscalers.cpp
    tests/render/test-base-render.cpp
    tests/render/test-mirror-render.cpp
+   tests/render/test-multiview-render.cpp
+   tests/render/test-normalmap-render.cpp
    tests/render/test-renderframe.cpp
+   tests/render/test-vr-spaces.cpp
+   tests/render/test-window.cpp
+   tests/ui/test-arealayout.cpp
    tests/vpx-test.cpp
    tests/vpx-test.h
 )
@@ -185,6 +192,9 @@ if(PLATFORM STREQUAL "windows")
       hid.lib
       setupapi.lib
       dinput8.lib
+      opusfile.lib
+      opus.lib
+      ogg.lib
       spatialaudio.lib
       mysofa.lib
       zlibstatic.lib
@@ -249,6 +259,12 @@ if(PLATFORM STREQUAL "windows")
 
    add_custom_command(TARGET vpx-test POST_BUILD
       COMMAND "${CMAKE_COMMAND}" -E copy_directory "${CMAKE_SOURCE_DIR}/tests/assets" "$<TARGET_FILE_DIR:vpx-test>/test-assets"
+      # The TBN shader contract test reads the live shader sources from test-assets/shaders-src
+      COMMAND "${CMAKE_COMMAND}" -E make_directory "$<TARGET_FILE_DIR:vpx-test>/test-assets/shaders-src"
+      COMMAND "${CMAKE_COMMAND}" -E copy "${CMAKE_SOURCE_DIR}/src/shaders/bgfx/common.sh" "$<TARGET_FILE_DIR:vpx-test>/test-assets/shaders-src"
+      COMMAND "${CMAKE_COMMAND}" -E copy "${CMAKE_SOURCE_DIR}/src/shaders/bgfx/fs_basic.sc" "$<TARGET_FILE_DIR:vpx-test>/test-assets/shaders-src"
+      COMMAND "${CMAKE_COMMAND}" -E copy "${CMAKE_SOURCE_DIR}/src/shaders/hlsl_glsl/BasicShader.hlsl" "$<TARGET_FILE_DIR:vpx-test>/test-assets/shaders-src"
+      COMMAND "${CMAKE_COMMAND}" -E copy "${CMAKE_SOURCE_DIR}/src/shaders/hlsl_glsl/BasicShader.glfx" "$<TARGET_FILE_DIR:vpx-test>/test-assets/shaders-src"
    )
 
    if(POST_BUILD_COPY_EXT_LIBS)
@@ -346,6 +362,9 @@ elseif(PLATFORM STREQUAL "windows-mingw")
       hidapi64
       openxr_loader64
       winevbs64
+      opusfile
+      opus
+      ogg
       spatialaudio
       mysofa
       z
@@ -365,6 +384,12 @@ elseif(PLATFORM STREQUAL "windows-mingw")
 
    add_custom_command(TARGET vpx-test POST_BUILD
       COMMAND "${CMAKE_COMMAND}" -E copy_directory "${CMAKE_SOURCE_DIR}/tests/assets" "$<TARGET_FILE_DIR:vpx-test>/test-assets"
+      # The TBN shader contract test reads the live shader sources from test-assets/shaders-src
+      COMMAND "${CMAKE_COMMAND}" -E make_directory "$<TARGET_FILE_DIR:vpx-test>/test-assets/shaders-src"
+      COMMAND "${CMAKE_COMMAND}" -E copy "${CMAKE_SOURCE_DIR}/src/shaders/bgfx/common.sh" "$<TARGET_FILE_DIR:vpx-test>/test-assets/shaders-src"
+      COMMAND "${CMAKE_COMMAND}" -E copy "${CMAKE_SOURCE_DIR}/src/shaders/bgfx/fs_basic.sc" "$<TARGET_FILE_DIR:vpx-test>/test-assets/shaders-src"
+      COMMAND "${CMAKE_COMMAND}" -E copy "${CMAKE_SOURCE_DIR}/src/shaders/hlsl_glsl/BasicShader.hlsl" "$<TARGET_FILE_DIR:vpx-test>/test-assets/shaders-src"
+      COMMAND "${CMAKE_COMMAND}" -E copy "${CMAKE_SOURCE_DIR}/src/shaders/hlsl_glsl/BasicShader.glfx" "$<TARGET_FILE_DIR:vpx-test>/test-assets/shaders-src"
    )
 
    if(POST_BUILD_COPY_EXT_LIBS)
@@ -452,6 +477,9 @@ elseif(PLATFORM STREQUAL "macos")
       freeimage
       hidapi
       winevbs
+      opusfile
+      opus
+      ogg
       spatialaudio
       mysofa
       z
@@ -468,6 +496,12 @@ elseif(PLATFORM STREQUAL "macos")
 
    add_custom_command(TARGET vpx-test POST_BUILD
       COMMAND "${CMAKE_COMMAND}" -E copy_directory "${CMAKE_SOURCE_DIR}/tests/assets" "$<TARGET_FILE_DIR:vpx-test>/test-assets"
+      # The TBN shader contract test reads the live shader sources from test-assets/shaders-src
+      COMMAND "${CMAKE_COMMAND}" -E make_directory "$<TARGET_FILE_DIR:vpx-test>/test-assets/shaders-src"
+      COMMAND "${CMAKE_COMMAND}" -E copy "${CMAKE_SOURCE_DIR}/src/shaders/bgfx/common.sh" "$<TARGET_FILE_DIR:vpx-test>/test-assets/shaders-src"
+      COMMAND "${CMAKE_COMMAND}" -E copy "${CMAKE_SOURCE_DIR}/src/shaders/bgfx/fs_basic.sc" "$<TARGET_FILE_DIR:vpx-test>/test-assets/shaders-src"
+      COMMAND "${CMAKE_COMMAND}" -E copy "${CMAKE_SOURCE_DIR}/src/shaders/hlsl_glsl/BasicShader.hlsl" "$<TARGET_FILE_DIR:vpx-test>/test-assets/shaders-src"
+      COMMAND "${CMAKE_COMMAND}" -E copy "${CMAKE_SOURCE_DIR}/src/shaders/hlsl_glsl/BasicShader.glfx" "$<TARGET_FILE_DIR:vpx-test>/test-assets/shaders-src"
    )
 
    if(POST_BUILD_COPY_EXT_LIBS)
@@ -556,6 +590,9 @@ elseif(PLATFORM STREQUAL "linux")
       freeimage
       hidapi-hidraw
       winevbs
+      opusfile
+      opus
+      ogg
       spatialaudio
       mysofa
       z
@@ -570,6 +607,12 @@ elseif(PLATFORM STREQUAL "linux")
 
    add_custom_command(TARGET vpx-test POST_BUILD
       COMMAND "${CMAKE_COMMAND}" -E copy_directory "${CMAKE_SOURCE_DIR}/tests/assets" "$<TARGET_FILE_DIR:vpx-test>/test-assets"
+      # The TBN shader contract test reads the live shader sources from test-assets/shaders-src
+      COMMAND "${CMAKE_COMMAND}" -E make_directory "$<TARGET_FILE_DIR:vpx-test>/test-assets/shaders-src"
+      COMMAND "${CMAKE_COMMAND}" -E copy "${CMAKE_SOURCE_DIR}/src/shaders/bgfx/common.sh" "$<TARGET_FILE_DIR:vpx-test>/test-assets/shaders-src"
+      COMMAND "${CMAKE_COMMAND}" -E copy "${CMAKE_SOURCE_DIR}/src/shaders/bgfx/fs_basic.sc" "$<TARGET_FILE_DIR:vpx-test>/test-assets/shaders-src"
+      COMMAND "${CMAKE_COMMAND}" -E copy "${CMAKE_SOURCE_DIR}/src/shaders/hlsl_glsl/BasicShader.hlsl" "$<TARGET_FILE_DIR:vpx-test>/test-assets/shaders-src"
+      COMMAND "${CMAKE_COMMAND}" -E copy "${CMAKE_SOURCE_DIR}/src/shaders/hlsl_glsl/BasicShader.glfx" "$<TARGET_FILE_DIR:vpx-test>/test-assets/shaders-src"
    )
 
    if(POST_BUILD_COPY_EXT_LIBS)

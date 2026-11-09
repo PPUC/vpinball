@@ -5,8 +5,11 @@
 #include <optional>
 
 #include "audio/AudioPlayer.h"
+#include "imgui/imgui.h"
+#include "EditorAreaView.h"
 
 class Collection;
+class IEditable;
 class Material;
 class Texture;
 class RenderProbe;
@@ -22,18 +25,24 @@ namespace VPX::EditorUI
 class EditorUI;
 class PropertyPane;
 
-// Right side panel displaying the properties of the current selection (table,
-// camera view setup, image, material, render probe, sound or editable part).
-class PropertiesPanel
+// Panel displaying the properties of the current selection (table, camera view
+// setup, image, material, render probe, sound or editable part). Hosted by a
+// leaf of the area layout (several instances may coexist).
+class PropertiesPanel : public EditorAreaView
 {
 public:
    explicit PropertiesPanel(EditorUI &editor);
    ~PropertiesPanel();
 
-   void Render(float topBarHeight);
+   AreaType GetType() const override { return AreaType::Properties; }
+   void RenderPane(const AreaRect &rect, int leafId) override;
+   void AppendStatusHints(vector<StatusHint> &hints) const override;
 
-   // Width of the panel in logical pixels (scaled by the UI DPI)
+   // Default width of a newly hosted panel in logical pixels (scaled by the UI DPI)
    static constexpr float PaneWidth = 280.f;
+
+   // Name of the main material of a part (empty when the type has none), e.g. for the outliner's 'm:' filter token
+   static string PartMaterial(const IEditable *part);
 
 private:
    void TableProperties(PropertyPane &props);
@@ -56,9 +65,9 @@ private:
    void RequestConfirm(const string &message, const std::function<void()> &action);
    void UsersSection(PropertyPane &props, const vector<WhereUsedInfo> &whereUsed);
    void RenderPopups();
-
-   EditorUI &m_editor;
    bool m_selectLiveTab = true;
+   ImGuiID m_prevActiveId = 0; // Item active on the previous frame (a different item taking the interaction ends the undo chain)
+   size_t m_editChainRecord = 0; // Undo count just after the current interaction's record was kept (it is still the latest record while equal)
 
    // Results of the asynchronous SDL file dialogs used by the resource actions. Since the dialogs are
    // asynchronous, the item selection at the time the action was requested is captured along the way.

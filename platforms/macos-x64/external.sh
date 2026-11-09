@@ -11,6 +11,7 @@ echo "  SDL_TTF_SHA: ${SDL_TTF_SHA}"
 echo "  FREEIMAGE_SHA: ${FREEIMAGE_SHA}"
 echo "  BGFX_CMAKE_VERSION: ${BGFX_CMAKE_VERSION}"
 echo "  BGFX_PATCH_SHA: ${BGFX_PATCH_SHA}"
+echo "  OPENXR_SHA: ${OPENXR_SHA}"
 echo "  PINMAME_SHA: ${PINMAME_SHA}"
 echo "  PINMAME_MEMMAPS_SHA: ${PINMAME_MEMMAPS_SHA}"
 echo "  PINMAME_GAMEDEFS_SHA: ${PINMAME_GAMEDEFS_SHA}"
@@ -23,6 +24,9 @@ echo "  LIBDOF_SHA: ${LIBDOF_SHA}"
 echo "  FFMPEG_SHA: ${FFMPEG_SHA}"
 echo "  LIBWINEVBS_SHA: ${LIBWINEVBS_SHA}"
 echo "  LIBMYSOFA_SHA: ${LIBMYSOFA_SHA}"
+echo "  LIBOGG_SHA: ${LIBOGG_SHA}"
+echo "  LIBOPUS_SHA: ${LIBOPUS_SHA}"
+echo "  OPUSFILE_SHA: ${OPUSFILE_SHA}"
 echo "  LIBSPATIALAUDIO_SHA: ${LIBSPATIALAUDIO_SHA}"
 echo "  ZLIB_SHA: ${ZLIB_SHA}"
 echo ""
@@ -184,6 +188,43 @@ if [ "${BGFX_EXPECTED_SHA}" != "${BGFX_FOUND_SHA}" ]; then
    cd ..
 
    echo "$BGFX_EXPECTED_SHA" > cache.txt
+
+   cd ..
+fi
+
+#
+# build openxr
+#
+
+OPENXR_EXPECTED_SHA="${OPENXR_SHA}"
+OPENXR_FOUND_SHA="$([ -f openxr/cache.txt ] && cat openxr/cache.txt || echo "")"
+
+if [ "${OPENXR_EXPECTED_SHA}" != "${OPENXR_FOUND_SHA}" ]; then
+   echo "Building OpenXR. Expected: ${OPENXR_EXPECTED_SHA}, Found: ${OPENXR_FOUND_SHA}"
+
+   rm -rf openxr
+   mkdir openxr
+   cd openxr
+
+   curl -sL https://github.com/KhronosGroup/OpenXR-SDK-Source/archive/${OPENXR_SHA}.tar.gz -o OpenXR-SDK-Source-${OPENXR_SHA}.tar.gz
+   tar xzf OpenXR-SDK-Source-${OPENXR_SHA}.tar.gz
+   mv OpenXR-SDK-Source-${OPENXR_SHA} openxr
+   cd openxr
+   cmake \
+      -DBUILD_WITH_SYSTEM_JSONCPP=OFF \
+      -DBUILD_TESTS=OFF \
+      -DBUILD_API_LAYERS=OFF \
+      -DCMAKE_DISABLE_FIND_PACKAGE_OpenGL=ON \
+      -DCMAKE_DISABLE_FIND_PACKAGE_OpenGLES=ON \
+      -DDYNAMIC_LOADER=ON \
+      -DCMAKE_OSX_ARCHITECTURES=x86_64 \
+      -DCMAKE_OSX_DEPLOYMENT_TARGET=14.0 \
+      -DCMAKE_BUILD_TYPE=${BUILD_TYPE} \
+      -B build
+   cmake --build build -- -j${NUM_PROCS}
+   cd ..
+
+   echo "$OPENXR_EXPECTED_SHA" > cache.txt
 
    cd ..
 fi
@@ -559,6 +600,81 @@ if [ "${ZLIB_EXPECTED_SHA}" != "${ZLIB_FOUND_SHA}" ]; then
 fi
 
 #
+# build libogg, libopus, opusfile (Opus sounds)
+#
+
+OPUS_EXPECTED_SHA="${LIBOGG_SHA}-${LIBOPUS_SHA}-${OPUSFILE_SHA}_001"
+OPUS_FOUND_SHA="$([ -f opus/cache.txt ] && cat opus/cache.txt || echo "")"
+
+if [ "${OPUS_EXPECTED_SHA}" != "${OPUS_FOUND_SHA}" ]; then
+   echo "Building opus. Expected: ${OPUS_EXPECTED_SHA}, Found: ${OPUS_FOUND_SHA}"
+
+   rm -rf opus
+   mkdir opus
+   cd opus
+
+   curl -sL https://github.com/xiph/ogg/archive/${LIBOGG_SHA}.tar.gz -o ogg-${LIBOGG_SHA}.tar.gz
+   tar xzf ogg-${LIBOGG_SHA}.tar.gz
+   mv ogg-${LIBOGG_SHA} ogg
+   cd ogg
+   cmake \
+      -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
+      -DCMAKE_OSX_ARCHITECTURES=x86_64 \
+      -DCMAKE_OSX_DEPLOYMENT_TARGET=14.0 \
+      -DCMAKE_BUILD_TYPE=${BUILD_TYPE} \
+      -DBUILD_SHARED_LIBS=OFF \
+      -DINSTALL_DOCS=OFF \
+      -DBUILD_TESTING=OFF \
+      -DCMAKE_INSTALL_PREFIX="$PWD/../install" \
+      -B build
+   cmake --build build -- -j${NUM_PROCS}
+   cmake --install build
+   cd ..
+
+   curl -sL https://github.com/xiph/opus/archive/${LIBOPUS_SHA}.tar.gz -o opus-${LIBOPUS_SHA}.tar.gz
+   tar xzf opus-${LIBOPUS_SHA}.tar.gz
+   mv opus-${LIBOPUS_SHA} opus
+   cd opus
+   cmake \
+      -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
+      -DCMAKE_OSX_ARCHITECTURES=x86_64 \
+      -DCMAKE_OSX_DEPLOYMENT_TARGET=14.0 \
+      -DCMAKE_BUILD_TYPE=${BUILD_TYPE} \
+      -DBUILD_SHARED_LIBS=OFF \
+      -DOPUS_BUILD_PROGRAMS=OFF \
+      -DOPUS_BUILD_TESTING=OFF \
+      -DCMAKE_INSTALL_PREFIX="$PWD/../install" \
+      -B build
+   cmake --build build -- -j${NUM_PROCS}
+   cmake --install build
+   cd ..
+
+   curl -sL https://github.com/xiph/opusfile/archive/${OPUSFILE_SHA}.tar.gz -o opusfile-${OPUSFILE_SHA}.tar.gz
+   tar xzf opusfile-${OPUSFILE_SHA}.tar.gz
+   mv opusfile-${OPUSFILE_SHA} opusfile
+   cd opusfile
+   cmake \
+      -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
+      -DCMAKE_OSX_ARCHITECTURES=x86_64 \
+      -DCMAKE_OSX_DEPLOYMENT_TARGET=14.0 \
+      -DCMAKE_BUILD_TYPE=${BUILD_TYPE} \
+      -DBUILD_SHARED_LIBS=OFF \
+      -DOP_DISABLE_HTTP=ON \
+      -DOP_DISABLE_DOCS=ON \
+      -DOP_DISABLE_EXAMPLES=ON \
+      -DCMAKE_PREFIX_PATH="$PWD/../install" \
+      -DCMAKE_INSTALL_PREFIX="$PWD/../install" \
+      -B build
+   cmake --build build -- -j${NUM_PROCS}
+   cmake --install build
+   cd ..
+
+   echo "$OPUS_EXPECTED_SHA" > cache.txt
+
+   cd ..
+fi
+
+#
 # build libmysofa
 #
 
@@ -658,6 +774,10 @@ cp -r bgfx/bgfx.cmake/bgfx/include/bgfx ../../../third-party/include/
 cp -r bgfx/bgfx.cmake/bimg/include/bimg ../../../third-party/include/
 cp -r bgfx/bgfx.cmake/bx/include/bx ../../../third-party/include/
 
+cp -a openxr/openxr/build/src/loader/libopenxr_loader.dylib ../../../third-party/runtime-libs/macos-x64
+mkdir -p ../../../third-party/include/openxr
+cp openxr/openxr/build/include/openxr/*.h ../../../third-party/include/openxr
+
 cp -a pinmame/pinmame/build/libpinmame.{dylib,*.dylib} ../../../third-party/runtime-libs/macos-x64
 mkdir -p ../../../third-party/include/pinmame
 cp pinmame/pinmame/src/libpinmame/libpinmame.h ../../../third-party/include/pinmame
@@ -710,6 +830,12 @@ cp zlib/zlib/build/libz.a ../../../third-party/build-libs/macos-x64
 cp libmysofa/libmysofa/build/src/libmysofa.a ../../../third-party/build-libs/macos-x64
 cp libmysofa/libmysofa/src/hrtf/mysofa.h ../../../third-party/include
 cp libmysofa/libmysofa/src/hrtf/mysofa_export.h ../../../third-party/include
+cp opus/install/lib/libogg.a ../../../third-party/build-libs/macos-x64
+cp opus/install/lib/libopus.a ../../../third-party/build-libs/macos-x64
+cp opus/install/lib/libopusfile.a ../../../third-party/build-libs/macos-x64
+mkdir -p ../../../third-party/include/ogg
+cp opus/install/include/ogg/*.h ../../../third-party/include/ogg
+cp opus/install/include/opus/*.h ../../../third-party/include
 
 cp libspatialaudio/libspatialaudio/build/libspatialaudio.a ../../../third-party/build-libs/macos-x64
 mkdir -p ../../../third-party/include/spatialaudio

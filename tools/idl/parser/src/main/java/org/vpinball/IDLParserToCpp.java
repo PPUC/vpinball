@@ -127,6 +127,11 @@ public class IDLParserToCpp {
 		}
 
 		outputStream.write("\n".getBytes());
+		outputStream.write("static VARIANT* OptionalArg(DISPPARAMS* pDispParams, int& index, VARIANT* pDefault) {\n".getBytes());
+		outputStream.write("\tif (index <= 0)\n\t\treturn pDefault;\n".getBytes());
+		outputStream.write("\tVARIANT* pArg = &pDispParams->rgvarg[--index];\n".getBytes());
+		outputStream.write("\treturn (V_VT(pArg) == VT_ERROR && V_ERROR(pArg) == DISP_E_PARAMNOTFOUND) ? pDefault : pArg;\n".getBytes());
+		outputStream.write("}\n\n".getBytes());
 
 		for (String[] block : order) {
 			String kind = block[0];
@@ -634,11 +639,12 @@ public class IDLParserToCpp {
 		}
 
 		if (type != null) {
+			// hrConv gates the method call, see generateMethod()
 			if (!param.getType().equals("VARIANT")) {
-				buffer.append("VariantChangeType(&var" + index + ", ");
+				buffer.append("if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var" + index + ", ");
 
 				if (param.hasDefaultValue() || param.isOptional()) {
-					buffer.append("(index > 0) ? &pDispParams->rgvarg[--index] : &var" + index);
+					buffer.append("OptionalArg(pDispParams, index, &var" + index + ")");
 				}
 				else {
 					buffer.append("&pDispParams->rgvarg[--index]");
@@ -647,7 +653,7 @@ public class IDLParserToCpp {
 				buffer.append(", 0, " + type + ");\n");
 			}
 			else {
-				buffer.append("VariantCopyInd(&var" + index + ", ");
+				buffer.append("if (SUCCEEDED(hrConv)) hrConv = VariantCopyInd(&var" + index + ", ");
 
 				if (param.hasDefaultValue() || param.isOptional()) {
 					buffer.append("(index > 0) ? &pDispParams->rgvarg[--index] : &var" + index);
@@ -660,7 +666,14 @@ public class IDLParserToCpp {
 			}
 		}
 		else {
-			buffer.append("VariantCopyInd(&var" + index + ", &pDispParams->rgvarg[--index]);\n");
+			// An omitted optional argument (e.g. VPDebug.Print without argument) keeps var as is: only the
+			// required arguments are covered by the DISP_E_BADPARAMCOUNT check, see generateMethod()
+			buffer.append("if (SUCCEEDED(hrConv)) hrConv = VariantCopyInd(&var" + index + ", ");
+			if (param.hasDefaultValue() || param.isOptional())
+				buffer.append("(index > 0) ? &pDispParams->rgvarg[--index] : &var" + index);
+			else
+				buffer.append("&pDispParams->rgvarg[--index]");
+			buffer.append(");\n");
 		}
 
 		return buffer.toString();
@@ -799,6 +812,8 @@ public class IDLParserToCpp {
 			else if (param.getParamType() == ParamType.OUT) {
 				if ("VARIANT*".equals(param.getType())) {
 					header.append("VARIANT* var" + index + " = &pDispParams->rgvarg[--index];\n");
+					// The method writes through the reference, so the script must pass a variable
+					header.append("if (SUCCEEDED(hrConv) && V_VT(var" + index + ") != (VT_BYREF | VT_VARIANT)) hrConv = DISP_E_TYPEMISMATCH;\n");
 					buffer.append("V_VARIANTREF(var" + index + ")");
 				}
 				else {
@@ -913,6 +928,12 @@ public class IDLParserToCpp {
 			buffer.append("}\n");
 		}
 
+		// Closes the else block inserted below
+		final boolean hasArgs = header.length() > 0;
+		if (hasArgs) {
+			buffer.append("}\n");
+		}
+
 		index = 0;
 
 		for (Param param : method.getParamList()) {
@@ -923,7 +944,12 @@ public class IDLParserToCpp {
 			index++;
 		}
 
-		buffer.insert(0, header.toString());
+		// A failed conversion leaves its VARIANT empty (e.g. V_BSTR() is then garbage), so skip the call and return
+		// the error to the script like DispInvoke does. index then designates the failed argument in rgvarg
+		if (hasArgs) {
+			buffer.insert(0, "HRESULT hrConv = S_OK;\n" + header.toString()
+					+ "if (FAILED(hrConv)) {\nhres = hrConv;\nif (puArgErr) *puArgErr = (UINT)index;\n}\nelse {\n");
+		}
 
 		if (method.getMinRequiredArgs() > 0) {
 			buffer.insert(0, "if (pDispParams->cArgs < " + method.getMinRequiredArgs() + ") {\nhres = DISP_E_BADPARAMCOUNT;\nbreak;\n}\n");

@@ -1,0 +1,136 @@
+#include "core/stdafx.h"
+
+#include "SpinnerUIPart.h"
+
+#include "../BlueprintRenderContext.h"
+#include "math/matrix.h"
+#include "utils/color.h"
+
+namespace VPX::EditorUI
+{
+
+SpinnerUIPart::SpinnerUIPart(Spinner* spinner)
+   : EditableUIPart(spinner, { &Data::m_visible })
+{
+}
+
+SpinnerUIPart::TransformMask SpinnerUIPart::GetTransform(Matrix3D& transform)
+{
+   const float height = m_part->GetPTable()->GetSurfaceHeight(m_part->m_d.m_szSurface, m_part->m_d.m_vCenter.x, m_part->m_d.m_vCenter.y);
+   transform = Matrix3D::MatrixTranslate(m_part->m_d.m_vCenter.x, m_part->m_d.m_vCenter.y, height);
+   return TM_TransAny;
+}
+
+void SpinnerUIPart::SetTransform(const vec3& pos, const vec3& scale, const vec3& rot)
+{ 
+   m_part->m_d.m_vCenter.x = pos.x;
+   m_part->m_d.m_vCenter.y = pos.y;
+}
+
+void SpinnerUIPart::RenderOverlay(const EditorRenderContext& ctx)
+{
+   ctx.DrawWireframe(m_part);
+}
+
+void SpinnerUIPart::RenderBlueprint(const BlueprintRenderContext& ctx)
+{
+   if (ctx.GetPass() == BlueprintRenderContext::Pass::Fill)
+      return;
+
+   ctx.SetBorderColor(RGB(0, 0, 0), false, 0);
+   ctx.SetLineColor(RGB(0, 0, 0), false, 3);
+   ctx.SetObject(this);
+
+   const float halflength = m_part->m_d.m_length * 0.5f;
+
+   const float radangle = ANGTORAD(m_part->m_d.m_rotation);
+   float sn = sinf(radangle);
+   float cs = cosf(radangle);
+
+   ctx.Line(m_part->m_d.m_vCenter.x + cs * halflength, m_part->m_d.m_vCenter.y + sn * halflength, m_part->m_d.m_vCenter.x - cs * halflength, m_part->m_d.m_vCenter.y - sn * halflength);
+
+   ctx.SetLineColor(RGB(0, 0, 0), false, 1);
+   ctx.SetObject(this);
+
+   ctx.Line(m_part->m_d.m_vCenter.x + cs * halflength, m_part->m_d.m_vCenter.y + sn * halflength, m_part->m_d.m_vCenter.x - cs * halflength, m_part->m_d.m_vCenter.y - sn * halflength);
+
+   if (sn == 0.0f)
+      sn = 1.0f;
+   if (cs == 0.0f)
+      cs = 1.0f;
+   ctx.Rectangle(m_part->m_d.m_vCenter.x - cs * halflength * 0.65f, m_part->m_d.m_vCenter.y - sn * halflength * 0.65f, m_part->m_d.m_vCenter.x + cs * halflength * 0.65f,
+      m_part->m_d.m_vCenter.y + sn * halflength * 0.65f);
+}
+
+void SpinnerUIPart::UpdatePropertyPane(PropertyPane& props)
+{
+   props.EditableHeader("Spinner"s, m_part);
+
+   if (props.BeginSection("Visuals"s))
+   {
+      props.Checkbox<Spinner>(
+         m_part, "Visible"s, //
+         [this](const Spinner* spinner) { return GetVisibility(spinner); }, //
+         [this](Spinner* spinner, bool v) { SetVisibility(spinner, v); });
+      props.MaterialVisuals(m_part, "Material"s, &Data::m_szMaterial, "Image"s, &Data::m_szImage);
+      props.Checkbox<Spinner>(
+         m_part, "Show Bracket"s, //
+         [](const Spinner* spinner) { return spinner->m_d.m_showBracket; }, //
+         [](Spinner* spinner, bool v) { spinner->m_d.m_showBracket = v; });
+      props.Checkbox<Spinner>(
+         m_part, "Reflection Enabled"s, //
+         [](const Spinner* spinner) { return spinner->m_d.m_reflectionEnabled; }, //
+         [](Spinner* spinner, bool v) { spinner->m_d.m_reflectionEnabled = v; }, "Render this part in the table's reflections");
+      props.EndSection();
+   }
+
+   if (props.BeginSection("Position"s))
+   {
+      props.InputFloat2<Spinner>(
+         m_part, "Position"s, //
+         [](const Spinner* spinner) { return spinner->m_d.m_vCenter; }, //
+         [](Spinner* spinner, const Vertex2D& v) { spinner->Translate(Vertex2D(v.x - spinner->m_d.m_vCenter.x, v.y - spinner->m_d.m_vCenter.y)); }, PropertyPane::Unit::VPLength, 1);
+      props.SurfaceCombo<Spinner>(
+         m_part, "Surface"s, //
+         [](const Spinner* spinner) { return spinner->m_d.m_szSurface; }, //
+         [](Spinner* spinner, const string& v) { spinner->m_d.m_szSurface = v; }, "Surface this part rests on (defines its base height)");
+      props.InputFloat<Spinner>(
+         m_part, "Length"s, //
+         [](const Spinner* spinner) { return spinner->m_d.m_length; }, //
+         [](Spinner* spinner, float v) { spinner->m_d.m_length = v; }, PropertyPane::Unit::VPLength, 1);
+      props.InputFloat<Spinner>(
+         m_part, "Height"s, //
+         [](const Spinner* spinner) { return spinner->m_d.m_height; }, //
+         [](Spinner* spinner, float v) { spinner->m_d.m_height = v; }, PropertyPane::Unit::VPLength, 1);
+      props.InputFloat<Spinner>(
+         m_part, "Rotation"s, //
+         [](const Spinner* spinner) { return spinner->m_d.m_rotation; }, //
+         [](Spinner* spinner, float v) { spinner->m_d.m_rotation = v; }, PropertyPane::Unit::Degree, 1);
+      props.InputFloat<Spinner>(
+         m_part, "Angle Max"s, //
+         [](const Spinner* spinner) { return spinner->m_d.m_angleMax; }, //
+         [](Spinner* spinner, float v) { spinner->m_d.m_angleMax = v; }, PropertyPane::Unit::Degree, 1);
+      props.InputFloat<Spinner>(
+         m_part, "Angle Min"s, //
+         [](const Spinner* spinner) { return spinner->m_d.m_angleMin; }, //
+         [](Spinner* spinner, float v) { spinner->m_d.m_angleMin = v; }, PropertyPane::Unit::Degree, 1);
+      props.EndSection();
+   }
+
+   if (props.BeginSection("Physics"s))
+   {
+      props.InputFloat<Spinner>(
+         m_part, "Elasticy"s, //
+         [](const Spinner* spinner) { return spinner->m_d.m_elasticity; }, //
+         [](Spinner* spinner, float v) { spinner->m_d.m_elasticity = v; }, PropertyPane::Unit::None, 2);
+      props.InputFloat<Spinner>(
+         m_part, "Damping"s, //
+         [](const Spinner* spinner) { return spinner->m_d.m_damping; }, //
+         [](Spinner* spinner, float v) { spinner->m_d.m_damping = v; }, PropertyPane::Unit::None, 2, "Resistance slowing the spinner's rotation");
+      props.EndSection();
+   }
+
+   props.TimerSection(m_part);
+}
+
+}

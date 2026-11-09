@@ -48,6 +48,7 @@ void ReportError(const string& errorText, const HRESULT hr, const char *file, co
 
 class Shader;
 class ModelViewProj;
+struct UIListGeometry;
 
 class RenderDeviceState final
 {
@@ -128,6 +129,10 @@ public:
                          const int x2 = -1, const int y2 = -1, const int w2 = -1, const int h2 = -1,
                          const int srcLayer = -1, const int dstLayer = -1);
    void DrawMesh(Shader* shader, const bool isTranparentPass, const Vertex3Ds& center, const float depthBias, std::shared_ptr<MeshBuffer> mb, const PrimitiveTypes type, const uint32_t startIndex, const uint32_t indexCount);
+#if defined(ENABLE_BGFX)
+   void DrawTransientMesh(Shader* shader, const bool isTransparentPass, const float depth, std::shared_ptr<UIListGeometry> geo, std::shared_ptr<MeshBuffer> mb, const PrimitiveTypes type,
+      const uint32_t startIndex, const uint32_t indexCount);
+#endif
    void DrawTexturedQuad(Shader* shader, const Vertex3D_TexelOnly* vertices, const bool isTransparent = false, const float depth = 0.f);
    void DrawTexturedQuad(Shader* shader, const Vertex3D_NoTex2* vertices, const bool isTransparent = false, const float depth = 0.f);
    void DrawFullscreenTexturedQuad(Shader* shader);
@@ -298,6 +303,7 @@ public:
    bgfx::ProgramHandle m_program = BGFX_INVALID_HANDLE; // Bound program for next draw submission
    bgfx::VertexLayout* m_pVertexTexelDeclaration = nullptr;
    bgfx::VertexLayout* m_pVertexNormalTexelDeclaration = nullptr;
+   bgfx::VertexLayout* m_pVertexImGuiDeclaration = nullptr;
    bgfx::ViewId m_activeViewId = 0;
    uint16_t m_activeViewClearFlags = BGFX_CLEAR_NONE; // Accumulated clear flags of the active view (BGFX applies a single clear per view, using the last defined state)
    uint32_t m_activeViewClearColor = 0;
@@ -377,6 +383,10 @@ public:
    std::shared_ptr<MeshBuffer> m_quadPNTDynMeshBuffer; // internal vb for rendering dynamic quads (position/normal/texture)
    std::shared_ptr<MeshBuffer> m_quadPTDynMeshBuffer; // internal vb for rendering dynamic quads (position/texture)
 
+   // Basic shader matrix block for screen space rendering (desktop backdrop, ancillary outputs). World and view are identity so that shaders see the
+   // vertex position as table position (e.g. classic light halos), like on DX9. Layout depends on the shader eye count (see BasicShader.glfx)
+   void SetBasicShaderScreenSpaceMatrices(const Matrix3D& matWorldViewProj);
+
 private:
    GLfloat m_maxaniso;
    int m_GLversion;
@@ -397,6 +407,7 @@ public:
    IDirect3DVertexDeclaration9* m_currentVertexDeclaration = nullptr;
    IDirect3DVertexDeclaration9* m_pVertexTexelDeclaration = nullptr;
    IDirect3DVertexDeclaration9* m_pVertexNormalTexelDeclaration = nullptr;
+   IDirect3DVertexDeclaration9* m_pVertexImGuiDeclaration = nullptr;
 
    bool m_autogen_mipmap;
    bool m_useNvidiaApi;

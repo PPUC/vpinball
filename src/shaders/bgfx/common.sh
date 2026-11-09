@@ -79,6 +79,42 @@ vec3 mul_w0(const vec3 v, const mat4x3 m)
     return v.x*m[0] + v.y*m[1] + v.z*m[2];
 }*/
 
+#if BGFX_SHADER_TYPE_FRAGMENT // screen space derivatives are fragment only
+// Cotangent frame for tangent space normal mapping (Christian Schüler, "Normal
+// Mapping without Precomputed Tangents"). pos must be the raw view space position:
+// its screen space derivatives are the true triangle edges. Passing a normalized
+// direction (e.g. the view vector) projects the edges onto the plane perpendicular
+// to the view ray, skewing the frame at grazing angles in a way the normalization
+// below can not undo.
+// The frame is the DX9 one (normal maps authored for VPX 10.8): T and B along increasing
+// u and v. pos and uv are differentiated as is on every target: on OpenGL, the window y
+// axis flips the y derivatives of both, which cancels out (all backends are checked by
+// the 'Normal mapping render' test).
+mat3 TBN_trafo(const vec3 N, const vec3 pos, const vec2 uv)
+{
+   // derivatives: edge vectors for tri-pos and tri-uv
+   const vec3 dpx = dFdx(pos);
+   const vec3 dpy = dFdy(pos);
+   const vec2 duvx = dFdx(uv);
+   const vec2 duvy = dFdy(uv);
+
+   // solve linear system
+   const vec3 dp2perp = cross(N, dpy);
+   const vec3 dp1perp = cross(dpx, N);
+   const vec3 T = dp2perp * duvx.x + dp1perp * duvy.x;
+   const vec3 B = dp2perp * duvx.y + dp1perp * duvy.y;
+
+   // degenerate uvs give a null frame: fall back to the geometric normal instead of NaNs
+   const float invmax = max(dot(T,T), dot(B,B));
+   if (invmax < 1e-12)
+      return mtxFromCols(vec3_splat(0.0), vec3_splat(0.0), N);
+
+   // construct scale-invariant transformation
+   // T, B, N as columns (mat3() makes them rows on HLSL/SPIR-V/Metal), so mul(TBN, tn) = T * tn.x + B * tn.y + N * tn.z as in the DX9 shader
+   return mtxFromCols(T, B, N * sqrt(invmax)); // inverse scale, as will be normalized anyhow later-on (to save some mul's)
+}
+#endif // BGFX_SHADER_TYPE_FRAGMENT
+
 #if 0
 float acos_approx(const float v)
 {

@@ -80,29 +80,10 @@ uniform vec4 lightCenter_doShadow;
 #include "material.sh"
 #include "ball_shadows.sh"
 
-mat3 TBN_trafo(const vec3 N, const vec3 V, const vec2 uv)
-{
-   // derivatives: edge vectors for tri-pos and tri-uv
-   const vec3 dpx = dFdx(V);
-   const vec3 dpy = dFdy(V);
-   const vec2 duvx = dFdx(uv);
-   const vec2 duvy = dFdy(uv);
-
-   // solve linear system
-   const vec3 dp2perp = cross(N, dpy);
-   const vec3 dp1perp = cross(dpx, N);
-   const vec3 T = dp2perp * duvx.x + dp1perp * duvy.x;
-   const vec3 B = dp2perp * duvx.y + dp1perp * duvy.y;
-
-   // construct scale-invariant transformation
-   // T, B, N as columns (mat3() makes them rows on HLSL/SPIR-V/Metal), so mul(TBN, tn) = T * tn.x + B * tn.y + N * tn.z as in the DX9 shader
-   return mtxFromCols(T, B, N * sqrt( max(dot(T,T), dot(B,B)) )); // inverse scale, as will be normalized anyhow later-on (to save some mul's)
-}
-
 #ifdef STEREO
-vec3 normal_map(const vec3 N, const vec3 V, const vec2 uv, const float v_eye)
+vec3 normal_map(const vec3 N, const vec3 pos, const vec2 uv, const float v_eye)
 #else
-vec3 normal_map(const vec3 N, const vec3 V, const vec2 uv)
+vec3 normal_map(const vec3 N, const vec3 pos, const vec2 uv)
 #endif
 {
    vec3 tn;
@@ -117,7 +98,7 @@ vec3 normal_map(const vec3 N, const vec3 V, const vec2 uv)
    }
    else
    { // Tangent space
-      return normalize(mul(TBN_trafo(N, V, uv), tn).xyz);
+      return normalize(mul(TBN_trafo(N, pos, uv), tn).xyz);
    }
 }
 
@@ -237,14 +218,12 @@ vec3 compute_refraction(const vec3 pos, const vec3 screenCoord, const vec3 N, co
 
       const vec3 V = -normalize(v_worldPos);
       vec3 N = normalize(v_normal);
-      #ifdef TEX
-         BRANCH if (doNormalMapping)
-            #ifdef STEREO
-               N = normal_map(N, -V, v_texcoord0, v_eye);
-            #else
-               N = normal_map(N, -V, v_texcoord0);
-            #endif
-      #endif
+      BRANCH if (doNormalMapping)
+         #ifdef STEREO
+            N = normal_map(N, v_worldPos, v_texcoord0, v_eye);
+         #else
+            N = normal_map(N, v_worldPos, v_texcoord0);
+         #endif
 
       //color = vec4((N+1.0)*0.5,1.0); return; // visualize normals
 

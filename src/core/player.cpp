@@ -112,8 +112,9 @@ Player::Player(PinTable *const table, const PlayMode playMode, LoadProgress &loa
    , m_scoreViewOutput(VPXWindowId::VPXWINDOW_ScoreView)
    , m_topperOutput(VPXWindowId::VPXWINDOW_Topper)
    , m_pininput(this, g_settingsService.GetAppSettings())
-   , m_audioPlayer(std::make_unique<VPX::AudioPlayer>(
-        table->GetSettings().GetPlayer_SoundDeviceBG(), table->GetSettings().GetPlayer_SoundDevice(), static_cast<VPX::SoundConfigTypes>(table->GetSettings().GetPlayer_Sound3D())))
+   , m_audioPlayer(std::make_unique<VPX::AudioPlayer>(table->GetSettings().GetPlayer_SoundDeviceBG(), table->GetSettings().GetPlayer_SoundDevice(),
+        static_cast<VPX::SoundConfigTypes>(table->GetSettings().GetPlayer_Sound3D()), static_cast<VPX::BackglassConfigTypes>(table->GetSettings().GetPlayer_Sound3DBackglass()),
+        table->GetSettings().GetPlayer_SoundDeviceHaptic(), static_cast<VPX::SoundConfigTypes>(table->GetSettings().GetPlayer_Sound3DHaptic())))
    , m_resURIResolver(m_pluginManager.GetMsgAPI(), m_pluginAPI.GetVPXEndPointId(), true, true, true)
 {
    // For the time being, lots of access are made through the global singleton, so ensure we are unique, and define it as soon as needed
@@ -129,6 +130,7 @@ Player::Player(PinTable *const table, const PlayMode playMode, LoadProgress &loa
    // without a working video driver. It must happen before the window creation below, hence at
    // the very start of the Player. Released in the destructor.
    SDL_SetHint(SDL_HINT_WINDOW_ALLOW_TOPMOST, "0");
+   SDL_SetHint(SDL_HINT_TRACKPAD_IS_TOUCH_ONLY, "1");
    if (!SDL_InitSubSystem(SDL_INIT_VIDEO))
    {
       PLOGE << "SDL_InitSubSystem(SDL_INIT_VIDEO) failed: " << SDL_GetError();
@@ -291,6 +293,11 @@ Player::Player(PinTable *const table, const PlayMode playMode, LoadProgress &loa
          // Disable VSync for VR (sync is performed by the VR runtime)
          m_videoSyncMode = VideoSyncMode::VSM_NONE;
          m_maxFramerate = 10000.f;
+
+         // In VR the desktop display is not the main output and may lose focus while the game keeps
+         // playing (e.g. another person using the computer): keep receiving joystick/gamepad input,
+         // which SDL otherwise suppresses for unfocused applications (reverted in the destructor)
+         SDL_SetHint(SDL_HINT_JOYSTICK_ALLOW_BACKGROUND_EVENTS, "1");
       }
       else
       {
@@ -366,6 +373,11 @@ Player::Player(PinTable *const table, const PlayMode playMode, LoadProgress &loa
    if (stereo3D == STEREO_VR)
       m_renderer->DisableStaticPrePass(true);
 
+   // Undo the cursor hidden at construction: in VR it must only be hidden when the desktop display
+   // presents a game surface, otherwise it belongs to whoever is using the computer
+   if (IsVR() && !ShouldHideDesktopCursor())
+      SDL_ShowCursor();
+
    m_renderer->m_renderDevice->m_vsyncCount = 1;
 
    //----------------------------------------------------------------------------------
@@ -392,6 +404,8 @@ Player::Player(PinTable *const table, const PlayMode playMode, LoadProgress &loa
    msgApi->SubscribeMsg(m_pluginAPI.GetVPXEndPointId(), m_onAudioUpdatedMsgId, OnAudioUpdated, this);
    msgApi->SubscribeMsg(m_pluginAPI.GetVPXEndPointId(), m_onAudioSrcChangedMsgId, OnAudioSrcChanged, this);
    OnAudioSrcChanged(m_onAudioSrcChangedMsgId, this, nullptr);
+   m_getAudioOutputMsgId = msgApi->GetMsgID(CTLPI_NAMESPACE, CTLPI_AUDIO_GET_OUTPUT_MSG);
+   msgApi->SubscribeMsg(m_pluginAPI.GetVPXEndPointId(), m_getAudioOutputMsgId, OnGetAudioOutput, this);
 
    m_getAuxRendererId = msgApi->GetMsgID(VPXPI_NAMESPACE, VPXPI_MSG_GET_AUX_RENDERER);
    m_onAuxRendererChgId = msgApi->GetMsgID(VPXPI_NAMESPACE, VPXPI_EVT_AUX_RENDERER_CHG);
@@ -408,11 +422,6 @@ Player::Player(PinTable *const table, const PlayMode playMode, LoadProgress &loa
    {
       assert(m_renderer->m_stereo3D != STEREO_VR);
       m_liveUI->OpenEditorUI();
-   }
-   if (playMode == PlayMode::FullEdit)
-   {
-      m_liveUI->PushNotification("** Saving should only be used on test tables as it may break table file **", 10000);
-      m_liveUI->PushNotification("This is a an early & unstable version of the Live Editor, only meant for testing.", 10000);
    }
 
    m_loadProgress->SetProgress("Starting..."s, 100);
@@ -523,6 +532,7 @@ void Player::InitTableSession(const bool isInitial)
 
    m_backglassVolume = dequantizeUnsignedPercent(m_ptable->GetSettings().GetPlayer_MusicVolume());
    m_playfieldVolume = dequantizeUnsignedPercent(m_ptable->GetSettings().GetPlayer_SoundVolume());
+   m_hapticVolume = dequantizeUnsignedPercent(m_ptable->GetSettings().GetPlayer_HapticVolume());
    UpdateVolume();
 
    PLOGI << "Initializing inputs & implicit objects"; // For profiling
@@ -1458,6 +1468,8 @@ Player::~Player()
    msgApi->UnsubscribeMsg(m_onAudioSrcChangedMsgId, OnAudioSrcChanged, this);
    msgApi->ReleaseMsgID(m_onAudioSrcChangedMsgId);
    msgApi->ReleaseMsgID(m_getAudioSrcMsgId);
+   msgApi->UnsubscribeMsg(m_getAudioOutputMsgId, OnGetAudioOutput, this);
+   msgApi->ReleaseMsgID(m_getAudioOutputMsgId);
    msgApi->ReleaseMsgID(m_onPrepareFrameMsgId);
    msgApi->UnsubscribeMsg(m_onAuxRendererChgId, OnAuxRendererChanged, this);
    msgApi->ReleaseMsgID(m_getAuxRendererId);
@@ -1467,7 +1479,11 @@ Player::~Player()
 
    // Save adjusted VR settings
    if (m_renderer->m_stereo3D == STEREO_VR)
+   {
       m_vrDevice->SaveVRSettings(g_settingsService.GetAppSettings());
+      // Restore SDL's default of suppressing joystick events while unfocused (enabled for VR in the constructor)
+      SDL_SetHint(SDL_HINT_JOYSTICK_ALLOW_BACKGROUND_EVENTS, "0");
+   }
 
    // FIXME remove or at least move legacy ushock to a plugin
    ushock_output_shutdown();
@@ -1562,6 +1578,8 @@ bool Player::ShowStats() const
    const InfoMode mode = GetInfoMode();
    return mode == IF_FPS || mode == IF_PROFILING;
 }
+
+bool Player::ShouldHideDesktopCursor() const { return !IsVR() || (m_renderer && m_renderer->NeedsDesktopSceneRender()); }
 
 void Player::OnFocusChanged()
 {
@@ -1926,9 +1944,14 @@ void Player::ProcessOSMessages(const bool isInitialized)
          if (m_playfieldWnd->GetCore() == wnd)
             m_playfieldWnd->OnResized();
          else
+         {
             for (VPX::RenderOutput* const output : { &m_backglassOutput, &m_scoreViewOutput, &m_topperOutput })
                if (output->GetMode() == VPX::RenderOutput::OM_WINDOW && output->GetWindow()->GetCore() == wnd)
                   output->GetWindow()->OnResized();
+            // The desktop display window presented in VR is owned by the render device
+            if (IsVR() && m_renderer && m_renderer->m_renderDevice->m_outputWnd.size() >= 2 && m_renderer->m_renderDevice->m_outputWnd[1]->GetCore() == wnd)
+               m_renderer->m_renderDevice->m_outputWnd[1]->OnResized();
+         }
          break;
       }
 
@@ -2286,13 +2309,13 @@ void Player::UpdateGameLogic()
       m_pininput.ProcessInput(); // Trigger key events to sync with controller
       if (IsPlaying())
       {
-         // Handle a main thread stall (static prerender at startup, shader compilation,...) like a pause: shift the game forward in time
-         // instead of catching up. Otherwise game time jumps by the stall duration, PinMAME (time fenced on game time by core.vbs) races
-         // to catch up, and the audio it produces meanwhile adds the stall duration to the audio latency for the rest of the session.
+         // Game time lagging more than maxCatchUp (main thread stall: static prerender at startup, shader compilation,...) skips the excess, as a pause.
+         // Catching it up would make PinMAME (time fenced on game time by core.vbs) race forward, and the audio produced meanwhile would add the stall
+         // to the audio latency for the rest of the session. Shorter lags (slow frames, long script calls) are fully simulated
+         constexpr uint64_t maxCatchUp = 100000; // [us]
          const uint64_t now = usec();
-         if (m_lastPhysicsUpdate != 0 && now - m_lastPhysicsUpdate > 100000)
-            m_noTimeCorrect = true;
-         m_lastPhysicsUpdate = now;
+         if (m_physics->IsStarted() && now > m_physics->GetCurrentTime() + maxCatchUp)
+            m_physics->SkipTime(now - (m_physics->GetCurrentTime() + maxCatchUp));
          m_physics->UpdatePhysics(now); // Update physics (also triggering events, syncing with controller)
          m_pininput.UpdateRumble(); // Send the rumble triggered by the physics update
          // TODO These updates should also be done directly in the physics engine after collision events
@@ -2840,6 +2863,15 @@ void Player::OnAudioSrcChanged(const unsigned int msgId, void *userData, void *m
             laneIt->second.overriden = true;
 }
 
+void Player::OnGetAudioOutput(const unsigned int msgId, void *userData, void *msgData)
+{
+   // May be called from any thread (e.g. a controller starting its audio)
+   const Player *const me = static_cast<Player *>(userData);
+   GetAudioOutputMsg &msg = *static_cast<GetAudioOutputMsg *>(msgData);
+   if (msg.target == CTLPI_AUDIO_TARGET_BACKGLASS) // All plugin audio streams are played on the backglass output (see OnAudioUpdated)
+      msg.sampleRate = me->m_audioPlayer->GetStreamOutputSampleRate();
+}
+
 void Player::OnAudioUpdated(const unsigned int msgId, void *userData, void *msgData)
 {
    Player *me = static_cast<Player *>(userData);
@@ -2908,7 +2940,7 @@ void Player::SetAudioLaneMixerVolume(uint64_t laneId, float volume)
       it->second.mixerVolume = volume;
 }
 
-void Player::UpdateVolume() { m_audioPlayer->SetMainVolume(m_backglassVolume, m_playfieldVolume); }
+void Player::UpdateVolume() { m_audioPlayer->SetMainVolume(m_backglassVolume, m_playfieldVolume, m_hapticVolume); }
 
 void Player::PauseMusic()
 {

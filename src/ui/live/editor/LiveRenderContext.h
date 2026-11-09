@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "EditorUIPart.h"
+#include "parts/EditorUIPart.h"
 #include "renderer/Renderer.h"
 
 class Player;
@@ -26,6 +26,10 @@ public:
    ImDrawList *GetDrawList() const override { return m_drawlist; }
 
    ImVec2 Project(const Vertex3Ds &v) const override;
+   // Makes Project use the given view-projection matrix and map the result into a display-space
+   // rect (viewport pane rendering): origin is the rect's top left in display px, scale converts
+   // render px to display px, halfW/H is the render space half size
+   void SetPaneProjection(const Matrix3D &mvp, const ImVec2 &origin, const ImVec2 &scale, float halfW, float halfH);
    void DrawLine(const Vertex3Ds &a, const Vertex3Ds &b, ImU32 color) const override;
    void DrawCircle(const Vertex3Ds &center, const Vertex3Ds &x, const Vertex3Ds &y, float radius, ImU32 color) const override;
    void DrawHitObjects(IEditable *editable) const override;
@@ -33,6 +37,7 @@ public:
 
    bool m_isSelected = false;
    bool m_isActive = false;
+   int m_selectionDisplay = 0; // 0 = edges only, 1 = edges and tint, 2 = hidden (Editor/NavSelectionDisplay)
 
 private:
    Player *m_player;
@@ -40,6 +45,11 @@ private:
    const ViewMode m_viewMode;
    const Renderer::ShadeMode m_shadeMode;
    const bool m_needsLiveTableSync;
+   Matrix3D m_paneMvp {}; // Pane projection override (see SetPaneProjection), used when m_hasPaneMvp
+   bool m_hasPaneMvp = false;
+   ImVec2 m_projOrigin { 0.f, 0.f };
+   ImVec2 m_projScale { 1.f, 1.f };
+   float m_projHalfW = 0.f, m_projHalfH = 0.f;
 };
 
 }

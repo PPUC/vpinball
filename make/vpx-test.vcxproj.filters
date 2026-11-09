@@ -25,6 +25,9 @@
     <Filter Include="render">
       <UniqueIdentifier>{07AAEE0E-5F1F-4D1F-885D-15C36E60C7A8}</UniqueIdentifier>
     </Filter>
+    <Filter Include="ui">
+      <UniqueIdentifier>{8F2B5C1D-4E7A-4F3B-9C2E-6D1A5B8E4F7C}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="../gen/vpinball_i.c" />
@@ -71,6 +74,9 @@
     <ClCompile Include="../../tests/input/test-buttonmapping.cpp">
       <Filter>input</Filter>
     </ClCompile>
+    <ClCompile Include="../../tests/input/test-inputaction.cpp">
+      <Filter>input</Filter>
+    </ClCompile>
     <ClCompile Include="../../tests/input/test-plunger-kalman.cpp">
       <Filter>input</Filter>
     </ClCompile>
@@ -99,6 +105,9 @@
       <Filter>misc</Filter>
     </ClCompile>
     <ClCompile Include="../../tests/misc/test-table-io.cpp">
+      <Filter>misc</Filter>
+    </ClCompile>
+    <ClCompile Include="../../tests/misc/test-tbn-shader.cpp">
       <Filter>misc</Filter>
     </ClCompile>
     <ClCompile Include="../../tests/parts/test-ball.cpp">
@@ -224,8 +233,23 @@
     <ClCompile Include="../../tests/render/test-mirror-render.cpp">
       <Filter>render</Filter>
     </ClCompile>
+    <ClCompile Include="../../tests/render/test-multiview-render.cpp">
+      <Filter>render</Filter>
+    </ClCompile>
+    <ClCompile Include="../../tests/render/test-normalmap-render.cpp">
+      <Filter>render</Filter>
+    </ClCompile>
     <ClCompile Include="../../tests/render/test-renderframe.cpp">
       <Filter>render</Filter>
+    </ClCompile>
+    <ClCompile Include="../../tests/render/test-vr-spaces.cpp">
+      <Filter>render</Filter>
+    </ClCompile>
+    <ClCompile Include="../../tests/render/test-window.cpp">
+      <Filter>render</Filter>
+    </ClCompile>
+    <ClCompile Include="../../tests/ui/test-arealayout.cpp">
+      <Filter>ui</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

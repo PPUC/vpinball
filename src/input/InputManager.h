@@ -3,6 +3,7 @@
 #pragma once
 
 #include <SDL3/SDL.h>
+#include <bitset>
 #include <mutex>
 
 #include "input/InputAction.h"
@@ -19,9 +20,7 @@ class NudgeHandler;
 };
 
 
-class InputManager final
-   : public ButtonMapping::ButtonInputEventManager
-   , public SensorMapping::AxisInputEventManager
+class InputManager final : public InputAction::EventManager, public SensorMapping::AxisInputEventManager
 {
 public:
    InputManager(class Player* player, Settings& appSettings);
@@ -63,7 +62,16 @@ public:
    unsigned int GetVRViewCenterActionId() const { return m_vrViewCenterActionId; }
    unsigned int GetVRViewUpActionId() const { return m_vrViewUpActionId; }
    unsigned int GetVRViewDownActionId() const { return m_vrViewDownActionId; }
-   bool IsUINavigationActionId(unsigned int id) const;
+   unsigned int GetVRViewLeftActionId() const { return m_vrViewLeftActionId; }
+   unsigned int GetVRViewRightActionId() const { return m_vrViewRightActionId; }
+   unsigned int GetVRViewFrontActionId() const { return m_vrViewFrontActionId; }
+   unsigned int GetVRViewBackActionId() const { return m_vrViewBackActionId; }
+   unsigned int GetPauseActionId() const { return m_pauseActionId; }
+   unsigned int GetPerfOverlayActionId() const { return m_perfOverlayActionId; }
+   unsigned int GetRulesActionId() const { return m_rulesActionId; }
+   unsigned int GetMouseLeftActionId() const { return m_mouseLeftActionId; }
+   unsigned int GetMouseRightActionId() const { return m_mouseRightActionId; }
+   bool IsUINavigationActionId(unsigned int id) const override;
    bool IsPressed(int actionId) const;
    int GetWindowVirtualKeyForAction(unsigned int actionId) const;
 
@@ -83,6 +91,7 @@ public:
    class MappingSetupHandler
    {
    public:
+      virtual bool IsTestingMapping() const = 0;
       virtual void MapAction(const vector<ButtonMapping>& input, unsigned int action) = 0;
       virtual void MapPlunger(std::unique_ptr<PlungerSensor> sensor) = 0;
       virtual void MapNudge(std::unique_ptr<VPX::Physics::NudgeSensor> sensor) = 0;
@@ -92,8 +101,10 @@ public:
    void RegisterElementName(uint16_t deviceId, bool isAxis, uint16_t buttonOrAxisId, const string& name);
    void UnregisterDevice(uint16_t deviceId);
    void ClearDeviceMappings(uint16_t deviceId);
-   uint16_t GetDeviceId(const string& settingsId);
-   const string& GetDeviceSettingId(uint16_t deviceId) const;
+   bool HasDeviceDefaultMapping(uint16_t deviceId) const;
+   void ApplyDefaultDeviceMapping(uint16_t deviceId);
+   uint16_t GetDeviceId(const string& settingsId) override;
+   const string& GetDeviceSettingId(uint16_t deviceId) const override;
    const string& GetDeviceName(uint16_t deviceId) const;
    bool IsDeviceConnected(uint16_t deviceId) const;
    bool IsDeviceMapped(uint16_t deviceId) const;
@@ -116,8 +127,8 @@ public:
    void AddAxisListener(std::function<void()> listener) { m_axisListeners.push_back(std::move(listener)); }
    void ClearAxisListeners() { m_axisListeners.clear(); }
 
-   void RegisterOnUpdate(InputAction* action);
-   void UnregisterOnUpdate(InputAction* action);
+   void RegisterOnUpdate(InputAction* action) override;
+   void UnregisterOnUpdate(InputAction* action) override;
 
    struct TouchRegionDef
    {
@@ -130,7 +141,7 @@ public:
 
    void StartButtonCapture();
    const vector<ButtonMapping>& GetButtonCapture() const { return m_buttonCapture; }
-   string GetMappingLabel(const vector<ButtonMapping>& mappings) const;
+   string GetMappingLabel(const vector<ButtonMapping>& mappings) const override;
    bool IsButtonCaptureDone() const { return m_buttonCaptureState == 2; }
 
    // ButtonInputEventManager
@@ -150,7 +161,7 @@ public:
    };
 
    // Used by actions to report state changes and query if local processing should be performed
-   bool OnInputActionStateChanged(InputAction* action);
+   bool OnInputActionStateChanged(InputAction* action) override;
 
    // Speed: 0..1. Pulses are mixed, not replaced: the device plays the strongest active pulse per motor, and
    // falls back to the next one when that runs out. The devices are driven by UpdateRumble.
@@ -234,7 +245,16 @@ private:
    unsigned int m_vrViewCenterActionId;
    unsigned int m_vrViewUpActionId;
    unsigned int m_vrViewDownActionId;
+   unsigned int m_vrViewLeftActionId;
+   unsigned int m_vrViewRightActionId;
+   unsigned int m_vrViewFrontActionId;
+   unsigned int m_vrViewBackActionId;
    unsigned int m_vrControllerViewCenteringActionId;
+   unsigned int m_pauseActionId;
+   unsigned int m_perfOverlayActionId;
+   unsigned int m_rulesActionId;
+   unsigned int m_mouseLeftActionId;
+   unsigned int m_mouseRightActionId;
    ankerl::unordered_dense::map<uint32_t, vector<ButtonMapping*>> m_buttonMappings;
    vector<InputAction*> m_onUpdateActions;
    const unsigned int m_onActionEventMsgId;
@@ -268,11 +288,11 @@ private:
    };
    vector<DeviceDef> m_inputDevices;
    const uint16_t m_keyboardDeviceId;
+   std::bitset<256> m_scriptKeysDown; // DirectInput keys for which a KeyDown was sent to the script, and no KeyUp yet
    const uint16_t m_mouseDeviceId;
    bool m_hasPendingLayoutApply = false;
    void LoadDevicesFromSettings();
    void SaveDevicesToSettings() const;
-   void ApplyDefaultDeviceMapping(uint16_t deviceId);
 
    int m_buttonCaptureState = 0;
    vector<ButtonMapping> m_buttonCapture;

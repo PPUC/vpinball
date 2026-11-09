@@ -51,7 +51,26 @@ enum SoundConfigTypes : int
    SNDCFG_SND3D6CH = 4,
 
    // SSF: Same as 6CH but with a different sound horizontal panning and vertical fading are enhanced for a more realistic experience.
-   SNDCFG_SND3DSSF = 5
+   SNDCFG_SND3DSSF = 5,
+
+   // FRONTRIGHT: Render playfield sounds to the front right channel only. Combined with the backglass
+   // output mode on the front left channel, both outputs can share a single stereo audio device.
+   SNDCFG_SND3DFRONTRIGHT = 6
+};
+
+// Backglass sound playback mode
+// =============================
+// This option selects how backglass audio (music and audio streamed by plugins like VPinMAME,
+// AltSound, PuP, FlexDMD, ..., as well as backglass sounds) is routed to the channels of the
+// backglass audio device.
+enum BackglassConfigTypes : int
+{
+   // 2CH: Render backglass audio to the 2 front channels
+   SNDCFG_BG2CH = 0,
+
+   // FRONTLEFT: Downmix backglass audio to the front left channel only. Combined with a playfield
+   // output mode on the front right channel, both outputs can share a single stereo audio device.
+   SNDCFG_BGFRONTLEFT = 1
 };
 
 struct SoundSpec
@@ -68,15 +87,18 @@ struct SoundSpec
 class AudioPlayer
 {
 public:
-   explicit AudioPlayer(const string& backglassDevice, const string& playfieldDevice, SoundConfigTypes playfieldSoundMode);
+   explicit AudioPlayer(const string& backglassDevice, const string& playfieldDevice, SoundConfigTypes playfieldSoundMode, BackglassConfigTypes backglassSoundMode,
+      const string& hapticDevice, SoundConfigTypes hapticSoundMode);
    ~AudioPlayer();
 
-   void SetMainVolume(float backglassVolume, float playfieldVolume); // Overall gain, directly applied to all sounds, including the ones being played
+   void SetMainVolume(float backglassVolume, float playfieldVolume, float hapticVolume); // Overall gain, directly applied to all sounds, including the ones being played
    void SetMirrored(bool mirrored) { m_mirrored = mirrored; } // Whether the table is mirrored, affects sound panning
 
-   // Audio stream, directly forwarded to audio device, respecting channel assignment, applying backglass global volume
+   // Audio stream, rendered through the backglass engine (spatially positioned in VR), applying backglass global volume
    using AudioStreamID = std::shared_ptr<class AudioStreamPlayer>; // opaque pointer as objects are always owned by AudioPlayer without any public API
    AudioStreamID OpenAudioStream(const string& name, int frequency, int channels, bool isFloat);
+   // Sample rate of the engine the audio streams are played on (0 if unknown): a stream at this rate is not resampled (Thread safe)
+   unsigned int GetStreamOutputSampleRate() const;
    bool IsOpened(const AudioStreamID& stream) const;
    void EnqueueStream(const AudioStreamID& stream, uint8_t* buffer, int length) const;
    void SetStreamVolume(const AudioStreamID& stream, const float volume) const;
@@ -102,10 +124,16 @@ public:
    // Spatial audio: positions sounds in 3D and binauralizes them for headphone rendering.
    // Intended for VR play (head tracked listener pose through SetListenerPose).
    void SetTableDimensions(float width, float height); // in table units, used for the default listener pose and legacy pan/fade to position mapping
-   void SetListenerPose(float x, float y, float z, float yaw, float pitch, float roll);
+   void SetListenerPose(float x, float y, float z, float yaw, float pitch, float roll); // head tracked pose (VR), drives both spatialization and distance attenuation
    void SetSpatialMode(bool backglass, bool playfield); // enable/disable spatial rendering per output
    bool IsSpatialAudioEnabled(SoundOutTypes out) const { return GetSpatialMixer(out) != nullptr; }
-   SpatialAudioMixer* GetSpatialMixer(SoundOutTypes out) const { return out == SoundOutTypes::SNDOUT_TABLE ? m_playfieldSpatial.get() : m_backglassSpatial.get(); }
+   SpatialAudioMixer* GetSpatialMixer(SoundOutTypes out) const
+   {
+      return out == SoundOutTypes::SNDOUT_TABLE ? m_playfieldSpatial.get() : out == SoundOutTypes::SNDOUT_BACKGLASS ? m_backglassSpatial.get() : nullptr;
+   }
+   // Positions a backglass spatial source on the 2 backglass speakers: at the
+   // corners of the table opposite the player, ~40cm above the playfield
+   void PositionBackglassSource(SpatialAudioSource& source) const;
    float GetTableWidth() const { return m_tableWidth; }
    float GetTableHeight() const { return m_tableHeight; }
    void StopSound(Sound* sound);
@@ -114,7 +142,18 @@ public:
 
    string GetBackglassDeviceName() const { const char * name = SDL_GetAudioDeviceName(m_backglassAudioDevice); return name ? string(name) : "Error"s; }
    string GetPlayfieldDeviceName() const { const char * name = SDL_GetAudioDeviceName(m_playfieldAudioDevice); return name ? string(name) : "Error"s; }
+   string GetHapticDeviceName() const
+   {
+      if (m_hapticEngine == nullptr)
+         return ""s;
+      const char* name = SDL_GetAudioDeviceName(m_hapticAudioDevice);
+      return name ? string(name) : ""s;
+   }
+   bool IsHapticEnabled() const { return m_hapticEngine != nullptr; }
    SoundConfigTypes GetSoundMode3D() const { return m_soundMode3D; }
+   SoundConfigTypes GetSoundMode3D(SoundOutTypes out) const { return out == SoundOutTypes::SNDOUT_HAPTIC ? m_hapticMode : m_soundMode3D; }
+   SoundConfigTypes GetHapticMode() const { return m_hapticMode; }
+   BackglassConfigTypes GetBackglassMode() const { return m_backglassMode; }
 
    struct AudioDevice
    {
@@ -124,32 +163,41 @@ public:
    // initializes the SDL audio subsystem and retrieves a list of available audio playback devices.
    static vector<AudioDevice> EnumerateAudioDevices();
 
-   ma_engine* GetEngine(SoundOutTypes out) const { return out == SoundOutTypes::SNDOUT_TABLE ? m_playfieldEngine.get() : m_backglassEngine.get(); }
+   ma_engine* GetEngine(SoundOutTypes out) const
+   {
+      return out == SoundOutTypes::SNDOUT_TABLE ? m_playfieldEngine.get() : out == SoundOutTypes::SNDOUT_HAPTIC ? m_hapticEngine.get() : m_backglassEngine.get();
+   }
 
 private:
    void PlaySoundInternal(Sound* sound, float volume, const float randompitch, const int pitch, float pan, float front_rear_fade, const int loopcount, const bool usesame, const bool restart,
       bool hasPos, float posX, float posY, float posZ);
+   void SetReferencePose(float x, float y, float z, float yaw, float pitch, float roll); // canonical listener pose used as the distance attenuation reference
+   void ReleaseFinishedStreams();
 
    float m_playfieldVolume = 1.f;
    float m_backglassVolume = 1.f;
+   float m_hapticVolume = 1.f;
    float m_musicVolume = 1.f;
    bool m_mirrored = false;
 
    float m_tableWidth = 950.f;
    float m_tableHeight = 2100.f;
    float m_listenerPose[6] = { 0.f, 0.f, 0.f, 0.f, 0.f, 0.f };
+   float m_referencePose[6] = { 475.f, 2450.f, 1000.f, 0.f, 0.f, 0.f }; // canonical pose matching the default table dimensions
    std::unique_ptr<SpatialAudioMixer> m_backglassSpatial;
    std::unique_ptr<SpatialAudioMixer> m_playfieldSpatial;
 
    int m_playfieldAudioDevice = SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK;
    int m_backglassAudioDevice = SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK;
+   int m_hapticAudioDevice = SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK;
    const SoundConfigTypes m_soundMode3D;
+   const BackglassConfigTypes m_backglassMode;
+   const SoundConfigTypes m_hapticMode;
 
    mutable ankerl::unordered_dense::map<Sound*, vector<std::unique_ptr<class SoundPlayer>>> m_soundPlayers;
 
    vector<AudioStreamID> m_audioStreams;
    vector<AudioStreamID> m_pendingDeleteAudioStreams;
-   SDL_AudioDeviceID m_backglassSDLDevice = 0;
 
    std::unique_ptr<class SoundPlayer> m_music;
 
@@ -158,6 +206,8 @@ private:
    std::unique_ptr<ma_engine> m_backglassEngine;
    std::unique_ptr<ma_device_ex> m_playfieldDevice;
    std::unique_ptr<ma_engine> m_playfieldEngine;
+   std::unique_ptr<ma_device_ex> m_hapticDevice;
+   std::unique_ptr<ma_engine> m_hapticEngine;
 };
 
 }

@@ -10,41 +10,79 @@
 #include "parts/Collection.h"
 #include "parts/Material.h"
 #include "parts/Sound.h"
+#include "parts/bumper.h"
+#include "parts/decal.h"
+#include "parts/flipper.h"
+#include "parts/gate.h"
+#include "parts/hittarget.h"
+#include "parts/kicker.h"
+#include "parts/plunger.h"
 #include "parts/primitive.h"
+#include "parts/ramp.h"
+#include "parts/rubber.h"
+#include "parts/spinner.h"
+#include "parts/surface.h"
+#include "parts/trigger.h"
 #include "physics/PhysicsEngine.h"
 #include "renderer/Texture.h"
 #include "ui/live/EditorUI.h"
+#include "ui/live/FileDialog.h"
 #include "ui/live/LiveUI.h"
 #include "utils/color.h"
 
+#include "ui/live/IconsLucide.h"
 #include "PropertyPane.h"
+#include "ui/live/ImGuiHelpers.h"
 
 namespace VPX::EditorUI
 {
 
 PropertiesPanel::PropertiesPanel(EditorUI &editor)
-   : m_editor(editor)
+   : EditorAreaView(editor)
 {
 }
 
 PropertiesPanel::~PropertiesPanel() = default;
 
-void PropertiesPanel::Render(float topBarHeight)
+string PropertiesPanel::PartMaterial(const IEditable *part)
+{
+   switch (part->GetItemType())
+   {
+   case eItemPrimitive: return static_cast<const Primitive *>(part)->m_d.m_szMaterial;
+   case eItemRamp: return static_cast<const Ramp *>(part)->m_d.m_szMaterial;
+   case eItemSurface: return static_cast<const Surface *>(part)->m_d.m_szTopMaterial;
+   case eItemDecal: return static_cast<const Decal *>(part)->m_d.m_szMaterial;
+   case eItemFlipper: return static_cast<const Flipper *>(part)->m_d.m_szMaterial;
+   case eItemHitTarget: return static_cast<const HitTarget *>(part)->m_d.m_szMaterial;
+   case eItemPlunger: return static_cast<const Plunger *>(part)->m_d.m_szMaterial;
+   case eItemRubber: return static_cast<const Rubber *>(part)->m_d.m_szMaterial;
+   case eItemSpinner: return static_cast<const Spinner *>(part)->m_d.m_szMaterial;
+   case eItemKicker: return static_cast<const Kicker *>(part)->m_d.m_szMaterial;
+   case eItemTrigger: return static_cast<const Trigger *>(part)->m_d.m_szMaterial;
+   case eItemGate: return static_cast<const Gate *>(part)->m_d.m_szMaterial;
+   case eItemBumper: return static_cast<const Bumper *>(part)->m_d.m_szCapMaterial;
+   default: return string();
+   }
+}
+
+void PropertiesPanel::RenderPane(const AreaRect &rect, const int leafId)
 {
    EditorUI &editor = m_editor;
    if (editor.m_table->IsLocked())
       return;
 
-   const ImGuiViewport *const viewport = ImGui::GetMainViewport();
-   const float pane_width = PaneWidth * editor.m_liveUI.GetDPI();
-   ImGui::SetNextWindowPos(ImVec2(viewport->Pos.x + viewport->Size.x - pane_width, viewport->Pos.y + topBarHeight));
-   ImGui::SetNextWindowSize(ImVec2(pane_width, viewport->Size.y - topBarHeight));
+   char name[32];
+   snprintf(name, sizeof(name), "##Pane%d", leafId);
+   ImGui::SetNextWindowPos(ImVec2(rect.x0, rect.y0));
+   ImGui::SetNextWindowSize(ImVec2(rect.Width(), rect.Height()));
    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(4.0f * editor.m_liveUI.GetDPI(), 4.0f * editor.m_liveUI.GetDPI()));
    ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
    ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
-   ImGui::Begin("PROPERTIES", nullptr,
-      ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoBringToFrontOnFocus
-         | ImGuiWindowFlags_NoNavFocus);
+   ImGui::Begin(name, nullptr,
+      ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus);
+   ImGui::PushID(leafId);
+   editor.RenderAreaTypeButton(leafId);
+   ImGui::Separator();
 
    // Multi-edit only applies to uniform selections: all selected parts of the same type as the active one
    const bool uniformPartSel = editor.m_selection.GetType() == Selection::S_EDITABLE && editor.m_multiSel.size() > 1
@@ -103,6 +141,14 @@ void PropertiesPanel::Render(float topBarHeight)
                case Selection::S_SOUND: SoundProperties(props, editor.m_selection.GetSound()); break;
                case Selection::S_COLLECTION: CollectionProperties(props, editor.m_selection.GetCollection()); break;
                }
+               // Remember what was edited on the live copy: 'Save' copies it back to the startup table that is written to disk
+               if (is_live && props.GetModifiedField() > 0)
+               {
+                  if (editor.m_selection.GetType() == Selection::S_MATERIAL)
+                     editor.m_liveEditedMaterials.insert(editor.m_selection.GetMaterial());
+                  else if (editor.m_selection.GetType() == Selection::S_EDITABLE)
+                     editor.m_liveEditedParts.insert(editor.m_selection.GetPart()->GetEditable());
+               }
                ImGui::EndTabItem();
             }
          }
@@ -143,14 +189,41 @@ void PropertiesPanel::Render(float topBarHeight)
          // A renamed surface or ramp retargets the parts placed on it, recorded in the same undo record
          editor.m_table->UpdateSurfaceReferences(editable, nameBefore, [&editor](IEditable *part) { editor.m_undo.MarkForUndo(part); });
          editor.m_undo.EndUndo();
-         if (props.GetModifiedField() > 0 && (editor.m_lastUndoPart != editor.m_selection.GetPart()->GetEditable() || editor.m_lastUndoId != (0x2000 | props.GetModifiedField())))
          {
-            editor.m_lastUndoPart = editor.m_selection.GetPart()->GetEditable();
-            editor.m_lastUndoId = 0x2000 | props.GetModifiedField();
-         }
-         else
-         {
-            editor.m_undo.Discard();
+            // The edit of one field (a drag, a typed value) is one step: its first frame keeps the record, the next ones discard theirs.
+            // The chain ends when the interaction does (mouse released, no item active) or when another item takes it
+            // (Tab between components, a click on another field), so the next edit is a step of its own
+            const bool modified = props.GetModifiedField() > 0;
+            const unsigned int editId = 0x2000u | static_cast<unsigned int>(props.GetModifiedField());
+            const bool continues = modified && editor.m_lastUndoPart == editable && editor.m_lastUndoId == editId;
+            if (modified && !continues)
+            {
+               editor.m_lastUndoPart = editable;
+               editor.m_lastUndoId = editId;
+               m_editChainRecord = editor.m_undo.UndoCount();
+            }
+            else
+            {
+               editor.m_undo.Discard();
+               // Esc cancelled the drag / typed value (restored): the step it had started is dropped too, if it is still the latest record
+               if (!modified && props.ConsumeEditCancel() && editor.m_lastUndoPart == editable && editor.m_undo.HasUndo() && editor.m_undo.UndoCount() == m_editChainRecord)
+               {
+                  editor.m_undo.Discard();
+                  editor.m_lastUndoPart = nullptr;
+                  editor.m_lastUndoId = 0;
+                  m_editChainRecord = 0;
+               }
+            }
+            const bool ended = !modified && !ImGui::IsMouseDown(ImGuiMouseButton_Left) && !ImGui::IsAnyItemActive();
+            const ImGuiID activeId = ImGui::GetActiveID();
+            if (editor.m_lastUndoId != 0x1000 // The gizmo's own marker is not ours to clear
+               && (ended || (m_prevActiveId != 0 && activeId != m_prevActiveId && activeId != 0)))
+            {
+               editor.m_lastUndoPart = nullptr;
+               editor.m_lastUndoId = 0;
+               m_editChainRecord = 0;
+            }
+            m_prevActiveId = activeId;
          }
          if (props.GetModifiedField() > 0)
             RefreshEditedParts(props);
@@ -163,10 +236,13 @@ void PropertiesPanel::Render(float topBarHeight)
       case Selection::S_SOUND: SoundProperties(props, editor.m_selection.GetSound()); break;
       case Selection::S_COLLECTION: CollectionProperties(props, editor.m_selection.GetCollection()); break;
       }
+      if (editor.m_selection.GetType() != Selection::S_EDITABLE && props.GetModifiedField() > 0)
+         editor.m_table->SetNonUndoableDirty(SaveDirtyState::Dirty);
    }
 
    RenderPopups();
 
+   ImGui::PopID();
    ImGui::End();
    ImGui::PopStyleVar(3);
 }
@@ -216,7 +292,8 @@ void PropertiesPanel::TableProperties(PropertyPane &props)
             table->m_winEditorBackdrop = v;
             if (g_pplayer->m_implicitPlayfieldMesh)
                g_pplayer->m_implicitPlayfieldMesh->m_d.m_displayTexture = v;
-         });
+         },
+         "Draw the image on the playfield in the editor (does not change how it renders in game)");
       ImGui::EndDisabled();
       props.InputInt<PinTable>(
          table, "Reflection Strength"s, //
@@ -231,7 +308,7 @@ void PropertiesPanel::TableProperties(PropertyPane &props)
       props.Checkbox<PinTable>(
          table, "Spherical Map"s, //
          [](const PinTable *table) { return table->m_ballSphericalMapping; }, //
-         [](PinTable *table, bool v) { table->m_ballSphericalMapping = v; });
+         [](PinTable *table, bool v) { table->m_ballSphericalMapping = v; }, "Wrap the image around the ball instead of projecting it flat");
       props.ImageCombo<PinTable>(
          table, "Ball Decal"s, //
          [](const PinTable *table) { return table->m_ballImageDecal; }, //
@@ -239,15 +316,15 @@ void PropertiesPanel::TableProperties(PropertyPane &props)
       props.Checkbox<PinTable>(
          table, "Logo Mode"s, //
          [](const PinTable *table) { return table->m_BallDecalMode; }, //
-         [](PinTable *table, bool v) { table->m_BallDecalMode = v; });
+         [](PinTable *table, bool v) { table->m_BallDecalMode = v; }, "Draw the decal as a flat logo keeping its orientation instead of wrapping it on the ball");
       props.InputFloat<PinTable>(
          table, "Reflection of Playfield"s, //
          [](const PinTable *table) { return table->m_ballPlayfieldReflectionStrength; }, //
-         [](PinTable *table, float v) { table->m_ballPlayfieldReflectionStrength = v; }, PropertyPane::Unit::None, 2);
+         [](PinTable *table, float v) { table->m_ballPlayfieldReflectionStrength = v; }, PropertyPane::Unit::None, 2, "Strength of the playfield's reflection on the ball");
       props.InputFloat<PinTable>(
          table, "Default Bulb Intensity Scale"s, //
          [](const PinTable *table) { return table->m_defaultBulbIntensityScaleOnBall; }, //
-         [](PinTable *table, float v) { table->m_defaultBulbIntensityScaleOnBall = v; }, PropertyPane::Unit::None, 2);
+         [](PinTable *table, float v) { table->m_defaultBulbIntensityScaleOnBall = v; }, PropertyPane::Unit::None, 2, "Default scale of bulb light contribution on the ball");
 
       props.Separator("Backdrop"s);
       props.InputRGB<PinTable>(
@@ -257,27 +334,27 @@ void PropertiesPanel::TableProperties(PropertyPane &props)
       props.Checkbox<PinTable>(
          table, "Apply Night->Day cycle"s, //
          [](const PinTable *table) { return table->m_ImageBackdropNightDay; }, //
-         [](PinTable *table, bool v) { table->m_ImageBackdropNightDay = v; });
+         [](PinTable *table, bool v) { table->m_ImageBackdropNightDay = v; }, "Tint the backdrop image according to the night/day setting");
       props.ImageCombo<PinTable>(
          table, "DT Image"s, //
          [](const PinTable *table) { return table->m_BG_image[0]; }, //
-         [](PinTable *table, const string &v) { table->m_BG_image[0] = v; });
+         [](PinTable *table, const string &v) { table->m_BG_image[0] = v; }, "Backdrop image in desktop view");
       props.ImageCombo<PinTable>(
          table, "FS Image"s, //
          [](const PinTable *table) { return table->m_BG_image[1]; }, //
-         [](PinTable *table, const string &v) { table->m_BG_image[1] = v; });
+         [](PinTable *table, const string &v) { table->m_BG_image[1] = v; }, "Backdrop image in fullscreen (cabinet) view");
       props.ImageCombo<PinTable>(
          table, "FSS Image"s, //
          [](const PinTable *table) { return table->m_BG_image[2]; }, //
-         [](PinTable *table, const string &v) { table->m_BG_image[2] = v; });
+         [](PinTable *table, const string &v) { table->m_BG_image[2] = v; }, "Backdrop image in full single screen view");
       props.ImageCombo<PinTable>(
          table, "Color Grading LUT"s, //
          [](const PinTable *table) { return table->m_imageColorGrade; }, //
-         [](PinTable *table, const string &v) { table->m_imageColorGrade = v; });
+         [](PinTable *table, const string &v) { table->m_imageColorGrade = v; }, "Lookup-table image applied to color grade the final render");
       props.Checkbox<PinTable>(
          table, "Enable EMReels"s, //
          [](const PinTable *table) { return table->m_renderEMReels; }, //
-         [](PinTable *table, bool v) { table->m_renderEMReels = v; });
+         [](PinTable *table, bool v) { table->m_renderEMReels = v; }, "Render the table's electromechanical reel displays");
       props.Checkbox<PinTable>(
          table, "Enable Decals"s, //
          [](const PinTable *table) { return table->m_renderDecals; }, //
@@ -285,7 +362,7 @@ void PropertiesPanel::TableProperties(PropertyPane &props)
       props.Checkbox<PinTable>(
          table, "Enable FSS mode"s, //
          [](const PinTable *table) { return table->IsFSSEnabled(); }, //
-         [](PinTable *table, bool v) { table->EnableFSS(v); });
+         [](PinTable *table, bool v) { table->EnableFSS(v); }, "Full Single Screen mode: render the table and its backglass on a single display");
       props.EndSection();
    }
 
@@ -303,7 +380,7 @@ void PropertiesPanel::TableProperties(PropertyPane &props)
       props.InputFloat<PinTable>(
          table, "Playfield Elasticity Falloff"s, //
          [](const PinTable *table) { return table->m_elasticityFalloff; }, //
-         [](PinTable *table, float v) { table->m_elasticityFalloff = v; }, PropertyPane::Unit::None, 3);
+         [](PinTable *table, float v) { table->m_elasticityFalloff = v; }, PropertyPane::Unit::None, 3, "Reduce elasticity for slower impacts (0 = constant elasticity)");
       props.InputFloat<PinTable>(
          table, "Playfield Friction"s, //
          [](const PinTable *table) { return table->m_friction; }, //
@@ -311,23 +388,23 @@ void PropertiesPanel::TableProperties(PropertyPane &props)
       props.InputFloat<PinTable>(
          table, "Playfield Scatter Angle"s, //
          [](const PinTable *table) { return table->m_scatter; }, //
-         [](PinTable *table, float v) { table->m_scatter = v; }, PropertyPane::Unit::Degree, 1);
+         [](PinTable *table, float v) { table->m_scatter = v; }, PropertyPane::Unit::Degree, 1, "Random angle added to the ball's bounce on the playfield");
       props.InputFloat<PinTable>(
          table, "Default Elements Scatter Angle"s, //
          [](const PinTable *table) { return table->m_defaultScatter; }, //
-         [](PinTable *table, float v) { table->m_defaultScatter = v; }, PropertyPane::Unit::Degree, 1);
+         [](PinTable *table, float v) { table->m_defaultScatter = v; }, PropertyPane::Unit::Degree, 1, "Scatter angle used by elements that don't define their own");
       props.Combo<PinTable>(
          table, "Overwrite Physics by Global Set"s, vector<string> { "Disable"s, "Set1"s, "Set2"s, "Set3"s, "Set4"s, "Set5"s, "Set6"s, "Set7"s, "Set8"s }, //
          [](const PinTable *table) { return table->m_overridePhysics; }, //
-         [](PinTable *table, int v) { table->m_overridePhysics = v; });
+         [](PinTable *table, int v) { table->m_overridePhysics = v; }, "Apply a predefined global physics set to the whole table");
       props.Checkbox<PinTable>(
          table, "including Flipper Physics"s, //
          [](const PinTable *table) { return table->m_overridePhysicsFlipper; }, //
-         [](PinTable *table, bool v) { table->m_overridePhysicsFlipper = v; });
+         [](PinTable *table, bool v) { table->m_overridePhysicsFlipper = v; }, "Also apply the physics set to flippers, which use their own physics values");
       props.InputFloat<PinTable>(
          table, "Nudge Time"s, //
          [](const PinTable *table) { return table->m_nudgeTime; }, //
-         [](PinTable *table, float v) { table->m_nudgeTime = v; }, PropertyPane::Unit::None, 2);
+         [](PinTable *table, float v) { table->m_nudgeTime = v; }, PropertyPane::Unit::None, 2, "Duration of the impulse applied to the table by a nudge");
       props.InputInt<PinTable>(
          table, "Physics Max. Loops (-1=def.)"s, //
          [](const PinTable *table) { return static_cast<int>(table->m_PhysicsMaxLoops); }, //
@@ -359,15 +436,15 @@ void PropertiesPanel::TableProperties(PropertyPane &props)
       props.InputFloat<PinTable>(
          table, "Slope for Min. Difficulty"s, //
          [](const PinTable *table) { return table->m_angletiltMin; }, //
-         [](PinTable *table, float v) { table->m_angletiltMin = v; }, PropertyPane::Unit::Degree, 2);
+         [](PinTable *table, float v) { table->m_angletiltMin = v; }, PropertyPane::Unit::Degree, 2, "Table incline at minimum game difficulty");
       props.InputFloat<PinTable>(
          table, "Slope for Max. Difficulty"s, //
          [](const PinTable *table) { return table->m_angletiltMax; }, //
-         [](PinTable *table, float v) { table->m_angletiltMax = v; }, PropertyPane::Unit::Degree, 2);
+         [](PinTable *table, float v) { table->m_angletiltMax = v; }, PropertyPane::Unit::Degree, 2, "Table incline at maximum game difficulty");
       props.InputFloat<PinTable>(
          table, "Game Difficulty"s, //
          [](const PinTable *table) { return table->m_difficulty; }, //
-         [](PinTable *table, float v) { table->m_difficulty = v; }, PropertyPane::Unit::Percent, 0);
+         [](PinTable *table, float v) { table->m_difficulty = v; }, PropertyPane::Unit::Percent, 0, "Interpolate the table's difficulty settings between the min & max slopes");
       props.EndSection();
    }
 
@@ -411,7 +488,7 @@ void PropertiesPanel::TableProperties(PropertyPane &props)
             table->m_lightEmissionScale = v;
             editor.m_renderer->MarkShaderDirty(); // Needed to update shaders with new light settings
          },
-         PropertyPane::Unit::None, 0);
+         PropertyPane::Unit::None, 0, "Intensity of the table's main light emission");
       props.InputFloat<PinTable>(
          table, "Light Height"s, //
          [](const PinTable *table) { return table->m_lightHeight; }, //
@@ -438,7 +515,7 @@ void PropertiesPanel::TableProperties(PropertyPane &props)
             table->m_globalEmissionScale = v;
             editor.m_renderer->MarkShaderDirty(); // Needed to update shaders with new light settings
          },
-         PropertyPane::Unit::Percent, 1);
+         PropertyPane::Unit::Percent, 1, "Global scale applied to all scene lighting");
 
       props.Separator("Environment Lighting"s);
       props.ImageCombo<PinTable>(
@@ -448,11 +525,17 @@ void PropertiesPanel::TableProperties(PropertyPane &props)
          {
             table->m_envImage = v;
             editor.m_renderer->MarkShaderDirty(); // Needed to update shaders with new light settings
-         });
+         },
+         "Image used for ambient environment lighting");
       props.InputFloat<PinTable>(
          table, "Environment Em. Scale"s, //
          [](const PinTable *table) { return table->m_envEmissionScale; }, //
-         [](PinTable *table, float v) { table->m_envEmissionScale = v; }, PropertyPane::Unit::Percent, 3);
+         [&editor](PinTable *table, float v)
+         {
+            table->m_envEmissionScale = v;
+            editor.m_renderer->MarkShaderDirty(); // Needed to update shaders with new light settings
+         },
+         PropertyPane::Unit::Percent, 3, "Intensity of the environment lighting");
 
       props.Separator("Render Options"s);
       props.Checkbox<PinTable>(
@@ -462,11 +545,12 @@ void PropertiesPanel::TableProperties(PropertyPane &props)
          {
             table->m_enableAO = v;
             editor.m_renderer->MarkShaderDirty(); // Needed to update shaders with new light settings
-         });
+         },
+         "Darken creases and contact areas with ambient occlusion");
       props.InputFloat<PinTable>(
          table, "Ambient Occlusion Scale"s, //
          [](const PinTable *table) { return table->m_AOScale; }, //
-         [](PinTable *table, float v) { table->m_AOScale = v; }, PropertyPane::Unit::Percent, 1);
+         [](PinTable *table, float v) { table->m_AOScale = v; }, PropertyPane::Unit::Percent, 1, "Strength of the ambient occlusion");
       props.Checkbox<PinTable>(
          table, "Enable Sc. Sp. Reflections"s, //
          [](const PinTable *table) { return table->m_enableSSR; }, //
@@ -474,15 +558,16 @@ void PropertiesPanel::TableProperties(PropertyPane &props)
          {
             table->m_enableSSR = v;
             editor.m_renderer->MarkShaderDirty(); // Needed to update shaders with new light settings
-         });
+         },
+         "Reflect on-screen content on glossy surfaces (screen-space reflections)");
       props.InputFloat<PinTable>(
          table, "Screen Space Reflection Scale"s, //
          [](const PinTable *table) { return table->m_SSRScale; }, //
-         [](PinTable *table, float v) { table->m_SSRScale = v; }, PropertyPane::Unit::Percent, 1);
+         [](PinTable *table, float v) { table->m_SSRScale = v; }, PropertyPane::Unit::Percent, 1, "Strength of the screen-space reflections");
       props.InputFloat<PinTable>(
          table, "Bloom Strength"s, //
          [](const PinTable *table) { return table->m_bloom_strength; }, //
-         [](PinTable *table, float v) { table->m_bloom_strength = v; }, PropertyPane::Unit::Percent, 1);
+         [](PinTable *table, float v) { table->m_bloom_strength = v; }, PropertyPane::Unit::Percent, 1, "Intensity of the glow around bright areas");
       props.Combo<PinTable>(
          table, "Tonemapping"s, vector<string> { "Reinhard"s, "AgX"s, "Filmic"s, "Neutral"s }, //
          [](const PinTable *table) { return static_cast<int>(table->GetToneMapper()); }, //
@@ -490,7 +575,8 @@ void PropertiesPanel::TableProperties(PropertyPane &props)
          {
             table->SetToneMapper(static_cast<ToneMapper>(v));
             editor.m_renderer->MarkShaderDirty(); // Needed to update shaders with new light settings
-         });
+         },
+         "How high dynamic range colors are mapped to the display");
       props.InputFloat<PinTable>(
          table, "Exposure"s, //
          [](const PinTable *table) { return table->GetExposure(); }, //
@@ -530,7 +616,7 @@ void PropertiesPanel::CameraProperties(PropertyPane &props, int bgSet)
       props.Combo<ViewSetup>(
          vs, "View Mode"s, vector { "Legacy"s, "Camera"s, "Window"s }, //
          [](const ViewSetup *viewSetup) { return static_cast<int>(viewSetup->mMode); }, //
-         [](ViewSetup *viewSetup, int v) { viewSetup->mMode = static_cast<ViewLayoutMode>(v); });
+         [](ViewSetup *viewSetup, int v) { viewSetup->mMode = static_cast<ViewLayoutMode>(v); }, "How the view is computed: legacy fixed projection, camera parameters, or window mapping");
       props.InputFloat<ViewSetup>(
          vs, "Field of View"s, //
          [](const ViewSetup *viewSetup) { return viewSetup->mFOV; }, //
@@ -538,11 +624,11 @@ void PropertiesPanel::CameraProperties(PropertyPane &props, int bgSet)
       props.InputFloat<ViewSetup>(
          vs, "Layback"s, //
          [](const ViewSetup *viewSetup) { return viewSetup->mLayback; }, //
-         [](ViewSetup *viewSetup, float v) { viewSetup->mLayback = v; }, PropertyPane::Unit::Degree, 1);
+         [](ViewSetup *viewSetup, float v) { viewSetup->mLayback = v; }, PropertyPane::Unit::Degree, 1, "Fake tilt of the table toward the viewer (legacy view only)");
       props.InputFloat<ViewSetup>(
          vs, "Look At"s, //
          [](const ViewSetup *viewSetup) { return viewSetup->mLookAt; }, //
-         [](ViewSetup *viewSetup, float v) { viewSetup->mLookAt = v; }, PropertyPane::Unit::None, 2);
+         [](ViewSetup *viewSetup, float v) { viewSetup->mLookAt = v; }, PropertyPane::Unit::None, 2, "Height along the table the camera is aimed at");
       props.InputFloat<ViewSetup>(
          vs, "X Offset"s, //
          [](const ViewSetup *viewSetup) { return viewSetup->mViewX; }, //
@@ -570,7 +656,7 @@ void PropertiesPanel::CameraProperties(PropertyPane &props, int bgSet)
       props.InputFloat<ViewSetup>(
          vs, "X Scale"s, //
          [](const ViewSetup *viewSetup) { return viewSetup->mSceneScaleX; }, //
-         [](ViewSetup *viewSetup, float v) { viewSetup->mSceneScaleX = v; }, PropertyPane::Unit::Percent, 3);
+         [](ViewSetup *viewSetup, float v) { viewSetup->mSceneScaleX = v; }, PropertyPane::Unit::Percent, 3, "Stretch the rendered scene (compensates display distortion)");
       props.InputFloat<ViewSetup>(
          vs, "Y Scale"s, //
          [](const ViewSetup *viewSetup) { return viewSetup->mSceneScaleY; }, //
@@ -603,7 +689,7 @@ void PropertiesPanel::ImageProperties(PropertyPane &props, Texture *texture)
          props.InputFloat<Texture>(
             texture, "Alpha Mask", //
             [](const Texture *image) { return image->m_alphaTestValue; }, //
-            [](Texture *image, float v) { image->m_alphaTestValue = v; }, PropertyPane::Unit::None, 2);
+            [](Texture *image, float v) { image->m_alphaTestValue = v; }, PropertyPane::Unit::None, 2, "Pixels with alpha below this value are discarded (cutout transparency)");
          ImGui::EndDisabled();
 
          const string info
@@ -642,15 +728,16 @@ void PropertiesPanel::RenderProbeProperties(PropertyPane &props, RenderProbe *pr
       props.Combo<RenderProbe>(
          probe, "Type"s, vector { "Reflection"s, "Refraction"s }, //
          [](const RenderProbe *probe) { return static_cast<int>(probe->GetType()); }, //
-         [](RenderProbe *probe, int v) { probe->SetType(static_cast<RenderProbe::ProbeType>(v)); });
+         [](RenderProbe *probe, int v) { probe->SetType(static_cast<RenderProbe::ProbeType>(v)); },
+         "Reflection renders the scene mirrored on a plane; Refraction renders what is behind the surface");
       props.InputFloat3<RenderProbe>(
          probe, "Normal"s, //
          [](const RenderProbe *probe) { return probe->GetReflectionPlaneNormal(); }, //
-         [](RenderProbe *probe, const vec3 &v) { probe->SetReflectionPlaneNormal(v); }, PropertyPane::Unit::None, 2);
+         [](RenderProbe *probe, const vec3 &v) { probe->SetReflectionPlaneNormal(v); }, PropertyPane::Unit::None, 2, "Normal of the plane the scene is reflected on");
       props.InputFloat<RenderProbe>(
          probe, "Distance"s, //
          [](const RenderProbe *probe) { return probe->GetReflectionPlaneDistance(); }, //
-         [](RenderProbe *probe, float v) { probe->SetReflectionPlaneDistance(v); }, PropertyPane::Unit::VPLength, 1);
+         [](RenderProbe *probe, float v) { probe->SetReflectionPlaneDistance(v); }, PropertyPane::Unit::VPLength, 1, "Distance of the reflection plane along its normal");
       props.EndSection();
    }
 
@@ -696,7 +783,7 @@ void PropertiesPanel::MaterialProperties(PropertyPane &props, Material *material
       props.Combo<Material>(
          material, "Type"s, vector { "Default"s, "Metal"s }, //
          [](const Material *material) { return material->m_type; }, //
-         [](Material *material, int v) { material->m_type = static_cast<Material::MaterialType>(v); });
+         [](Material *material, int v) { material->m_type = static_cast<Material::MaterialType>(v); }, "How the material reflects light: dielectric (default) or metal");
       props.InputRGB<Material>(
          material, "Color", //
          [](const Material *material) { return convertColor(material->m_cBase); }, //
@@ -704,7 +791,7 @@ void PropertiesPanel::MaterialProperties(PropertyPane &props, Material *material
       props.InputFloat<Material>(
          material, "Wrap Lighting"s, //
          [](const Material *material) { return material->m_fWrapLighting; }, //
-         [](Material *material, float v) { material->m_fWrapLighting = v; }, PropertyPane::Unit::None, 2);
+         [](Material *material, float v) { material->m_fWrapLighting = v; }, PropertyPane::Unit::None, 2, "Wrap diffuse light around the part's edges, softening the shading");
       if (editedMaterial->m_type != Material::METAL)
       {
          props.InputRGB<Material>(
@@ -714,12 +801,13 @@ void PropertiesPanel::MaterialProperties(PropertyPane &props, Material *material
          props.InputFloat<Material>(
             material, "Glossy Image Lerp"s, //
             [](const Material *material) { return material->m_fGlossyImageLerp; }, //
-            [](Material *material, float v) { material->m_fGlossyImageLerp = v; }, PropertyPane::Unit::None, 2);
+            [](Material *material, float v) { material->m_fGlossyImageLerp = v; }, PropertyPane::Unit::None, 2,
+            "How much specular highlights take the image's color instead of the glossy color");
       }
       props.InputFloat<Material>(
          material, "Shininess"s, //
          [](const Material *material) { return material->m_fRoughness; }, //
-         [](Material *material, float v) { material->m_fRoughness = v; }, PropertyPane::Unit::None, 2);
+         [](Material *material, float v) { material->m_fRoughness = v; }, PropertyPane::Unit::None, 2, "Sharpness of the specular highlights (higher = smaller, brighter highlights)");
       props.InputRGB<Material>(
          material, "Clearcoat Color", //
          [](const Material *material) { return convertColor(material->m_cClearcoat); }, //
@@ -727,7 +815,7 @@ void PropertiesPanel::MaterialProperties(PropertyPane &props, Material *material
       props.InputFloat<Material>(
          material, "Edge Brightness"s, //
          [](const Material *material) { return material->m_fEdge; }, //
-         [](Material *material, float v) { material->m_fEdge = v; }, PropertyPane::Unit::None, 2);
+         [](Material *material, float v) { material->m_fEdge = v; }, PropertyPane::Unit::None, 2, "Extra brightness at grazing angles");
       props.EndSection();
    }
 
@@ -744,11 +832,11 @@ void PropertiesPanel::MaterialProperties(PropertyPane &props, Material *material
       props.InputFloat<Material>(
          material, "Edge Opacity"s, //
          [](const Material *material) { return material->m_fEdgeAlpha; }, //
-         [](Material *material, float v) { material->m_fEdgeAlpha = v; }, PropertyPane::Unit::None, 2);
+         [](Material *material, float v) { material->m_fEdgeAlpha = v; }, PropertyPane::Unit::None, 2, "Opacity at grazing angles");
       props.InputFloat<Material>(
          material, "Thickness"s, //
          [](const Material *material) { return material->m_fThickness; }, //
-         [](Material *material, float v) { material->m_fThickness = v; }, PropertyPane::Unit::None, 2);
+         [](Material *material, float v) { material->m_fThickness = v; }, PropertyPane::Unit::None, 2, "Simulated thickness used for refraction through transparent parts");
       props.InputRGB<Material>(
          material, "Refraction Tint", //
          [](const Material *material) { return convertColor(material->m_cRefractionTint); }, //
@@ -796,7 +884,8 @@ void PropertiesPanel::SoundProperties(PropertyPane &props, VPX::Sound *sound)
    ImGui::EndDisabled();
 
    ImGui::BeginDisabled(audioPlayer == nullptr);
-   if (ImGui::Button(isPlaying ? (ICON_FK_STOP " Stop"s).c_str() : (ICON_FK_PLAY " Play"s).c_str()))
+   const string playStopLabel = isPlaying ? ICON_LC_SQUARE " Stop"s : ICON_LC_PLAY " Play"s;
+   if (IconButtonInk(playStopLabel.c_str(), "##PlayStop"))
    {
       if (isPlaying)
       {
@@ -824,7 +913,8 @@ void PropertiesPanel::SoundProperties(PropertyPane &props, VPX::Sound *sound)
          {
             s->SetOutputTarget(static_cast<VPX::SoundOutTypes>(v));
             editor.m_table->SetNonUndoableDirty(SaveDirtyState::Dirty);
-         });
+         },
+         "Play this sound on the table's or the backglass' audio output");
       props.InputFloat<VPX::Sound>(
          sound, "Volume"s, //
          [](const VPX::Sound *s) { return dequantizeSignedPercent(s->GetVolume()); }, //
@@ -851,7 +941,7 @@ void PropertiesPanel::SoundProperties(PropertyPane &props, VPX::Sound *sound)
             s->SetFrontRearFade(quantizeSignedPercent(v));
             editor.m_table->SetNonUndoableDirty(SaveDirtyState::Dirty);
          },
-         PropertyPane::Unit::None, 2);
+         PropertyPane::Unit::None, 2, "Balance between front and rear speakers (surround setups)");
       props.EndSection();
    }
 
@@ -966,7 +1056,8 @@ void PropertiesPanel::CollectionProperties(PropertyPane &props, Collection *coll
          {
             col->m_fireEvents = v;
             markDirty(col);
-         });
+         },
+         "Fire a Collection event when a member is hit, on top of the member's own event");
       props.Checkbox<Collection>(
          collection, "Suppress individual events for each member"s, //
          [](const Collection *col) { return col->m_stopSingleEvents; }, //
@@ -974,7 +1065,8 @@ void PropertiesPanel::CollectionProperties(PropertyPane &props, Collection *coll
          {
             col->m_stopSingleEvents = v;
             markDirty(col);
-         });
+         },
+         "Only fire the collection's event, not each member's own event");
       props.Checkbox<Collection>(
          collection, "Group elements together"s, //
          [](const Collection *col) { return col->m_groupElements; }, //
@@ -982,7 +1074,8 @@ void PropertiesPanel::CollectionProperties(PropertyPane &props, Collection *coll
          {
             col->m_groupElements = v;
             markDirty(col);
-         });
+         },
+         "Show this collection's members as a group in the editor");
       props.EndSection();
    }
 
@@ -1014,7 +1107,7 @@ void PropertiesPanel::CollectionProperties(PropertyPane &props, Collection *coll
       // Members, in the collection's order which is the order exposed to scripts
       if (members.empty())
          ImGui::TextDisabled("Empty collection");
-      const float buttonWidth = ImGui::CalcTextSize(ICON_FK_ARROW_UP).x + ImGui::GetStyle().FramePadding.x * 2.0f;
+      const float buttonWidth = IconButtonInkSize(ICON_LC_ARROW_UP).x;
       const float buttonsX = ImGui::GetContentRegionAvail().x - 3.f * buttonWidth - 2.f * ImGui::GetStyle().ItemSpacing.x;
       int moveIndex = -1, removeIndex = -1;
       for (int i = 0; i < static_cast<int>(members.size()); i++)
@@ -1033,20 +1126,20 @@ void PropertiesPanel::CollectionProperties(PropertyPane &props, Collection *coll
             ImGui::SetTooltip("%s", LocalString(EditableRegistry::GetTypeNameStringID(member->GetItemType())).m_szbuffer);
          ImGui::SameLine(buttonsX);
          ImGui::BeginDisabled(i == 0);
-         if (ImGui::SmallButton(ICON_FK_ARROW_UP))
+         if (SmallIconButtonInk(ICON_LC_ARROW_UP, "##MoveUp"))
             moveIndex = i - 1;
          ImGui::EndDisabled();
          if (ImGui::IsItemHovered())
             ImGui::SetTooltip("Move up");
          ImGui::SameLine();
          ImGui::BeginDisabled(i == static_cast<int>(members.size()) - 1);
-         if (ImGui::SmallButton(ICON_FK_ARROW_DOWN))
+         if (SmallIconButtonInk(ICON_LC_ARROW_DOWN, "##MoveDown"))
             moveIndex = i;
          ImGui::EndDisabled();
          if (ImGui::IsItemHovered())
             ImGui::SetTooltip("Move down");
          ImGui::SameLine();
-         if (ImGui::SmallButton(ICON_FK_TIMES))
+         if (SmallIconButtonInk(ICON_LC_X, "##RemoveMember"))
             removeIndex = i;
          if (ImGui::IsItemHovered())
             ImGui::SetTooltip("Remove from collection");
@@ -1211,7 +1304,7 @@ void PropertiesPanel::ImageActions(PropertyPane &props)
          m_pendingImageImport = std::make_shared<vector<string>>();
          const SDL_DialogFileFilter filters[] = { { "Image Files", "bmp;jpg;jpeg;png;tga;webp;exr;hdr" } };
          const string dir = PathToUTF8(PathFromString(g_settingsService.GetAppSettings().GetRecentDir_ImageDir())); // SDL expects UTF-8
-         SDL_ShowOpenFileDialog(
+         ShowOpenFileDialog(
             [](void *userdata, const char *const *filelist, int filter)
             {
                auto *res = static_cast<std::shared_ptr<vector<string>> *>(userdata);
@@ -1233,7 +1326,7 @@ void PropertiesPanel::ImageActions(PropertyPane &props)
          m_pendingImageExport = std::make_shared<string>();
          const SDL_DialogFileFilter filters[] = { { "Image Files", "bmp;jpg;jpeg;png;tga;webp;exr;hdr" } };
          const string dir = PathToUTF8(PathFromString(g_settingsService.GetAppSettings().GetRecentDir_ImageDir())); // SDL expects UTF-8
-         SDL_ShowSaveFileDialog(
+         ShowSaveFileDialog(
             [](void *userdata, const char *const *filelist, int filter)
             {
                auto *res = static_cast<std::shared_ptr<string> *>(userdata);
@@ -1302,7 +1395,7 @@ void PropertiesPanel::ImageActions(PropertyPane &props)
                m_pendingImageReimport = std::make_shared<string>();
                const SDL_DialogFileFilter filters[] = { { "Image Files", "bmp;jpg;jpeg;png;tga;webp;exr;hdr" } };
                const string dir = PathToUTF8(PathFromString(g_settingsService.GetAppSettings().GetRecentDir_ImageDir())); // SDL expects UTF-8
-               SDL_ShowOpenFileDialog(
+               ShowOpenFileDialog(
                   [](void *userdata, const char *const *filelist, int filter)
                   {
                      auto *res = static_cast<std::shared_ptr<string> *>(userdata);
@@ -1409,9 +1502,9 @@ void PropertiesPanel::SoundActions(PropertyPane &props)
       if (ImGui::Button("Import"))
       {
          m_pendingSoundImport = std::make_shared<vector<string>>();
-         const SDL_DialogFileFilter filters[] = { { "Sound Files", "wav;ogg;mp3" } };
+         const SDL_DialogFileFilter filters[] = { { "Sound Files", "wav;ogg;opus;mp3;flac" } };
          const string dir = PathToUTF8(PathFromString(g_settingsService.GetAppSettings().GetRecentDir_SoundDir())); // SDL expects UTF-8
-         SDL_ShowOpenFileDialog(
+         ShowOpenFileDialog(
             [](void *userdata, const char *const *filelist, int filter)
             {
                auto *res = static_cast<std::shared_ptr<vector<string>> *>(userdata);
@@ -1454,9 +1547,9 @@ void PropertiesPanel::SoundActions(PropertyPane &props)
                   return;
                m_pendingSoundReimportTarget = m_editor.m_multiSelSounds.empty() ? nullptr : m_editor.m_multiSelSounds.back();
                m_pendingSoundReimport = std::make_shared<string>();
-               const SDL_DialogFileFilter filters[] = { { "Sound Files", "wav;ogg;mp3" } };
+               const SDL_DialogFileFilter filters[] = { { "Sound Files", "wav;ogg;opus;mp3;flac" } };
                const string dir = PathToUTF8(PathFromString(g_settingsService.GetAppSettings().GetRecentDir_SoundDir())); // SDL expects UTF-8
-               SDL_ShowOpenFileDialog(
+               ShowOpenFileDialog(
                   [](void *userdata, const char *const *filelist, int filter)
                   {
                      auto *res = static_cast<std::shared_ptr<string> *>(userdata);
@@ -1475,9 +1568,9 @@ void PropertiesPanel::SoundActions(PropertyPane &props)
       {
          m_pendingSoundExportSel = sel;
          m_pendingSoundExport = std::make_shared<string>();
-         const SDL_DialogFileFilter filters[] = { { "Sound Files", "wav;ogg;mp3" } };
+         const SDL_DialogFileFilter filters[] = { { "Sound Files", "wav;ogg;opus;mp3;flac" } };
          const string dir = PathToUTF8(PathFromString(g_settingsService.GetAppSettings().GetRecentDir_SoundDir())); // SDL expects UTF-8
-         SDL_ShowSaveFileDialog(
+         ShowSaveFileDialog(
             [](void *userdata, const char *const *filelist, int filter)
             {
                auto *res = static_cast<std::shared_ptr<string> *>(userdata);
@@ -1642,7 +1735,7 @@ void PropertiesPanel::MaterialActions(PropertyPane &props)
          m_pendingMaterialImport = std::make_shared<string>();
          const SDL_DialogFileFilter filters[] = { { "Material Files", "mat" } };
          const string dir = PathToUTF8(PathFromString(g_settingsService.GetAppSettings().GetRecentDir_MaterialDir())); // SDL expects UTF-8
-         SDL_ShowOpenFileDialog(
+         ShowOpenFileDialog(
             [](void *userdata, const char *const *filelist, int filter)
             {
                auto *res = static_cast<std::shared_ptr<string> *>(userdata);
@@ -1663,7 +1756,7 @@ void PropertiesPanel::MaterialActions(PropertyPane &props)
          m_pendingMaterialExport = std::make_shared<string>();
          const SDL_DialogFileFilter filters[] = { { "Material Files", "mat" } };
          const string dir = PathToUTF8(PathFromString(g_settingsService.GetAppSettings().GetRecentDir_MaterialDir())); // SDL expects UTF-8
-         SDL_ShowSaveFileDialog(
+         ShowSaveFileDialog(
             [](void *userdata, const char *const *filelist, int filter)
             {
                auto *res = static_cast<std::shared_ptr<string> *>(userdata);
@@ -1699,4 +1792,6 @@ void PropertiesPanel::MaterialActions(PropertyPane &props)
       props.EndSection();
    }
 }
+
+void PropertiesPanel::AppendStatusHints(vector<StatusHint> &hints) const { hints = { { "Wheel", "Scroll" } }; }
 }

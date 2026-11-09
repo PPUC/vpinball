@@ -95,18 +95,22 @@ public:
       return mapping;
    }
 
+   static vector<ButtonMapping> Create(uint16_t altDeviceId, uint16_t altButtonOrAxisId, uint16_t deviceId, uint16_t buttonOrAxisId, float threshold = 0.f, bool axisReversed = false)
+   {
+      vector<ButtonMapping> mapping;
+      mapping.emplace_back(nullptr, nullptr, altDeviceId, altButtonOrAxisId, threshold, axisReversed);
+      mapping.emplace_back(nullptr, nullptr, deviceId, buttonOrAxisId, threshold, axisReversed);
+      return mapping;
+   }
+
    ButtonMapping With(ButtonInputEventManager* eventManager, ButtonMappingHandler* mappingHandler) const
    {
       return ButtonMapping(eventManager, mappingHandler, m_deviceId, m_axisOrButtonId, m_axisThreshold, m_isAxisReversed);
    }
 
-   void SetAxisPosition(float position)
-   {
-      if (m_isAxisReversed)
-         SetPressed(position <= m_axisThreshold);
-      else
-         SetPressed(position >= m_axisThreshold);
-   }
+   bool ComputeAxisPressed(float position) const { return m_isAxisReversed ? position <= m_axisThreshold : position >= m_axisThreshold; }
+
+   void SetAxisPosition(float position) { SetPressed(ComputeAxisPressed(position)); }
 
    void SetPressed(bool pressed)
    {

@@ -58,6 +58,12 @@
     <Filter Include="ui\live\editor">
       <UniqueIdentifier>{020AAA85-3A03-450C-9B86-5F11D3A9BB1A}</UniqueIdentifier>
     </Filter>
+    <Filter Include="ui\live\editor\parts">
+      <UniqueIdentifier>{D3F3319B-4D8E-43F3-95BA-EA27C3FC0967}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ui\live\editor\ops">
+      <UniqueIdentifier>{7B4E9A21-3C5D-4E8F-A6B2-9D1F0C5E7A83}</UniqueIdentifier>
+    </Filter>
     <Filter Include="ui\live\ingame">
       <UniqueIdentifier>{6DF89AE6-299E-4F7E-A729-9188AD1D98F1}</UniqueIdentifier>
     </Filter>
@@ -193,6 +199,9 @@
       <Filter>audio</Filter>
     </ClCompile>
     <ClCompile Include="$(SolutionDir)/../../src/audio/AudioStreamPlayer.cpp">
+      <Filter>audio</Filter>
+    </ClCompile>
+    <ClCompile Include="$(SolutionDir)/../../src/audio/MixNode.cpp">
       <Filter>audio</Filter>
     </ClCompile>
     <ClCompile Include="$(SolutionDir)/../../src/audio/SoundPlayer.cpp">
@@ -453,6 +462,9 @@
     <ClCompile Include="$(SolutionDir)/../../src/renderer/RenderTarget.cpp">
       <Filter>renderer</Filter>
     </ClCompile>
+    <ClCompile Include="$(SolutionDir)/../../src/renderer/RenderView.cpp">
+      <Filter>renderer</Filter>
+    </ClCompile>
     <ClCompile Include="$(SolutionDir)/../../src/renderer/Sampler.cpp">
       <Filter>renderer</Filter>
     </ClCompile>
@@ -478,6 +490,9 @@
       <Filter>renderer</Filter>
     </ClCompile>
     <ClCompile Include="$(SolutionDir)/../../src/renderer/VRDevice.cpp">
+      <Filter>renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="$(SolutionDir)/../../src/renderer/VRSpaces.cpp">
       <Filter>renderer</Filter>
     </ClCompile>
     <ClCompile Include="$(SolutionDir)/../../src/renderer/Window.cpp">
@@ -513,50 +528,68 @@
     <ClCompile Include="$(SolutionDir)/../../src/ui/live/EditorUI.cpp">
       <Filter>ui\live\editor</Filter>
     </ClCompile>
+    <ClCompile Include="$(SolutionDir)/../../src/ui/live/FileDialog.cpp">
+      <Filter>ui\live\editor</Filter>
+    </ClCompile>
     <ClCompile Include="$(SolutionDir)/../../src/ui/live/editor/PropertyPane.cpp">
       <Filter>ui\live\editor</Filter>
     </ClCompile>
-    <ClCompile Include="$(SolutionDir)/../../src/ui/live/editor/BallUIPart.cpp">
+    <ClCompile Include="$(SolutionDir)/../../src/ui/live/editor/AreaLayout.cpp">
       <Filter>ui\live\editor</Filter>
     </ClCompile>
-    <ClCompile Include="$(SolutionDir)/../../src/ui/live/editor/BumperUIPart.cpp">
+    <ClCompile Include="$(SolutionDir)/../../src/ui/live/editor/BlueprintContextMenu.cpp">
       <Filter>ui\live\editor</Filter>
     </ClCompile>
-    <ClCompile Include="$(SolutionDir)/../../src/ui/live/editor/DecalUIPart.cpp">
+    <ClCompile Include="$(SolutionDir)/../../src/ui/live/editor/BlueprintPane.cpp">
       <Filter>ui\live\editor</Filter>
     </ClCompile>
-    <ClCompile Include="$(SolutionDir)/../../src/ui/live/editor/DispReelUIPart.cpp">
+    <ClCompile Include="$(SolutionDir)/../../src/ui/live/editor/BlueprintRenderContext.cpp">
       <Filter>ui\live\editor</Filter>
+    </ClCompile>
+    <ClCompile Include="$(SolutionDir)/../../src/ui/live/editor/parts/BallUIPart.cpp">
+      <Filter>ui\live\editor\parts</Filter>
+    </ClCompile>
+    <ClCompile Include="$(SolutionDir)/../../src/ui/live/editor/parts/BumperUIPart.cpp">
+      <Filter>ui\live\editor\parts</Filter>
+    </ClCompile>
+    <ClCompile Include="$(SolutionDir)/../../src/ui/live/editor/parts/DecalUIPart.cpp">
+      <Filter>ui\live\editor\parts</Filter>
+    </ClCompile>
+    <ClCompile Include="$(SolutionDir)/../../src/ui/live/editor/parts/DispReelUIPart.cpp">
+      <Filter>ui\live\editor\parts</Filter>
     </ClCompile>
     <ClCompile Include="$(SolutionDir)/../../src/ui/live/editor/EditorChrome.cpp">
       <Filter>ui\live\editor</Filter>
     </ClCompile>
-    <ClCompile Include="$(SolutionDir)/../../src/ui/live/editor/EditorUIPart.cpp">
-      <Filter>ui\live\editor</Filter>
+    <ClCompile Include="$(SolutionDir)/../../src/ui/live/editor/parts/EditorUIPart.cpp">
+      <Filter>ui\live\editor\parts</Filter>
     </ClCompile>
-    <ClCompile Include="$(SolutionDir)/../../src/ui/live/editor/EditorUIPartRegistry.cpp">
-      <Filter>ui\live\editor</Filter>
+    <ClCompile Include="$(SolutionDir)/../../src/ui/live/editor/parts/EditorUIPartRegistry.cpp">
+      <Filter>ui\live\editor\parts</Filter>
     </ClCompile>
-    <ClCompile Include="$(SolutionDir)/../../src/ui/live/editor/FlasherUIPart.cpp">
-      <Filter>ui\live\editor</Filter>
+    <ClCompile Include="$(SolutionDir)/../../src/ui/live/editor/parts/FlasherUIPart.cpp">
+      <Filter>ui\live\editor\parts</Filter>
     </ClCompile>
-    <ClCompile Include="$(SolutionDir)/../../src/ui/live/editor/FlipperUIPart.cpp">
-      <Filter>ui\live\editor</Filter>
+    <ClCompile Include="$(SolutionDir)/../../src/ui/live/editor/parts/FlipperUIPart.cpp">
+      <Filter>ui\live\editor\parts</Filter>
     </ClCompile>
-    <ClCompile Include="$(SolutionDir)/../../src/ui/live/editor/GateUIPart.cpp">
-      <Filter>ui\live\editor</Filter>
+    <ClCompile Include="$(SolutionDir)/../../src/ui/live/editor/parts/GateUIPart.cpp">
+      <Filter>ui\live\editor\parts</Filter>
     </ClCompile>
-    <ClCompile Include="$(SolutionDir)/../../src/ui/live/editor/HitTargetUIPart.cpp">
-      <Filter>ui\live\editor</Filter>
+    <ClCompile Include="$(SolutionDir)/../../src/ui/live/editor/parts/HitTargetUIPart.cpp">
+      <Filter>ui\live\editor\parts</Filter>
     </ClCompile>
-    <ClCompile Include="$(SolutionDir)/../../src/ui/live/editor/KickerUIPart.cpp">
-      <Filter>ui\live\editor</Filter>
+    <ClCompile Include="$(SolutionDir)/../../src/ui/live/editor/parts/KickerUIPart.cpp">
+      <Filter>ui\live\editor\parts</Filter>
     </ClCompile>
-    <ClCompile Include="$(SolutionDir)/../../src/ui/live/editor/LightUIPart.cpp">
-      <Filter>ui\live\editor</Filter>
+    <ClCompile Include="$(SolutionDir)/../../src/ui/live/editor/ops/LayerSpaceChangeOp.cpp">
+      <Filter>ui\live\editor\ops</Filter>
     </ClCompile>
-    <ClCompile Include="$(SolutionDir)/../../src/ui/live/editor/LightSeqUIPart.cpp">
-      <Filter>ui\live\editor</Filter>
+    <ClCompile Include="$(SolutionDir)/../../src/ui/live/editor/parts/LightUIPart.cpp">
+      <Filter>ui\live\editor\parts</Filter>
+    </ClCompile>
+    <ClCompile Include="$(SolutionDir)/../../src/ui/live/editor/parts/LightSeqUIPart.cpp">
+      <Filter>ui\live\editor\parts</Filter>
     </ClCompile>
     <ClCompile Include="$(SolutionDir)/../../src/ui/live/editor/LiveRenderContext.cpp">
       <Filter>ui\live\editor</Filter>
@@ -567,20 +600,20 @@
     <ClCompile Include="$(SolutionDir)/../../src/ui/live/editor/PartLibraryPanel.cpp">
       <Filter>ui\live\editor</Filter>
     </ClCompile>
-    <ClCompile Include="$(SolutionDir)/../../src/ui/live/editor/PartGroupUIPart.cpp">
-      <Filter>ui\live\editor</Filter>
+    <ClCompile Include="$(SolutionDir)/../../src/ui/live/editor/parts/PartGroupUIPart.cpp">
+      <Filter>ui\live\editor\parts</Filter>
     </ClCompile>
-    <ClCompile Include="$(SolutionDir)/../../src/ui/live/editor/PlungerUIPart.cpp">
-      <Filter>ui\live\editor</Filter>
+    <ClCompile Include="$(SolutionDir)/../../src/ui/live/editor/parts/PlungerUIPart.cpp">
+      <Filter>ui\live\editor\parts</Filter>
     </ClCompile>
-    <ClCompile Include="$(SolutionDir)/../../src/ui/live/editor/PrimitiveUIPart.cpp">
-      <Filter>ui\live\editor</Filter>
+    <ClCompile Include="$(SolutionDir)/../../src/ui/live/editor/parts/PrimitiveUIPart.cpp">
+      <Filter>ui\live\editor\parts</Filter>
     </ClCompile>
     <ClCompile Include="$(SolutionDir)/../../src/ui/live/editor/PropertiesPanel.cpp">
       <Filter>ui\live\editor</Filter>
     </ClCompile>
-    <ClCompile Include="$(SolutionDir)/../../src/ui/live/editor/RampUIPart.cpp">
-      <Filter>ui\live\editor</Filter>
+    <ClCompile Include="$(SolutionDir)/../../src/ui/live/editor/parts/RampUIPart.cpp">
+      <Filter>ui\live\editor\parts</Filter>
     </ClCompile>
     <ClCompile Include="$(SolutionDir)/../../src/ui/live/editor/RendererInspectionModal.cpp">
       <Filter>ui\live\editor</Filter>
@@ -588,25 +621,31 @@
     <ClCompile Include="$(SolutionDir)/../../src/ui/live/editor/ResURIPicker.cpp">
       <Filter>ui\live\editor</Filter>
     </ClCompile>
-    <ClCompile Include="$(SolutionDir)/../../src/ui/live/editor/RubberUIPart.cpp">
-      <Filter>ui\live\editor</Filter>
+    <ClCompile Include="$(SolutionDir)/../../src/ui/live/editor/parts/RubberUIPart.cpp">
+      <Filter>ui\live\editor\parts</Filter>
     </ClCompile>
     <ClCompile Include="$(SolutionDir)/../../src/ui/live/editor/ScriptPanel.cpp">
       <Filter>ui\live\editor</Filter>
     </ClCompile>
-    <ClCompile Include="$(SolutionDir)/../../src/ui/live/editor/SpinnerUIPart.cpp">
-      <Filter>ui\live\editor</Filter>
+    <ClCompile Include="$(SolutionDir)/../../src/ui/live/editor/ops/SetOriginOp.cpp">
+      <Filter>ui\live\editor\ops</Filter>
     </ClCompile>
-    <ClCompile Include="$(SolutionDir)/../../src/ui/live/editor/SurfaceUIPart.cpp">
-      <Filter>ui\live\editor</Filter>
+    <ClCompile Include="$(SolutionDir)/../../src/ui/live/editor/parts/SpinnerUIPart.cpp">
+      <Filter>ui\live\editor\parts</Filter>
     </ClCompile>
-    <ClCompile Include="$(SolutionDir)/../../src/ui/live/editor/TextBoxUIPart.cpp">
-      <Filter>ui\live\editor</Filter>
+    <ClCompile Include="$(SolutionDir)/../../src/ui/live/editor/parts/SurfaceUIPart.cpp">
+      <Filter>ui\live\editor\parts</Filter>
     </ClCompile>
-    <ClCompile Include="$(SolutionDir)/../../src/ui/live/editor/TimerUIPart.cpp">
-      <Filter>ui\live\editor</Filter>
+    <ClCompile Include="$(SolutionDir)/../../src/ui/live/editor/parts/TextBoxUIPart.cpp">
+      <Filter>ui\live\editor\parts</Filter>
     </ClCompile>
-    <ClCompile Include="$(SolutionDir)/../../src/ui/live/editor/TriggerUIPart.cpp">
+    <ClCompile Include="$(SolutionDir)/../../src/ui/live/editor/parts/TimerUIPart.cpp">
+      <Filter>ui\live\editor\parts</Filter>
+    </ClCompile>
+    <ClCompile Include="$(SolutionDir)/../../src/ui/live/editor/parts/TriggerUIPart.cpp">
+      <Filter>ui\live\editor\parts</Filter>
+    </ClCompile>
+    <ClCompile Include="$(SolutionDir)/../../src/ui/live/editor/ViewportPane.cpp">
       <Filter>ui\live\editor</Filter>
     </ClCompile>
     <ClCompile Include="$(SolutionDir)/../../src/ui/live/ingameui/InGameUI.cpp">
@@ -1154,6 +1193,12 @@
     <ClInclude Include="$(SolutionDir)/../../src/audio/AudioStreamPlayer.h">
       <Filter>audio</Filter>
     </ClInclude>
+    <ClInclude Include="$(SolutionDir)/../../src/audio/MixNode.h">
+      <Filter>audio</Filter>
+    </ClInclude>
+    <ClInclude Include="$(SolutionDir)/../../src/audio/OpusDecoder.h">
+      <Filter>audio</Filter>
+    </ClInclude>
     <ClInclude Include="$(SolutionDir)/../../src/audio/SoundPlayer.h">
       <Filter>audio</Filter>
     </ClInclude>
@@ -1532,6 +1577,9 @@
     <ClInclude Include="$(SolutionDir)/../../src/renderer/RenderTarget.h">
       <Filter>renderer</Filter>
     </ClInclude>
+    <ClInclude Include="$(SolutionDir)/../../src/renderer/RenderView.h">
+      <Filter>renderer</Filter>
+    </ClInclude>
     <ClInclude Include="$(SolutionDir)/../../src/renderer/RenderDevice.h">
       <Filter>renderer</Filter>
     </ClInclude>
@@ -1577,6 +1625,9 @@
     <ClInclude Include="$(SolutionDir)/../../src/renderer/VRDevice.h">
       <Filter>renderer</Filter>
     </ClInclude>
+    <ClInclude Include="$(SolutionDir)/../../src/renderer/VRSpaces.h">
+      <Filter>renderer</Filter>
+    </ClInclude>
     <ClInclude Include="$(SolutionDir)/../../src/renderer/Window.h">
       <Filter>renderer</Filter>
     </ClInclude>
@@ -1610,6 +1661,9 @@
     <ClInclude Include="$(SolutionDir)/../../src/ui/live/LiveUI.h">
       <Filter>ui\live</Filter>
     </ClInclude>
+    <ClInclude Include="$(SolutionDir)/../../src/ui/live/ImGuiHelpers.h">
+      <Filter>ui\live</Filter>
+    </ClInclude>
     <ClInclude Include="$(SolutionDir)/../../src/ui/live/PerfUI.h">
       <Filter>ui\live</Filter>
     </ClInclude>
@@ -1622,53 +1676,80 @@
     <ClInclude Include="$(SolutionDir)/../../src/ui/live/EditorUI.h">
       <Filter>ui\live\editor</Filter>
     </ClInclude>
-    <ClInclude Include="$(SolutionDir)/../../src/ui/live/editor/EditorUIPart.h">
+    <ClInclude Include="$(SolutionDir)/../../src/ui/live/FileDialog.h">
       <Filter>ui\live\editor</Filter>
     </ClInclude>
-    <ClInclude Include="$(SolutionDir)/../../src/ui/live/editor/EditorUIPartRegistry.h">
-      <Filter>ui\live\editor</Filter>
+    <ClInclude Include="$(SolutionDir)/../../src/ui/live/editor/parts/EditorUIPart.h">
+      <Filter>ui\live\editor\parts</Filter>
+    </ClInclude>
+    <ClInclude Include="$(SolutionDir)/../../src/ui/live/editor/parts/EditorUIPartRegistry.h">
+      <Filter>ui\live\editor\parts</Filter>
     </ClInclude>
     <ClInclude Include="$(SolutionDir)/../../src/ui/live/editor/PropertyPane.h">
       <Filter>ui\live\editor</Filter>
     </ClInclude>
-    <ClInclude Include="$(SolutionDir)/../../src/ui/live/editor/BallUIPart.h">
+    <ClInclude Include="$(SolutionDir)/../../src/ui/live/editor/AreaLayout.h">
       <Filter>ui\live\editor</Filter>
     </ClInclude>
-    <ClInclude Include="$(SolutionDir)/../../src/ui/live/editor/BumperUIPart.h">
+    <ClInclude Include="$(SolutionDir)/../../src/ui/live/editor/BlueprintPane.h">
       <Filter>ui\live\editor</Filter>
     </ClInclude>
-    <ClInclude Include="$(SolutionDir)/../../src/ui/live/editor/DecalUIPart.h">
+    <ClInclude Include="$(SolutionDir)/../../src/ui/live/editor/BlueprintRenderContext.h">
       <Filter>ui\live\editor</Filter>
     </ClInclude>
-    <ClInclude Include="$(SolutionDir)/../../src/ui/live/editor/DispReelUIPart.h">
+    <ClInclude Include="$(SolutionDir)/../../src/ui/live/editor/parts/BallUIPart.h">
+      <Filter>ui\live\editor\parts</Filter>
+    </ClInclude>
+    <ClInclude Include="$(SolutionDir)/../../src/ui/live/editor/parts/BumperUIPart.h">
+      <Filter>ui\live\editor\parts</Filter>
+    </ClInclude>
+    <ClInclude Include="$(SolutionDir)/../../src/ui/live/editor/parts/DecalUIPart.h">
+      <Filter>ui\live\editor\parts</Filter>
+    </ClInclude>
+    <ClInclude Include="$(SolutionDir)/../../src/ui/live/editor/parts/DispReelUIPart.h">
+      <Filter>ui\live\editor\parts</Filter>
+    </ClInclude>
+    <ClInclude Include="$(SolutionDir)/../../src/ui/live/editor/EditorAreaView.h">
       <Filter>ui\live\editor</Filter>
     </ClInclude>
     <ClInclude Include="$(SolutionDir)/../../src/ui/live/editor/EditorChrome.h">
       <Filter>ui\live\editor</Filter>
     </ClInclude>
-    <ClInclude Include="$(SolutionDir)/../../src/ui/live/editor/FlasherUIPart.h">
+    <ClInclude Include="$(SolutionDir)/../../src/ui/live/editor/EditorTheme.h">
       <Filter>ui\live\editor</Filter>
     </ClInclude>
-    <ClInclude Include="$(SolutionDir)/../../src/ui/live/editor/FlipperUIPart.h">
-      <Filter>ui\live\editor</Filter>
+    <ClInclude Include="$(SolutionDir)/../../src/ui/live/editor/parts/FlasherUIPart.h">
+      <Filter>ui\live\editor\parts</Filter>
     </ClInclude>
-    <ClInclude Include="$(SolutionDir)/../../src/ui/live/editor/GateUIPart.h">
-      <Filter>ui\live\editor</Filter>
+    <ClInclude Include="$(SolutionDir)/../../src/ui/live/editor/parts/FlipperUIPart.h">
+      <Filter>ui\live\editor\parts</Filter>
     </ClInclude>
-    <ClInclude Include="$(SolutionDir)/../../src/ui/live/editor/HitTargetUIPart.h">
-      <Filter>ui\live\editor</Filter>
+    <ClInclude Include="$(SolutionDir)/../../src/ui/live/editor/parts/GateUIPart.h">
+      <Filter>ui\live\editor\parts</Filter>
     </ClInclude>
-    <ClInclude Include="$(SolutionDir)/../../src/ui/live/editor/KickerUIPart.h">
-      <Filter>ui\live\editor</Filter>
+    <ClInclude Include="$(SolutionDir)/../../src/ui/live/editor/parts/HitTargetUIPart.h">
+      <Filter>ui\live\editor\parts</Filter>
     </ClInclude>
-    <ClInclude Include="$(SolutionDir)/../../src/ui/live/editor/LightUIPart.h">
-      <Filter>ui\live\editor</Filter>
+    <ClInclude Include="$(SolutionDir)/../../src/ui/live/IconsLucide.h">
+      <Filter>ui\live</Filter>
     </ClInclude>
-    <ClInclude Include="$(SolutionDir)/../../src/ui/live/editor/LightSeqUIPart.h">
-      <Filter>ui\live\editor</Filter>
+    <ClInclude Include="$(SolutionDir)/../../src/ui/live/editor/parts/KickerUIPart.h">
+      <Filter>ui\live\editor\parts</Filter>
+    </ClInclude>
+    <ClInclude Include="$(SolutionDir)/../../src/ui/live/editor/parts/LightUIPart.h">
+      <Filter>ui\live\editor\parts</Filter>
+    </ClInclude>
+    <ClInclude Include="$(SolutionDir)/../../src/ui/live/editor/parts/LightSeqUIPart.h">
+      <Filter>ui\live\editor\parts</Filter>
+    </ClInclude>
+    <ClInclude Include="$(SolutionDir)/../../src/ui/live/LucideFont.h">
+      <Filter>ui\live</Filter>
     </ClInclude>
     <ClInclude Include="$(SolutionDir)/../../src/ui/live/editor/LiveRenderContext.h">
       <Filter>ui\live\editor</Filter>
+    </ClInclude>
+    <ClInclude Include="$(SolutionDir)/../../src/ui/live/editor/ops/LayerSpaceChangeOp.h">
+      <Filter>ui\live\editor\ops</Filter>
     </ClInclude>
     <ClInclude Include="$(SolutionDir)/../../src/ui/live/editor/OutlinerPanel.h">
       <Filter>ui\live\editor</Filter>
@@ -1676,20 +1757,20 @@
     <ClInclude Include="$(SolutionDir)/../../src/ui/live/editor/PartLibraryPanel.h">
       <Filter>ui\live\editor</Filter>
     </ClInclude>
-    <ClInclude Include="$(SolutionDir)/../../src/ui/live/editor/PartGroupUIPart.h">
-      <Filter>ui\live\editor</Filter>
+    <ClInclude Include="$(SolutionDir)/../../src/ui/live/editor/parts/PartGroupUIPart.h">
+      <Filter>ui\live\editor\parts</Filter>
     </ClInclude>
-    <ClInclude Include="$(SolutionDir)/../../src/ui/live/editor/PlungerUIPart.h">
-      <Filter>ui\live\editor</Filter>
+    <ClInclude Include="$(SolutionDir)/../../src/ui/live/editor/parts/PlungerUIPart.h">
+      <Filter>ui\live\editor\parts</Filter>
     </ClInclude>
-    <ClInclude Include="$(SolutionDir)/../../src/ui/live/editor/PrimitiveUIPart.h">
-      <Filter>ui\live\editor</Filter>
+    <ClInclude Include="$(SolutionDir)/../../src/ui/live/editor/parts/PrimitiveUIPart.h">
+      <Filter>ui\live\editor\parts</Filter>
     </ClInclude>
     <ClInclude Include="$(SolutionDir)/../../src/ui/live/editor/PropertiesPanel.h">
       <Filter>ui\live\editor</Filter>
     </ClInclude>
-    <ClInclude Include="$(SolutionDir)/../../src/ui/live/editor/RampUIPart.h">
-      <Filter>ui\live\editor</Filter>
+    <ClInclude Include="$(SolutionDir)/../../src/ui/live/editor/parts/RampUIPart.h">
+      <Filter>ui\live\editor\parts</Filter>
     </ClInclude>
     <ClInclude Include="$(SolutionDir)/../../src/ui/live/editor/RendererInspectionModal.h">
       <Filter>ui\live\editor</Filter>
@@ -1697,8 +1778,8 @@
     <ClInclude Include="$(SolutionDir)/../../src/ui/live/editor/ResURIPicker.h">
       <Filter>ui\live\editor</Filter>
     </ClInclude>
-    <ClInclude Include="$(SolutionDir)/../../src/ui/live/editor/RubberUIPart.h">
-      <Filter>ui\live\editor</Filter>
+    <ClInclude Include="$(SolutionDir)/../../src/ui/live/editor/parts/RubberUIPart.h">
+      <Filter>ui\live\editor\parts</Filter>
     </ClInclude>
     <ClInclude Include="$(SolutionDir)/../../src/ui/live/editor/ScriptPanel.h">
       <Filter>ui\live\editor</Filter>
@@ -1706,19 +1787,25 @@
     <ClInclude Include="$(SolutionDir)/../../src/ui/live/editor/Selection.h">
       <Filter>ui\live\editor</Filter>
     </ClInclude>
-    <ClInclude Include="$(SolutionDir)/../../src/ui/live/editor/SpinnerUIPart.h">
-      <Filter>ui\live\editor</Filter>
+    <ClInclude Include="$(SolutionDir)/../../src/ui/live/editor/ops/SetOriginOp.h">
+      <Filter>ui\live\editor\ops</Filter>
     </ClInclude>
-    <ClInclude Include="$(SolutionDir)/../../src/ui/live/editor/SurfaceUIPart.h">
-      <Filter>ui\live\editor</Filter>
+    <ClInclude Include="$(SolutionDir)/../../src/ui/live/editor/parts/SpinnerUIPart.h">
+      <Filter>ui\live\editor\parts</Filter>
     </ClInclude>
-    <ClInclude Include="$(SolutionDir)/../../src/ui/live/editor/TextBoxUIPart.h">
-      <Filter>ui\live\editor</Filter>
+    <ClInclude Include="$(SolutionDir)/../../src/ui/live/editor/parts/SurfaceUIPart.h">
+      <Filter>ui\live\editor\parts</Filter>
     </ClInclude>
-    <ClInclude Include="$(SolutionDir)/../../src/ui/live/editor/TimerUIPart.h">
-      <Filter>ui\live\editor</Filter>
+    <ClInclude Include="$(SolutionDir)/../../src/ui/live/editor/parts/TextBoxUIPart.h">
+      <Filter>ui\live\editor\parts</Filter>
     </ClInclude>
-    <ClInclude Include="$(SolutionDir)/../../src/ui/live/editor/TriggerUIPart.h">
+    <ClInclude Include="$(SolutionDir)/../../src/ui/live/editor/parts/TimerUIPart.h">
+      <Filter>ui\live\editor\parts</Filter>
+    </ClInclude>
+    <ClInclude Include="$(SolutionDir)/../../src/ui/live/editor/parts/TriggerUIPart.h">
+      <Filter>ui\live\editor\parts</Filter>
+    </ClInclude>
+    <ClInclude Include="$(SolutionDir)/../../src/ui/live/editor/ViewportPane.h">
       <Filter>ui\live\editor</Filter>
     </ClInclude>
     <ClInclude Include="$(SolutionDir)/../../src/ui/live/ingameui/InGameUI.h">
@@ -2437,12 +2524,6 @@
     </ClInclude>
     <ClInclude Include="$(SolutionDir)/../../third-party/include/serial.h">
       <Filter>third-party\serial</Filter>
-    </ClInclude>
-    <ClInclude Include="$(SolutionDir)/../../third-party/include/bgfx-imgui/fs_ocornut_imgui.bin.h">
-      <Filter>third-party\imgui\bgfx</Filter>
-    </ClInclude>
-    <ClInclude Include="$(SolutionDir)/../../third-party/include/bgfx-imgui/vs_ocornut_imgui.bin.h">
-      <Filter>third-party\imgui\bgfx</Filter>
     </ClInclude>
     <ClInclude Include="$(SolutionDir)/../../third-party/include/implot/implot.h">
       <Filter>third-party\imgui\implot</Filter>
@@ -3401,6 +3482,9 @@
       <Filter>shaders\bgfx</Filter>
     </None>
     <None Include="$(SolutionDir)/../../src/shaders/bgfx/fs_pp_copy.sc">
+      <Filter>shaders\bgfx</Filter>
+    </None>
+    <None Include="$(SolutionDir)/../../src/shaders/bgfx/fs_pp_copy_depth.sc">
       <Filter>shaders\bgfx</Filter>
     </None>
     <None Include="$(SolutionDir)/../../src/shaders/bgfx/fs_pp_dlaa.sc">

@@ -28,6 +28,13 @@
 #include "parts/timer.h"
 #include "parts/trigger.h"
 
+static VARIANT* OptionalArg(DISPPARAMS* pDispParams, int& index, VARIANT* pDefault) {
+	if (index <= 0)
+		return pDefault;
+	VARIANT* pArg = &pDispParams->rgvarg[--index];
+	return (V_VT(pArg) == VT_ERROR && V_ERROR(pArg) == DISP_E_PARAMNOTFOUND) ? pDefault : pArg;
+}
+
 STDMETHODIMP Collection::GetIDsOfNames(REFIID /*riid*/, LPOLESTR* rgszNames, UINT cNames, LCID lcid, DISPID* rgDispId) {
 	static struct {
 		const WCHAR *name;
@@ -87,11 +94,18 @@ STDMETHODIMP Collection::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid,
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_I4);
-				V_VT(&res) = VT_DISPATCH;
-				hres = get_Item(V_I4(&var0), (IDispatch**)&V_DISPATCH(&res));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_I4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					V_VT(&res) = VT_DISPATCH;
+					hres = get_Item(V_I4(&var0), (IDispatch**)&V_DISPATCH(&res));
+				}
 				VariantClear(&var0);
 			}
 			else if (wFlags == (DISPATCH_METHOD | DISPATCH_PROPERTYGET)) {
@@ -417,10 +431,17 @@ STDMETHODIMP PinTable::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, W
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_GlassHeight(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_GlassHeight(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -437,10 +458,17 @@ STDMETHODIMP PinTable::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, W
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
-				hres = put_PlayfieldMaterial(V_BSTR(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_PlayfieldMaterial(V_BSTR(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -457,10 +485,17 @@ STDMETHODIMP PinTable::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, W
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_UI4);
-				hres = put_BackdropColor((OLE_COLOR)V_UI4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_UI4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_BackdropColor((OLE_COLOR)V_UI4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -477,10 +512,17 @@ STDMETHODIMP PinTable::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, W
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_SlopeMax(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_SlopeMax(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -497,10 +539,17 @@ STDMETHODIMP PinTable::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, W
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_SlopeMin(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_SlopeMin(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -517,10 +566,17 @@ STDMETHODIMP PinTable::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, W
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_Inclination(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Inclination(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -537,10 +593,17 @@ STDMETHODIMP PinTable::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, W
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_FieldOfView(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_FieldOfView(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -557,10 +620,17 @@ STDMETHODIMP PinTable::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, W
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_Layback(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Layback(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -577,10 +647,17 @@ STDMETHODIMP PinTable::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, W
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_Rotation(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Rotation(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -597,10 +674,17 @@ STDMETHODIMP PinTable::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, W
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_Scalex(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Scalex(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -617,10 +701,17 @@ STDMETHODIMP PinTable::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, W
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_Scaley(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Scaley(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -637,10 +728,17 @@ STDMETHODIMP PinTable::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, W
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_Scalez(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Scalez(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -657,10 +755,17 @@ STDMETHODIMP PinTable::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, W
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_Xlatex(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Xlatex(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -677,10 +782,17 @@ STDMETHODIMP PinTable::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, W
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_Xlatey(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Xlatey(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -697,10 +809,17 @@ STDMETHODIMP PinTable::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, W
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_Xlatez(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Xlatez(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -717,10 +836,17 @@ STDMETHODIMP PinTable::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, W
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_Gravity(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Gravity(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -737,10 +863,17 @@ STDMETHODIMP PinTable::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, W
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_Friction(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Friction(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -757,10 +890,17 @@ STDMETHODIMP PinTable::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, W
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_Elasticity(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Elasticity(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -777,10 +917,17 @@ STDMETHODIMP PinTable::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, W
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_ElasticityFalloff(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_ElasticityFalloff(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -797,10 +944,17 @@ STDMETHODIMP PinTable::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, W
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_Scatter(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Scatter(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -817,10 +971,17 @@ STDMETHODIMP PinTable::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, W
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_DefaultScatter(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_DefaultScatter(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -837,10 +998,17 @@ STDMETHODIMP PinTable::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, W
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_NudgeTime(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_NudgeTime(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -857,10 +1025,17 @@ STDMETHODIMP PinTable::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, W
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_I4);
-				hres = put_PlungerNormalize(V_I4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_I4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_PlungerNormalize(V_I4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -877,10 +1052,17 @@ STDMETHODIMP PinTable::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, W
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_I4);
-				hres = put_PhysicsLoopTime(V_I4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_I4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_PhysicsLoopTime(V_I4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -897,10 +1079,17 @@ STDMETHODIMP PinTable::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, W
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
-				hres = put_PlungerFilter(V_BOOL(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_PlungerFilter(V_BOOL(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -917,10 +1106,17 @@ STDMETHODIMP PinTable::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, W
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_I4);
-				hres = put_YieldTime(V_I4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_I4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_YieldTime(V_I4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -937,10 +1133,17 @@ STDMETHODIMP PinTable::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, W
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
-				hres = put_BallImage(V_BSTR(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_BallImage(V_BSTR(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -957,10 +1160,17 @@ STDMETHODIMP PinTable::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, W
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
-				hres = put_BackdropImage_DT(V_BSTR(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_BackdropImage_DT(V_BSTR(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -977,10 +1187,17 @@ STDMETHODIMP PinTable::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, W
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
-				hres = put_BackdropImage_FS(V_BSTR(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_BackdropImage_FS(V_BSTR(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -997,10 +1214,17 @@ STDMETHODIMP PinTable::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, W
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
-				hres = put_BackdropImage_FSS(V_BSTR(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_BackdropImage_FSS(V_BSTR(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -1017,10 +1241,17 @@ STDMETHODIMP PinTable::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, W
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
-				hres = put_BackdropImageApplyNightDay(V_BOOL(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_BackdropImageApplyNightDay(V_BOOL(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -1037,10 +1268,17 @@ STDMETHODIMP PinTable::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, W
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
-				hres = put_ColorGradeImage(V_BSTR(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_ColorGradeImage(V_BSTR(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -1057,10 +1295,17 @@ STDMETHODIMP PinTable::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, W
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_Width(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Width(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -1077,10 +1322,17 @@ STDMETHODIMP PinTable::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, W
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_Height(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Height(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -1097,10 +1349,17 @@ STDMETHODIMP PinTable::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, W
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_MaxSeparation(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_MaxSeparation(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -1117,10 +1376,17 @@ STDMETHODIMP PinTable::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, W
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_ZPD(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_ZPD(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -1137,10 +1403,17 @@ STDMETHODIMP PinTable::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, W
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_Offset(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Offset(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -1157,10 +1430,17 @@ STDMETHODIMP PinTable::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, W
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
-				hres = put_GlobalStereo3D(V_BOOL(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_GlobalStereo3D(V_BOOL(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -1177,10 +1457,17 @@ STDMETHODIMP PinTable::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, W
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
-				hres = put_BallDecalMode(V_BOOL(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_BallDecalMode(V_BOOL(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -1197,10 +1484,17 @@ STDMETHODIMP PinTable::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, W
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
-				hres = put_Image(V_BSTR(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Image(V_BSTR(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -1225,10 +1519,17 @@ STDMETHODIMP PinTable::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, W
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
-				hres = put_Name(V_BSTR(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Name(V_BSTR(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -1245,10 +1546,17 @@ STDMETHODIMP PinTable::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, W
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_I4);
-				hres = put_EnableAntialiasing((UserDefaultOnOff)V_I4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_I4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_EnableAntialiasing((UserDefaultOnOff)V_I4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -1265,10 +1573,17 @@ STDMETHODIMP PinTable::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, W
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_I4);
-				hres = put_EnableAO((UserDefaultOnOff)V_I4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_I4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_EnableAO((UserDefaultOnOff)V_I4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -1285,10 +1600,17 @@ STDMETHODIMP PinTable::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, W
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_I4);
-				hres = put_EnableFXAA((FXAASettings)V_I4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_I4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_EnableFXAA((FXAASettings)V_I4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -1305,10 +1627,17 @@ STDMETHODIMP PinTable::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, W
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_I4);
-				hres = put_EnableSSR((UserDefaultOnOff)V_I4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_I4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_EnableSSR((UserDefaultOnOff)V_I4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -1325,10 +1654,17 @@ STDMETHODIMP PinTable::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, W
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_BloomStrength(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_BloomStrength(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -1345,10 +1681,17 @@ STDMETHODIMP PinTable::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, W
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
-				hres = put_BallFrontDecal(V_BSTR(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_BallFrontDecal(V_BSTR(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -1365,10 +1708,17 @@ STDMETHODIMP PinTable::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, W
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_I4);
-				hres = put_OverridePhysics((PhysicsSet)V_I4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_I4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_OverridePhysics((PhysicsSet)V_I4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -1385,10 +1735,17 @@ STDMETHODIMP PinTable::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, W
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
-				hres = put_OverridePhysicsFlippers(V_BOOL(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_OverridePhysicsFlippers(V_BOOL(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -1405,10 +1762,17 @@ STDMETHODIMP PinTable::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, W
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
-				hres = put_EnableEMReels(V_BOOL(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_EnableEMReels(V_BOOL(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -1425,10 +1789,17 @@ STDMETHODIMP PinTable::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, W
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
-				hres = put_EnableDecals(V_BOOL(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_EnableDecals(V_BOOL(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -1461,10 +1832,17 @@ STDMETHODIMP PinTable::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, W
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
-				hres = put_ReflectElementsOnPlayfield(V_BOOL(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_ReflectElementsOnPlayfield(V_BOOL(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -1481,10 +1859,17 @@ STDMETHODIMP PinTable::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, W
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
-				hres = put_EnvironmentImage(V_BSTR(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_EnvironmentImage(V_BSTR(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -1501,10 +1886,17 @@ STDMETHODIMP PinTable::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, W
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_I4);
-				hres = put_BackglassMode((BackglassIndex)V_I4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_I4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_BackglassMode((BackglassIndex)V_I4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -1521,10 +1913,17 @@ STDMETHODIMP PinTable::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, W
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
-				hres = put_Accelerometer(V_BOOL(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Accelerometer(V_BOOL(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -1541,10 +1940,17 @@ STDMETHODIMP PinTable::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, W
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
-				hres = put_AccelNormalMount(V_BOOL(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_AccelNormalMount(V_BOOL(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -1561,10 +1967,17 @@ STDMETHODIMP PinTable::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, W
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_AccelerometerAngle(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_AccelerometerAngle(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -1581,10 +1994,17 @@ STDMETHODIMP PinTable::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, W
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_GlobalDifficulty(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_GlobalDifficulty(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -1601,10 +2021,17 @@ STDMETHODIMP PinTable::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, W
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_TableHeight(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_TableHeight(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -1621,10 +2048,17 @@ STDMETHODIMP PinTable::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, W
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_I4);
-				hres = put_DeadZone(V_I4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_I4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_DeadZone(V_I4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -1641,10 +2075,17 @@ STDMETHODIMP PinTable::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, W
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_UI4);
-				hres = put_LightAmbient((OLE_COLOR)V_UI4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_UI4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_LightAmbient((OLE_COLOR)V_UI4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -1661,10 +2102,17 @@ STDMETHODIMP PinTable::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, W
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_UI4);
-				hres = put_Light0Emission((OLE_COLOR)V_UI4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_UI4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Light0Emission((OLE_COLOR)V_UI4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -1681,10 +2129,17 @@ STDMETHODIMP PinTable::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, W
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_LightHeight(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_LightHeight(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -1701,10 +2156,17 @@ STDMETHODIMP PinTable::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, W
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_LightRange(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_LightRange(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -1721,10 +2183,17 @@ STDMETHODIMP PinTable::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, W
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_EnvironmentEmissionScale(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_EnvironmentEmissionScale(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -1741,10 +2210,17 @@ STDMETHODIMP PinTable::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, W
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_LightEmissionScale(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_LightEmissionScale(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -1761,10 +2237,17 @@ STDMETHODIMP PinTable::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, W
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_AOScale(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_AOScale(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -1781,10 +2264,17 @@ STDMETHODIMP PinTable::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, W
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_SSRScale(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_SSRScale(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -1801,10 +2291,17 @@ STDMETHODIMP PinTable::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, W
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_I4);
-				hres = put_TableSoundVolume(V_I4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_I4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_TableSoundVolume(V_I4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -1821,10 +2318,17 @@ STDMETHODIMP PinTable::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, W
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_I4);
-				hres = put_TableMusicVolume(V_I4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_I4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_TableMusicVolume(V_I4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -1841,10 +2345,17 @@ STDMETHODIMP PinTable::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, W
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_I4);
-				hres = put_TableAdaptiveVSync(V_I4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_I4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_TableAdaptiveVSync(V_I4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -1861,10 +2372,17 @@ STDMETHODIMP PinTable::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, W
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_I4);
-				hres = put_BallReflection((UserDefaultOnOff)V_I4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_I4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_BallReflection((UserDefaultOnOff)V_I4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -1881,10 +2399,17 @@ STDMETHODIMP PinTable::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, W
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_I4);
-				hres = put_PlayfieldReflectionStrength(V_I4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_I4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_PlayfieldReflectionStrength(V_I4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -1901,10 +2426,17 @@ STDMETHODIMP PinTable::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, W
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_I4);
-				hres = put_BallTrail((UserDefaultOnOff)V_I4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_I4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_BallTrail((UserDefaultOnOff)V_I4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -1921,10 +2453,17 @@ STDMETHODIMP PinTable::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, W
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_I4);
-				hres = put_TrailStrength(V_I4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_I4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_TrailStrength(V_I4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -1941,10 +2480,17 @@ STDMETHODIMP PinTable::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, W
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_BallPlayfieldReflectionScale(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_BallPlayfieldReflectionScale(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -1961,10 +2507,17 @@ STDMETHODIMP PinTable::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, W
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_DefaultBulbIntensityScale(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_DefaultBulbIntensityScale(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -1981,10 +2534,17 @@ STDMETHODIMP PinTable::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, W
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_I4);
-				hres = put_DetailLevel(V_I4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_I4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_DetailLevel(V_I4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -2001,10 +2561,17 @@ STDMETHODIMP PinTable::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, W
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_I4);
-				hres = put_NightDay(V_I4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_I4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_NightDay(V_I4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -2021,10 +2588,17 @@ STDMETHODIMP PinTable::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, W
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
-				hres = put_GlobalAlphaAcc(V_BOOL(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_GlobalAlphaAcc(V_BOOL(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -2041,10 +2615,17 @@ STDMETHODIMP PinTable::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, W
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
-				hres = put_GlobalDayNight(V_BOOL(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_GlobalDayNight(V_BOOL(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -2096,29 +2677,36 @@ STDMETHODIMP PinTable::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, W
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
 				VARIANT var1;
 				V_VT(&var1) = VT_EMPTY;
-				VariantChangeType(&var1, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var1, &pDispParams->rgvarg[--index], 0, VT_R4);
 				VARIANT var2;
 				V_VT(&var2) = VT_EMPTY;
-				VariantChangeType(&var2, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var2, &pDispParams->rgvarg[--index], 0, VT_R4);
 				VARIANT var3;
 				V_VT(&var3) = VT_EMPTY;
-				VariantChangeType(&var3, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var3, &pDispParams->rgvarg[--index], 0, VT_R4);
 				VARIANT var4;
 				V_VT(&var4) = VT_EMPTY;
-				VariantChangeType(&var4, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var4, &pDispParams->rgvarg[--index], 0, VT_R4);
 				VARIANT var5;
 				V_VT(&var5) = VT_EMPTY;
-				VariantChangeType(&var5, &pDispParams->rgvarg[--index], 0, VT_I4);
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var5, &pDispParams->rgvarg[--index], 0, VT_I4);
 				VARIANT var6;
 				V_VT(&var6) = VT_EMPTY;
-				VariantCopyInd(&var6, (index > 0) ? &pDispParams->rgvarg[--index] : &var6);
-				V_VT(&res) = VT_R4;
-				hres = get_Option(V_BSTR(&var0), V_R4(&var1), V_R4(&var2), V_R4(&var3), V_R4(&var4), V_I4(&var5), var6, &V_R4(&res));
+				if (SUCCEEDED(hrConv)) hrConv = VariantCopyInd(&var6, (index > 0) ? &pDispParams->rgvarg[--index] : &var6);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					V_VT(&res) = VT_R4;
+					hres = get_Option(V_BSTR(&var0), V_R4(&var1), V_R4(&var2), V_R4(&var3), V_R4(&var4), V_I4(&var5), var6, &V_R4(&res));
+				}
 				VariantClear(&var0);
 				VariantClear(&var1);
 				VariantClear(&var2);
@@ -2133,31 +2721,38 @@ STDMETHODIMP PinTable::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, W
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
 				VARIANT var1;
 				V_VT(&var1) = VT_EMPTY;
-				VariantChangeType(&var1, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var1, &pDispParams->rgvarg[--index], 0, VT_R4);
 				VARIANT var2;
 				V_VT(&var2) = VT_EMPTY;
-				VariantChangeType(&var2, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var2, &pDispParams->rgvarg[--index], 0, VT_R4);
 				VARIANT var3;
 				V_VT(&var3) = VT_EMPTY;
-				VariantChangeType(&var3, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var3, &pDispParams->rgvarg[--index], 0, VT_R4);
 				VARIANT var4;
 				V_VT(&var4) = VT_EMPTY;
-				VariantChangeType(&var4, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var4, &pDispParams->rgvarg[--index], 0, VT_R4);
 				VARIANT var5;
 				V_VT(&var5) = VT_EMPTY;
-				VariantChangeType(&var5, &pDispParams->rgvarg[--index], 0, VT_I4);
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var5, &pDispParams->rgvarg[--index], 0, VT_I4);
 				VARIANT var6;
 				V_VT(&var6) = VT_EMPTY;
-				VariantCopyInd(&var6, (index > 0) ? &pDispParams->rgvarg[--index] : &var6);
+				if (SUCCEEDED(hrConv)) hrConv = VariantCopyInd(&var6, (index > 0) ? &pDispParams->rgvarg[--index] : &var6);
 				VARIANT var7;
 				V_VT(&var7) = VT_EMPTY;
-				VariantChangeType(&var7, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_Option(V_BSTR(&var0), V_R4(&var1), V_R4(&var2), V_R4(&var3), V_R4(&var4), V_I4(&var5), var6, V_R4(&var7));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var7, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Option(V_BSTR(&var0), V_R4(&var1), V_R4(&var2), V_R4(&var3), V_R4(&var4), V_I4(&var5), var6, V_R4(&var7));
+				}
 				VariantClear(&var0);
 				VariantClear(&var1);
 				VariantClear(&var2);
@@ -2845,11 +3440,18 @@ STDMETHODIMP ScriptGlobalTable::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCI
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_I4);
-				V_VT(&res) = VT_I4;
-				hres = get_JoyCustomKey(V_I4(&var0), (LONG*)&V_I4(&res));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_I4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					V_VT(&res) = VT_I4;
+					hres = get_JoyCustomKey(V_I4(&var0), (LONG*)&V_I4(&res));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -2861,11 +3463,18 @@ STDMETHODIMP ScriptGlobalTable::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCI
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_I4);
-				V_VT(&res) = VT_I4;
-				hres = get_VPXActionKey(V_I4(&var0), (LONG*)&V_I4(&res));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_I4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					V_VT(&res) = VT_I4;
+					hres = get_VPXActionKey(V_I4(&var0), (LONG*)&V_I4(&res));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -2877,42 +3486,49 @@ STDMETHODIMP ScriptGlobalTable::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCI
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
 				VARIANT var1;
 				V_VT(&var1) = VT_I4;
 				V_I4(&var1) = 1;
-				VariantChangeType(&var1, (index > 0) ? &pDispParams->rgvarg[--index] : &var1, 0, VT_I4);
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var1, OptionalArg(pDispParams, index, &var1), 0, VT_I4);
 				VARIANT var2;
 				V_VT(&var2) = VT_R4;
 				V_R4(&var2) = 1;
-				VariantChangeType(&var2, (index > 0) ? &pDispParams->rgvarg[--index] : &var2, 0, VT_R4);
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var2, OptionalArg(pDispParams, index, &var2), 0, VT_R4);
 				VARIANT var3;
 				V_VT(&var3) = VT_R4;
 				V_R4(&var3) = 0;
-				VariantChangeType(&var3, (index > 0) ? &pDispParams->rgvarg[--index] : &var3, 0, VT_R4);
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var3, OptionalArg(pDispParams, index, &var3), 0, VT_R4);
 				VARIANT var4;
 				V_VT(&var4) = VT_R4;
 				V_R4(&var4) = 0;
-				VariantChangeType(&var4, (index > 0) ? &pDispParams->rgvarg[--index] : &var4, 0, VT_R4);
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var4, OptionalArg(pDispParams, index, &var4), 0, VT_R4);
 				VARIANT var5;
 				V_VT(&var5) = VT_I4;
 				V_I4(&var5) = 0;
-				VariantChangeType(&var5, (index > 0) ? &pDispParams->rgvarg[--index] : &var5, 0, VT_I4);
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var5, OptionalArg(pDispParams, index, &var5), 0, VT_I4);
 				VARIANT var6;
 				V_VT(&var6) = VT_BOOL;
 				V_BOOL(&var6) = 0;
-				VariantChangeType(&var6, (index > 0) ? &pDispParams->rgvarg[--index] : &var6, 0, VT_BOOL);
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var6, OptionalArg(pDispParams, index, &var6), 0, VT_BOOL);
 				VARIANT var7;
 				V_VT(&var7) = VT_BOOL;
 				V_BOOL(&var7) = 1;
-				VariantChangeType(&var7, (index > 0) ? &pDispParams->rgvarg[--index] : &var7, 0, VT_BOOL);
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var7, OptionalArg(pDispParams, index, &var7), 0, VT_BOOL);
 				VARIANT var8;
 				V_VT(&var8) = VT_R4;
 				V_R4(&var8) = 0;
-				VariantChangeType(&var8, (index > 0) ? &pDispParams->rgvarg[--index] : &var8, 0, VT_R4);
-				hres = PlaySound(V_BSTR(&var0), V_I4(&var1), V_R4(&var2), V_R4(&var3), V_R4(&var4), V_I4(&var5), V_BOOL(&var6), V_BOOL(&var7), V_R4(&var8));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var8, OptionalArg(pDispParams, index, &var8), 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = PlaySound(V_BSTR(&var0), V_I4(&var1), V_R4(&var2), V_R4(&var3), V_R4(&var4), V_I4(&var5), V_BOOL(&var6), V_BOOL(&var7), V_R4(&var8));
+				}
 				VariantClear(&var0);
 				VariantClear(&var1);
 				VariantClear(&var2);
@@ -2932,14 +3548,21 @@ STDMETHODIMP ScriptGlobalTable::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCI
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
 				VARIANT var1;
 				V_VT(&var1) = VT_R4;
 				V_R4(&var1) = 1;
-				VariantChangeType(&var1, (index > 0) ? &pDispParams->rgvarg[--index] : &var1, 0, VT_R4);
-				hres = PlayMusic(V_BSTR(&var0), V_R4(&var1));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var1, OptionalArg(pDispParams, index, &var1), 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = PlayMusic(V_BSTR(&var0), V_R4(&var1));
+				}
 				VariantClear(&var0);
 				VariantClear(&var1);
 			}
@@ -2952,10 +3575,17 @@ STDMETHODIMP ScriptGlobalTable::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCI
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_MusicVolume(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_MusicVolume(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -2986,11 +3616,18 @@ STDMETHODIMP ScriptGlobalTable::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCI
 		case 257: {
 			if (wFlags & DISPATCH_PROPERTYGET) {
 				// line 717: [propget, id(257), helpstring("property MusicDirectory")] HRESULT MusicDirectory([in, optional] VARIANT pSubDir, [out, retval] BSTR *pVal);
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantCopyInd(&var0, (index > 0) ? &pDispParams->rgvarg[--index] : &var0);
-				V_VT(&res) = VT_BSTR;
-				hres = get_MusicDirectory(var0, &V_BSTR(&res));
+				if (SUCCEEDED(hrConv)) hrConv = VariantCopyInd(&var0, (index > 0) ? &pDispParams->rgvarg[--index] : &var0);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					V_VT(&res) = VT_BSTR;
+					hres = get_MusicDirectory(var0, &V_BSTR(&res));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -3034,10 +3671,17 @@ STDMETHODIMP ScriptGlobalTable::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCI
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
-				hres = put_ShowCursor(V_BOOL(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_ShowCursor(V_BOOL(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -3057,10 +3701,17 @@ STDMETHODIMP ScriptGlobalTable::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCI
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
-				hres = StopSound(V_BSTR(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = StopSound(V_BSTR(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -3072,16 +3723,23 @@ STDMETHODIMP ScriptGlobalTable::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCI
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
 				VARIANT var1;
 				V_VT(&var1) = VT_EMPTY;
-				VariantChangeType(&var1, &pDispParams->rgvarg[--index], 0, VT_BSTR);
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var1, &pDispParams->rgvarg[--index], 0, VT_BSTR);
 				VARIANT var2;
 				V_VT(&var2) = VT_EMPTY;
-				VariantCopyInd(&var2, &pDispParams->rgvarg[--index]);
-				hres = SaveValue(V_BSTR(&var0), V_BSTR(&var1), var2);
+				if (SUCCEEDED(hrConv)) hrConv = VariantCopyInd(&var2, &pDispParams->rgvarg[--index]);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = SaveValue(V_BSTR(&var0), V_BSTR(&var1), var2);
+				}
 				VariantClear(&var0);
 				VariantClear(&var1);
 				VariantClear(&var2);
@@ -3095,13 +3753,20 @@ STDMETHODIMP ScriptGlobalTable::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCI
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
 				VARIANT var1;
 				V_VT(&var1) = VT_EMPTY;
-				VariantChangeType(&var1, &pDispParams->rgvarg[--index], 0, VT_BSTR);
-				hres = LoadValue(V_BSTR(&var0), V_BSTR(&var1), &res);
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var1, &pDispParams->rgvarg[--index], 0, VT_BSTR);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = LoadValue(V_BSTR(&var0), V_BSTR(&var1), &res);
+				}
 				VariantClear(&var0);
 				VariantClear(&var1);
 			}
@@ -3160,11 +3825,18 @@ STDMETHODIMP ScriptGlobalTable::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCI
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_I4);
-				V_VT(&res) = VT_BSTR;
-				hres = GetCustomParam(V_I4(&var0), &V_BSTR(&res));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_I4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					V_VT(&res) = VT_BSTR;
+					hres = GetCustomParam(V_I4(&var0), &V_BSTR(&res));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -3176,14 +3848,21 @@ STDMETHODIMP ScriptGlobalTable::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCI
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
 				VARIANT var1;
 				V_VT(&var1) = VT_EMPTY;
-				VariantChangeType(&var1, &pDispParams->rgvarg[--index], 0, VT_BSTR);
-				V_VT(&res) = VT_BSTR;
-				hres = get_Setting(V_BSTR(&var0), V_BSTR(&var1), &V_BSTR(&res));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var1, &pDispParams->rgvarg[--index], 0, VT_BSTR);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					V_VT(&res) = VT_BSTR;
+					hres = get_Setting(V_BSTR(&var0), V_BSTR(&var1), &V_BSTR(&res));
+				}
 				VariantClear(&var0);
 				VariantClear(&var1);
 			}
@@ -3196,11 +3875,18 @@ STDMETHODIMP ScriptGlobalTable::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCI
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
-				V_VT(&res) = VT_BSTR;
-				hres = GetTextFile(V_BSTR(&var0), &V_BSTR(&res));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					V_VT(&res) = VT_BSTR;
+					hres = GetTextFile(V_BSTR(&var0), &V_BSTR(&res));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -3226,13 +3912,20 @@ STDMETHODIMP ScriptGlobalTable::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCI
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
 				VARIANT var1;
 				V_VT(&var1) = VT_EMPTY;
-				VariantChangeType(&var1, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = Nudge(V_R4(&var0), V_R4(&var1));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var1, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = Nudge(V_R4(&var0), V_R4(&var1));
+				}
 				VariantClear(&var0);
 				VariantClear(&var1);
 			}
@@ -3245,13 +3938,26 @@ STDMETHODIMP ScriptGlobalTable::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCI
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT* var0 = &pDispParams->rgvarg[--index];
+				if (SUCCEEDED(hrConv) && V_VT(var0) != (VT_BYREF | VT_VARIANT)) hrConv = DISP_E_TYPEMISMATCH;
 				VARIANT* var1 = &pDispParams->rgvarg[--index];
+				if (SUCCEEDED(hrConv) && V_VT(var1) != (VT_BYREF | VT_VARIANT)) hrConv = DISP_E_TYPEMISMATCH;
 				VARIANT* var2 = &pDispParams->rgvarg[--index];
+				if (SUCCEEDED(hrConv) && V_VT(var2) != (VT_BYREF | VT_VARIANT)) hrConv = DISP_E_TYPEMISMATCH;
 				VARIANT* var3 = &pDispParams->rgvarg[--index];
+				if (SUCCEEDED(hrConv) && V_VT(var3) != (VT_BYREF | VT_VARIANT)) hrConv = DISP_E_TYPEMISMATCH;
 				VARIANT* var4 = &pDispParams->rgvarg[--index];
+				if (SUCCEEDED(hrConv) && V_VT(var4) != (VT_BYREF | VT_VARIANT)) hrConv = DISP_E_TYPEMISMATCH;
 				VARIANT* var5 = &pDispParams->rgvarg[--index];
-				hres = NudgeGetCalibration(V_VARIANTREF(var0), V_VARIANTREF(var1), V_VARIANTREF(var2), V_VARIANTREF(var3), V_VARIANTREF(var4), V_VARIANTREF(var5));
+				if (SUCCEEDED(hrConv) && V_VT(var5) != (VT_BYREF | VT_VARIANT)) hrConv = DISP_E_TYPEMISMATCH;
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = NudgeGetCalibration(V_VARIANTREF(var0), V_VARIANTREF(var1), V_VARIANTREF(var2), V_VARIANTREF(var3), V_VARIANTREF(var4), V_VARIANTREF(var5));
+				}
 			}
 			break;
 		}
@@ -3262,25 +3968,32 @@ STDMETHODIMP ScriptGlobalTable::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCI
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_I4);
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_I4);
 				VARIANT var1;
 				V_VT(&var1) = VT_EMPTY;
-				VariantChangeType(&var1, &pDispParams->rgvarg[--index], 0, VT_I4);
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var1, &pDispParams->rgvarg[--index], 0, VT_I4);
 				VARIANT var2;
 				V_VT(&var2) = VT_EMPTY;
-				VariantChangeType(&var2, &pDispParams->rgvarg[--index], 0, VT_I4);
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var2, &pDispParams->rgvarg[--index], 0, VT_I4);
 				VARIANT var3;
 				V_VT(&var3) = VT_EMPTY;
-				VariantChangeType(&var3, &pDispParams->rgvarg[--index], 0, VT_I4);
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var3, &pDispParams->rgvarg[--index], 0, VT_I4);
 				VARIANT var4;
 				V_VT(&var4) = VT_EMPTY;
-				VariantChangeType(&var4, &pDispParams->rgvarg[--index], 0, VT_I4);
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var4, &pDispParams->rgvarg[--index], 0, VT_I4);
 				VARIANT var5;
 				V_VT(&var5) = VT_EMPTY;
-				VariantChangeType(&var5, &pDispParams->rgvarg[--index], 0, VT_I4);
-				hres = NudgeSetCalibration(V_I4(&var0), V_I4(&var1), V_I4(&var2), V_I4(&var3), V_I4(&var4), V_I4(&var5));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var5, &pDispParams->rgvarg[--index], 0, VT_I4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = NudgeSetCalibration(V_I4(&var0), V_I4(&var1), V_I4(&var2), V_I4(&var3), V_I4(&var4), V_I4(&var5));
+				}
 				VariantClear(&var0);
 				VariantClear(&var1);
 				VariantClear(&var2);
@@ -3297,9 +4010,18 @@ STDMETHODIMP ScriptGlobalTable::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCI
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT* var0 = &pDispParams->rgvarg[--index];
+				if (SUCCEEDED(hrConv) && V_VT(var0) != (VT_BYREF | VT_VARIANT)) hrConv = DISP_E_TYPEMISMATCH;
 				VARIANT* var1 = &pDispParams->rgvarg[--index];
-				hres = NudgeSensorStatus(V_VARIANTREF(var0), V_VARIANTREF(var1));
+				if (SUCCEEDED(hrConv) && V_VT(var1) != (VT_BYREF | VT_VARIANT)) hrConv = DISP_E_TYPEMISMATCH;
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = NudgeSensorStatus(V_VARIANTREF(var0), V_VARIANTREF(var1));
+				}
 			}
 			break;
 		}
@@ -3310,21 +4032,38 @@ STDMETHODIMP ScriptGlobalTable::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCI
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT* var0 = &pDispParams->rgvarg[--index];
+				if (SUCCEEDED(hrConv) && V_VT(var0) != (VT_BYREF | VT_VARIANT)) hrConv = DISP_E_TYPEMISMATCH;
 				VARIANT* var1 = &pDispParams->rgvarg[--index];
+				if (SUCCEEDED(hrConv) && V_VT(var1) != (VT_BYREF | VT_VARIANT)) hrConv = DISP_E_TYPEMISMATCH;
 				VARIANT* var2 = &pDispParams->rgvarg[--index];
-				hres = NudgeTiltStatus(V_VARIANTREF(var0), V_VARIANTREF(var1), V_VARIANTREF(var2));
+				if (SUCCEEDED(hrConv) && V_VT(var2) != (VT_BYREF | VT_VARIANT)) hrConv = DISP_E_TYPEMISMATCH;
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = NudgeTiltStatus(V_VARIANTREF(var0), V_VARIANTREF(var1), V_VARIANTREF(var2));
+				}
 			}
 			break;
 		}
 		case 33: {
 			if (wFlags & DISPATCH_METHOD) {
 				// line 748: [id(33), helpstring("method FireKnocker")] HRESULT FireKnocker([defaultvalue(1)] int Count);
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_I4;
 				V_I4(&var0) = 1;
-				VariantChangeType(&var0, (index > 0) ? &pDispParams->rgvarg[--index] : &var0, 0, VT_I4);
-				hres = FireKnocker(V_I4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, OptionalArg(pDispParams, index, &var0), 0, VT_I4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = FireKnocker(V_I4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -3332,11 +4071,18 @@ STDMETHODIMP ScriptGlobalTable::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCI
 		case 37: {
 			if (wFlags & DISPATCH_METHOD) {
 				// line 749: [id(37), helpstring("method QuitPlayer")] HRESULT QuitPlayer([defaultvalue(0)] int CloseType);
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_I4;
 				V_I4(&var0) = 0;
-				VariantChangeType(&var0, (index > 0) ? &pDispParams->rgvarg[--index] : &var0, 0, VT_I4);
-				hres = QuitPlayer(V_I4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, OptionalArg(pDispParams, index, &var0), 0, VT_I4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = QuitPlayer(V_I4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -3388,11 +4134,18 @@ STDMETHODIMP ScriptGlobalTable::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCI
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
-				V_VT(&res) = VT_DISPATCH;
-				hres = GetElementByName(V_BSTR(&var0), (IDispatch**)&V_DISPATCH(&res));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					V_VT(&res) = VT_DISPATCH;
+					hres = GetElementByName(V_BSTR(&var0), (IDispatch**)&V_DISPATCH(&res));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -3418,10 +4171,17 @@ STDMETHODIMP ScriptGlobalTable::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCI
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_I4);
-				hres = put_DMDWidth(V_I4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_I4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_DMDWidth(V_I4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -3433,10 +4193,17 @@ STDMETHODIMP ScriptGlobalTable::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCI
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_I4);
-				hres = put_DMDHeight(V_I4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_I4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_DMDHeight(V_I4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -3448,10 +4215,17 @@ STDMETHODIMP ScriptGlobalTable::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCI
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantCopyInd(&var0, &pDispParams->rgvarg[--index]);
-				hres = put_DMDPixels(var0);
+				if (SUCCEEDED(hrConv)) hrConv = VariantCopyInd(&var0, &pDispParams->rgvarg[--index]);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_DMDPixels(var0);
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -3463,10 +4237,17 @@ STDMETHODIMP ScriptGlobalTable::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCI
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantCopyInd(&var0, &pDispParams->rgvarg[--index]);
-				hres = put_DMDColoredPixels(var0);
+				if (SUCCEEDED(hrConv)) hrConv = VariantCopyInd(&var0, &pDispParams->rgvarg[--index]);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_DMDColoredPixels(var0);
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -3525,10 +4306,17 @@ STDMETHODIMP ScriptGlobalTable::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCI
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
-				hres = OpenSerial(V_BSTR(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = OpenSerial(V_BSTR(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -3554,25 +4342,32 @@ STDMETHODIMP ScriptGlobalTable::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCI
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_I4);
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_I4);
 				VARIANT var1;
 				V_VT(&var1) = VT_EMPTY;
-				VariantChangeType(&var1, &pDispParams->rgvarg[--index], 0, VT_I4);
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var1, &pDispParams->rgvarg[--index], 0, VT_I4);
 				VARIANT var2;
 				V_VT(&var2) = VT_EMPTY;
-				VariantChangeType(&var2, &pDispParams->rgvarg[--index], 0, VT_I4);
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var2, &pDispParams->rgvarg[--index], 0, VT_I4);
 				VARIANT var3;
 				V_VT(&var3) = VT_EMPTY;
-				VariantChangeType(&var3, &pDispParams->rgvarg[--index], 0, VT_I4);
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var3, &pDispParams->rgvarg[--index], 0, VT_I4);
 				VARIANT var4;
 				V_VT(&var4) = VT_EMPTY;
-				VariantChangeType(&var4, &pDispParams->rgvarg[--index], 0, VT_BOOL);
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var4, &pDispParams->rgvarg[--index], 0, VT_BOOL);
 				VARIANT var5;
 				V_VT(&var5) = VT_EMPTY;
-				VariantChangeType(&var5, &pDispParams->rgvarg[--index], 0, VT_BOOL);
-				hres = SetupSerial(V_I4(&var0), V_I4(&var1), V_I4(&var2), V_I4(&var3), V_BOOL(&var4), V_BOOL(&var5));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var5, &pDispParams->rgvarg[--index], 0, VT_BOOL);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = SetupSerial(V_I4(&var0), V_I4(&var1), V_I4(&var2), V_I4(&var3), V_BOOL(&var4), V_BOOL(&var5));
+				}
 				VariantClear(&var0);
 				VariantClear(&var1);
 				VariantClear(&var2);
@@ -3589,11 +4384,19 @@ STDMETHODIMP ScriptGlobalTable::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCI
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_I4);
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_I4);
 				VARIANT* var1 = &pDispParams->rgvarg[--index];
-				hres = ReadSerial(V_I4(&var0), V_VARIANTREF(var1));
+				if (SUCCEEDED(hrConv) && V_VT(var1) != (VT_BYREF | VT_VARIANT)) hrConv = DISP_E_TYPEMISMATCH;
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = ReadSerial(V_I4(&var0), V_VARIANTREF(var1));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -3605,10 +4408,17 @@ STDMETHODIMP ScriptGlobalTable::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCI
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantCopyInd(&var0, &pDispParams->rgvarg[--index]);
-				hres = WriteSerial(var0);
+				if (SUCCEEDED(hrConv)) hrConv = VariantCopyInd(&var0, &pDispParams->rgvarg[--index]);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = WriteSerial(var0);
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -3628,58 +4438,65 @@ STDMETHODIMP ScriptGlobalTable::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCI
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
 				VARIANT var1;
 				V_VT(&var1) = VT_EMPTY;
-				VariantChangeType(&var1, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var1, &pDispParams->rgvarg[--index], 0, VT_R4);
 				VARIANT var2;
 				V_VT(&var2) = VT_EMPTY;
-				VariantChangeType(&var2, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var2, &pDispParams->rgvarg[--index], 0, VT_R4);
 				VARIANT var3;
 				V_VT(&var3) = VT_EMPTY;
-				VariantChangeType(&var3, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var3, &pDispParams->rgvarg[--index], 0, VT_R4);
 				VARIANT var4;
 				V_VT(&var4) = VT_EMPTY;
-				VariantChangeType(&var4, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var4, &pDispParams->rgvarg[--index], 0, VT_R4);
 				VARIANT var5;
 				V_VT(&var5) = VT_EMPTY;
-				VariantChangeType(&var5, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var5, &pDispParams->rgvarg[--index], 0, VT_R4);
 				VARIANT var6;
 				V_VT(&var6) = VT_EMPTY;
-				VariantChangeType(&var6, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var6, &pDispParams->rgvarg[--index], 0, VT_R4);
 				VARIANT var7;
 				V_VT(&var7) = VT_EMPTY;
-				VariantChangeType(&var7, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var7, &pDispParams->rgvarg[--index], 0, VT_R4);
 				VARIANT var8;
 				V_VT(&var8) = VT_EMPTY;
-				VariantChangeType(&var8, &pDispParams->rgvarg[--index], 0, VT_UI4);
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var8, &pDispParams->rgvarg[--index], 0, VT_UI4);
 				VARIANT var9;
 				V_VT(&var9) = VT_EMPTY;
-				VariantChangeType(&var9, &pDispParams->rgvarg[--index], 0, VT_UI4);
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var9, &pDispParams->rgvarg[--index], 0, VT_UI4);
 				VARIANT var10;
 				V_VT(&var10) = VT_EMPTY;
-				VariantChangeType(&var10, &pDispParams->rgvarg[--index], 0, VT_UI4);
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var10, &pDispParams->rgvarg[--index], 0, VT_UI4);
 				VARIANT var11;
 				V_VT(&var11) = VT_EMPTY;
-				VariantChangeType(&var11, &pDispParams->rgvarg[--index], 0, VT_BOOL);
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var11, &pDispParams->rgvarg[--index], 0, VT_BOOL);
 				VARIANT var12;
 				V_VT(&var12) = VT_EMPTY;
-				VariantChangeType(&var12, &pDispParams->rgvarg[--index], 0, VT_BOOL);
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var12, &pDispParams->rgvarg[--index], 0, VT_BOOL);
 				VARIANT var13;
 				V_VT(&var13) = VT_EMPTY;
-				VariantChangeType(&var13, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var13, &pDispParams->rgvarg[--index], 0, VT_R4);
 				VARIANT var14;
 				V_VT(&var14) = VT_EMPTY;
-				VariantChangeType(&var14, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var14, &pDispParams->rgvarg[--index], 0, VT_R4);
 				VARIANT var15;
 				V_VT(&var15) = VT_EMPTY;
-				VariantChangeType(&var15, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var15, &pDispParams->rgvarg[--index], 0, VT_R4);
 				VARIANT var16;
 				V_VT(&var16) = VT_EMPTY;
-				VariantChangeType(&var16, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = UpdateMaterial(V_BSTR(&var0), V_R4(&var1), V_R4(&var2), V_R4(&var3), V_R4(&var4), V_R4(&var5), V_R4(&var6), V_R4(&var7), (OLE_COLOR)V_UI4(&var8), (OLE_COLOR)V_UI4(&var9), (OLE_COLOR)V_UI4(&var10), V_BOOL(&var11), V_BOOL(&var12), V_R4(&var13), V_R4(&var14), V_R4(&var15), V_R4(&var16));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var16, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = UpdateMaterial(V_BSTR(&var0), V_R4(&var1), V_R4(&var2), V_R4(&var3), V_R4(&var4), V_R4(&var5), V_R4(&var6), V_R4(&var7), (OLE_COLOR)V_UI4(&var8), (OLE_COLOR)V_UI4(&var9), (OLE_COLOR)V_UI4(&var10), V_BOOL(&var11), V_BOOL(&var12), V_R4(&var13), V_R4(&var14), V_R4(&var15), V_R4(&var16));
+				}
 				VariantClear(&var0);
 				VariantClear(&var1);
 				VariantClear(&var2);
@@ -3707,26 +4524,49 @@ STDMETHODIMP ScriptGlobalTable::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCI
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
 				VARIANT* var1 = &pDispParams->rgvarg[--index];
+				if (SUCCEEDED(hrConv) && V_VT(var1) != (VT_BYREF | VT_VARIANT)) hrConv = DISP_E_TYPEMISMATCH;
 				VARIANT* var2 = &pDispParams->rgvarg[--index];
+				if (SUCCEEDED(hrConv) && V_VT(var2) != (VT_BYREF | VT_VARIANT)) hrConv = DISP_E_TYPEMISMATCH;
 				VARIANT* var3 = &pDispParams->rgvarg[--index];
+				if (SUCCEEDED(hrConv) && V_VT(var3) != (VT_BYREF | VT_VARIANT)) hrConv = DISP_E_TYPEMISMATCH;
 				VARIANT* var4 = &pDispParams->rgvarg[--index];
+				if (SUCCEEDED(hrConv) && V_VT(var4) != (VT_BYREF | VT_VARIANT)) hrConv = DISP_E_TYPEMISMATCH;
 				VARIANT* var5 = &pDispParams->rgvarg[--index];
+				if (SUCCEEDED(hrConv) && V_VT(var5) != (VT_BYREF | VT_VARIANT)) hrConv = DISP_E_TYPEMISMATCH;
 				VARIANT* var6 = &pDispParams->rgvarg[--index];
+				if (SUCCEEDED(hrConv) && V_VT(var6) != (VT_BYREF | VT_VARIANT)) hrConv = DISP_E_TYPEMISMATCH;
 				VARIANT* var7 = &pDispParams->rgvarg[--index];
+				if (SUCCEEDED(hrConv) && V_VT(var7) != (VT_BYREF | VT_VARIANT)) hrConv = DISP_E_TYPEMISMATCH;
 				VARIANT* var8 = &pDispParams->rgvarg[--index];
+				if (SUCCEEDED(hrConv) && V_VT(var8) != (VT_BYREF | VT_VARIANT)) hrConv = DISP_E_TYPEMISMATCH;
 				VARIANT* var9 = &pDispParams->rgvarg[--index];
+				if (SUCCEEDED(hrConv) && V_VT(var9) != (VT_BYREF | VT_VARIANT)) hrConv = DISP_E_TYPEMISMATCH;
 				VARIANT* var10 = &pDispParams->rgvarg[--index];
+				if (SUCCEEDED(hrConv) && V_VT(var10) != (VT_BYREF | VT_VARIANT)) hrConv = DISP_E_TYPEMISMATCH;
 				VARIANT* var11 = &pDispParams->rgvarg[--index];
+				if (SUCCEEDED(hrConv) && V_VT(var11) != (VT_BYREF | VT_VARIANT)) hrConv = DISP_E_TYPEMISMATCH;
 				VARIANT* var12 = &pDispParams->rgvarg[--index];
+				if (SUCCEEDED(hrConv) && V_VT(var12) != (VT_BYREF | VT_VARIANT)) hrConv = DISP_E_TYPEMISMATCH;
 				VARIANT* var13 = &pDispParams->rgvarg[--index];
+				if (SUCCEEDED(hrConv) && V_VT(var13) != (VT_BYREF | VT_VARIANT)) hrConv = DISP_E_TYPEMISMATCH;
 				VARIANT* var14 = &pDispParams->rgvarg[--index];
+				if (SUCCEEDED(hrConv) && V_VT(var14) != (VT_BYREF | VT_VARIANT)) hrConv = DISP_E_TYPEMISMATCH;
 				VARIANT* var15 = &pDispParams->rgvarg[--index];
+				if (SUCCEEDED(hrConv) && V_VT(var15) != (VT_BYREF | VT_VARIANT)) hrConv = DISP_E_TYPEMISMATCH;
 				VARIANT* var16 = &pDispParams->rgvarg[--index];
-				hres = GetMaterial(V_BSTR(&var0), V_VARIANTREF(var1), V_VARIANTREF(var2), V_VARIANTREF(var3), V_VARIANTREF(var4), V_VARIANTREF(var5), V_VARIANTREF(var6), V_VARIANTREF(var7), V_VARIANTREF(var8), V_VARIANTREF(var9), V_VARIANTREF(var10), V_VARIANTREF(var11), V_VARIANTREF(var12), V_VARIANTREF(var13), V_VARIANTREF(var14), V_VARIANTREF(var15), V_VARIANTREF(var16));
+				if (SUCCEEDED(hrConv) && V_VT(var16) != (VT_BYREF | VT_VARIANT)) hrConv = DISP_E_TYPEMISMATCH;
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = GetMaterial(V_BSTR(&var0), V_VARIANTREF(var1), V_VARIANTREF(var2), V_VARIANTREF(var3), V_VARIANTREF(var4), V_VARIANTREF(var5), V_VARIANTREF(var6), V_VARIANTREF(var7), V_VARIANTREF(var8), V_VARIANTREF(var9), V_VARIANTREF(var10), V_VARIANTREF(var11), V_VARIANTREF(var12), V_VARIANTREF(var13), V_VARIANTREF(var14), V_VARIANTREF(var15), V_VARIANTREF(var16));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -3738,22 +4578,29 @@ STDMETHODIMP ScriptGlobalTable::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCI
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
 				VARIANT var1;
 				V_VT(&var1) = VT_EMPTY;
-				VariantChangeType(&var1, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var1, &pDispParams->rgvarg[--index], 0, VT_R4);
 				VARIANT var2;
 				V_VT(&var2) = VT_EMPTY;
-				VariantChangeType(&var2, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var2, &pDispParams->rgvarg[--index], 0, VT_R4);
 				VARIANT var3;
 				V_VT(&var3) = VT_EMPTY;
-				VariantChangeType(&var3, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var3, &pDispParams->rgvarg[--index], 0, VT_R4);
 				VARIANT var4;
 				V_VT(&var4) = VT_EMPTY;
-				VariantChangeType(&var4, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = UpdateMaterialPhysics(V_BSTR(&var0), V_R4(&var1), V_R4(&var2), V_R4(&var3), V_R4(&var4));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var4, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = UpdateMaterialPhysics(V_BSTR(&var0), V_R4(&var1), V_R4(&var2), V_R4(&var3), V_R4(&var4));
+				}
 				VariantClear(&var0);
 				VariantClear(&var1);
 				VariantClear(&var2);
@@ -3769,14 +4616,25 @@ STDMETHODIMP ScriptGlobalTable::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCI
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
 				VARIANT* var1 = &pDispParams->rgvarg[--index];
+				if (SUCCEEDED(hrConv) && V_VT(var1) != (VT_BYREF | VT_VARIANT)) hrConv = DISP_E_TYPEMISMATCH;
 				VARIANT* var2 = &pDispParams->rgvarg[--index];
+				if (SUCCEEDED(hrConv) && V_VT(var2) != (VT_BYREF | VT_VARIANT)) hrConv = DISP_E_TYPEMISMATCH;
 				VARIANT* var3 = &pDispParams->rgvarg[--index];
+				if (SUCCEEDED(hrConv) && V_VT(var3) != (VT_BYREF | VT_VARIANT)) hrConv = DISP_E_TYPEMISMATCH;
 				VARIANT* var4 = &pDispParams->rgvarg[--index];
-				hres = GetMaterialPhysics(V_BSTR(&var0), V_VARIANTREF(var1), V_VARIANTREF(var2), V_VARIANTREF(var3), V_VARIANTREF(var4));
+				if (SUCCEEDED(hrConv) && V_VT(var4) != (VT_BYREF | VT_VARIANT)) hrConv = DISP_E_TYPEMISMATCH;
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = GetMaterialPhysics(V_BSTR(&var0), V_VARIANTREF(var1), V_VARIANTREF(var2), V_VARIANTREF(var3), V_VARIANTREF(var4));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -3788,13 +4646,20 @@ STDMETHODIMP ScriptGlobalTable::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCI
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
 				VARIANT var1;
 				V_VT(&var1) = VT_EMPTY;
-				VariantChangeType(&var1, &pDispParams->rgvarg[--index], 0, VT_UI4);
-				hres = MaterialColor(V_BSTR(&var0), (OLE_COLOR)V_UI4(&var1));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var1, &pDispParams->rgvarg[--index], 0, VT_UI4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = MaterialColor(V_BSTR(&var0), (OLE_COLOR)V_UI4(&var1));
+				}
 				VariantClear(&var0);
 				VariantClear(&var1);
 			}
@@ -3828,10 +4693,17 @@ STDMETHODIMP ScriptGlobalTable::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCI
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
-				hres = put_DisableStaticPrerendering(V_BOOL(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_DisableStaticPrerendering(V_BOOL(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -3843,13 +4715,20 @@ STDMETHODIMP ScriptGlobalTable::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCI
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
 				VARIANT var1;
 				V_VT(&var1) = VT_EMPTY;
-				VariantChangeType(&var1, &pDispParams->rgvarg[--index], 0, VT_BSTR);
-				hres = LoadTexture(V_BSTR(&var0), V_BSTR(&var1));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var1, &pDispParams->rgvarg[--index], 0, VT_BSTR);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = LoadTexture(V_BSTR(&var0), V_BSTR(&var1));
+				}
 				VariantClear(&var0);
 				VariantClear(&var1);
 			}
@@ -3862,11 +4741,18 @@ STDMETHODIMP ScriptGlobalTable::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCI
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
-				V_VT(&res) = VT_DISPATCH;
-				hres = CreatePluginObject(V_BSTR(&var0), (IDispatch**)&V_DISPATCH(&res));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					V_VT(&res) = VT_DISPATCH;
+					hres = CreatePluginObject(V_BSTR(&var0), (IDispatch**)&V_DISPATCH(&res));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -3878,19 +4764,26 @@ STDMETHODIMP ScriptGlobalTable::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCI
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
 				VARIANT var1;
 				V_VT(&var1) = VT_I4;
 				V_I4(&var1) = 5000;
-				VariantChangeType(&var1, (index > 0) ? &pDispParams->rgvarg[--index] : &var1, 0, VT_I4);
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var1, OptionalArg(pDispParams, index, &var1), 0, VT_I4);
 				VARIANT var2;
 				V_VT(&var2) = VT_I4;
 				V_I4(&var2) = 0;
-				VariantChangeType(&var2, (index > 0) ? &pDispParams->rgvarg[--index] : &var2, 0, VT_I4);
-				V_VT(&res) = VT_I4;
-				hres = PushNotification(V_BSTR(&var0), V_I4(&var1), V_I4(&var2), (LONG*)&V_I4(&res));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var2, OptionalArg(pDispParams, index, &var2), 0, VT_I4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					V_VT(&res) = VT_I4;
+					hres = PushNotification(V_BSTR(&var0), V_I4(&var1), V_I4(&var2), (LONG*)&V_I4(&res));
+				}
 				VariantClear(&var0);
 				VariantClear(&var1);
 				VariantClear(&var2);
@@ -3904,44 +4797,51 @@ STDMETHODIMP ScriptGlobalTable::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCI
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
 				VARIANT var1;
 				V_VT(&var1) = VT_EMPTY;
-				VariantChangeType(&var1, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var1, &pDispParams->rgvarg[--index], 0, VT_R4);
 				VARIANT var2;
 				V_VT(&var2) = VT_EMPTY;
-				VariantChangeType(&var2, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var2, &pDispParams->rgvarg[--index], 0, VT_R4);
 				VARIANT var3;
 				V_VT(&var3) = VT_R4;
 				V_R4(&var3) = 0;
-				VariantChangeType(&var3, (index > 0) ? &pDispParams->rgvarg[--index] : &var3, 0, VT_R4);
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var3, OptionalArg(pDispParams, index, &var3), 0, VT_R4);
 				VARIANT var4;
 				V_VT(&var4) = VT_I4;
 				V_I4(&var4) = 1;
-				VariantChangeType(&var4, (index > 0) ? &pDispParams->rgvarg[--index] : &var4, 0, VT_I4);
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var4, OptionalArg(pDispParams, index, &var4), 0, VT_I4);
 				VARIANT var5;
 				V_VT(&var5) = VT_R4;
 				V_R4(&var5) = 1;
-				VariantChangeType(&var5, (index > 0) ? &pDispParams->rgvarg[--index] : &var5, 0, VT_R4);
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var5, OptionalArg(pDispParams, index, &var5), 0, VT_R4);
 				VARIANT var6;
 				V_VT(&var6) = VT_R4;
 				V_R4(&var6) = 0;
-				VariantChangeType(&var6, (index > 0) ? &pDispParams->rgvarg[--index] : &var6, 0, VT_R4);
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var6, OptionalArg(pDispParams, index, &var6), 0, VT_R4);
 				VARIANT var7;
 				V_VT(&var7) = VT_I4;
 				V_I4(&var7) = 0;
-				VariantChangeType(&var7, (index > 0) ? &pDispParams->rgvarg[--index] : &var7, 0, VT_I4);
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var7, OptionalArg(pDispParams, index, &var7), 0, VT_I4);
 				VARIANT var8;
 				V_VT(&var8) = VT_BOOL;
 				V_BOOL(&var8) = 0;
-				VariantChangeType(&var8, (index > 0) ? &pDispParams->rgvarg[--index] : &var8, 0, VT_BOOL);
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var8, OptionalArg(pDispParams, index, &var8), 0, VT_BOOL);
 				VARIANT var9;
 				V_VT(&var9) = VT_BOOL;
 				V_BOOL(&var9) = 1;
-				VariantChangeType(&var9, (index > 0) ? &pDispParams->rgvarg[--index] : &var9, 0, VT_BOOL);
-				hres = PlaySoundAt(V_BSTR(&var0), V_R4(&var1), V_R4(&var2), V_R4(&var3), V_I4(&var4), V_R4(&var5), V_R4(&var6), V_I4(&var7), V_BOOL(&var8), V_BOOL(&var9));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var9, OptionalArg(pDispParams, index, &var9), 0, VT_BOOL);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = PlaySoundAt(V_BSTR(&var0), V_R4(&var1), V_R4(&var2), V_R4(&var3), V_I4(&var4), V_R4(&var5), V_R4(&var6), V_I4(&var7), V_BOOL(&var8), V_BOOL(&var9));
+				}
 				VariantClear(&var0);
 				VariantClear(&var1);
 				VariantClear(&var2);
@@ -5251,10 +6151,17 @@ STDMETHODIMP ScriptInterpreter::DebuggerModule::Invoke(DISPID dispIdMember, REFI
 		case 10: {
 			if (wFlags & DISPATCH_METHOD) {
 				// line 837: [id(10), helpstring("method Print")] HRESULT Print([in, optional] VARIANT* pvar);
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantCopyInd(&var0, &pDispParams->rgvarg[--index]);
-				hres = Print(&var0);
+				if (SUCCEEDED(hrConv)) hrConv = VariantCopyInd(&var0, (index > 0) ? &pDispParams->rgvarg[--index] : &var0);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = Print(&var0);
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -5418,10 +6325,17 @@ STDMETHODIMP Surface::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WO
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
-				hres = put_Name(V_BSTR(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Name(V_BSTR(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -5438,10 +6352,17 @@ STDMETHODIMP Surface::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WO
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
-				hres = put_TimerEnabled(V_BOOL(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_TimerEnabled(V_BOOL(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -5458,10 +6379,17 @@ STDMETHODIMP Surface::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WO
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_I4);
-				hres = put_TimerInterval(V_I4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_I4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_TimerInterval(V_I4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -5478,10 +6406,17 @@ STDMETHODIMP Surface::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WO
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
-				hres = put_HasHitEvent(V_BOOL(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_HasHitEvent(V_BOOL(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -5498,10 +6433,17 @@ STDMETHODIMP Surface::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WO
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_Threshold(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Threshold(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -5518,10 +6460,17 @@ STDMETHODIMP Surface::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WO
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
-				hres = put_Image(V_BSTR(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Image(V_BSTR(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -5538,10 +6487,17 @@ STDMETHODIMP Surface::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WO
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
-				hres = put_SideMaterial(V_BSTR(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_SideMaterial(V_BSTR(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -5558,10 +6514,17 @@ STDMETHODIMP Surface::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WO
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_I4);
-				hres = put_ImageAlignment((ImageAlignment)V_I4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_I4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_ImageAlignment((ImageAlignment)V_I4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -5578,10 +6541,17 @@ STDMETHODIMP Surface::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WO
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_HeightBottom(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_HeightBottom(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -5598,10 +6568,17 @@ STDMETHODIMP Surface::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WO
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_HeightTop(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_HeightTop(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -5618,10 +6595,17 @@ STDMETHODIMP Surface::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WO
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
-				hres = put_TopMaterial(V_BSTR(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_TopMaterial(V_BSTR(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -5638,10 +6622,17 @@ STDMETHODIMP Surface::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WO
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
-				hres = put_CanDrop(V_BOOL(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_CanDrop(V_BOOL(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -5658,10 +6649,17 @@ STDMETHODIMP Surface::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WO
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
-				hres = put_Collidable(V_BOOL(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Collidable(V_BOOL(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -5678,10 +6676,17 @@ STDMETHODIMP Surface::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WO
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
-				hres = put_IsDropped(V_BOOL(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_IsDropped(V_BOOL(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -5698,10 +6703,17 @@ STDMETHODIMP Surface::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WO
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
-				hres = put_DisplayTexture(V_BOOL(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_DisplayTexture(V_BOOL(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -5718,10 +6730,17 @@ STDMETHODIMP Surface::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WO
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_SlingshotStrength(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_SlingshotStrength(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -5738,10 +6757,17 @@ STDMETHODIMP Surface::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WO
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_Elasticity(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Elasticity(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -5758,10 +6784,17 @@ STDMETHODIMP Surface::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WO
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_ElasticityFalloff(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_ElasticityFalloff(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -5778,10 +6811,17 @@ STDMETHODIMP Surface::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WO
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
-				hres = put_SideImage(V_BSTR(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_SideImage(V_BSTR(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -5798,10 +6838,17 @@ STDMETHODIMP Surface::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WO
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
-				hres = put_Visible(V_BOOL(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Visible(V_BOOL(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -5818,10 +6865,17 @@ STDMETHODIMP Surface::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WO
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
-				hres = put_Disabled(V_BOOL(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Disabled(V_BOOL(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -5838,10 +6892,17 @@ STDMETHODIMP Surface::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WO
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
-				hres = put_SideVisible(V_BOOL(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_SideVisible(V_BOOL(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -5857,10 +6918,17 @@ STDMETHODIMP Surface::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WO
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantCopyInd(&var0, &pDispParams->rgvarg[--index]);
-				hres = put_UserValue(&var0);
+				if (SUCCEEDED(hrConv)) hrConv = VariantCopyInd(&var0, &pDispParams->rgvarg[--index]);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_UserValue(&var0);
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -5877,10 +6945,17 @@ STDMETHODIMP Surface::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WO
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
-				hres = put_SlingshotMaterial(V_BSTR(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_SlingshotMaterial(V_BSTR(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -5897,10 +6972,17 @@ STDMETHODIMP Surface::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WO
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_SlingshotThreshold(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_SlingshotThreshold(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -5917,10 +6999,17 @@ STDMETHODIMP Surface::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WO
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
-				hres = put_SlingshotAnimation(V_BOOL(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_SlingshotAnimation(V_BOOL(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -5937,10 +7026,17 @@ STDMETHODIMP Surface::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WO
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
-				hres = put_FlipbookAnimation(V_BOOL(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_FlipbookAnimation(V_BOOL(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -5957,10 +7053,17 @@ STDMETHODIMP Surface::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WO
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
-				hres = put_IsBottomSolid(V_BOOL(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_IsBottomSolid(V_BOOL(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -5977,10 +7080,17 @@ STDMETHODIMP Surface::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WO
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
-				hres = put_DisableLighting(V_BOOL(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_DisableLighting(V_BOOL(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -5997,10 +7107,17 @@ STDMETHODIMP Surface::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WO
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_BlendDisableLighting(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_BlendDisableLighting(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -6017,10 +7134,17 @@ STDMETHODIMP Surface::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WO
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_BlendDisableLightingFromBelow(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_BlendDisableLightingFromBelow(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -6037,10 +7161,17 @@ STDMETHODIMP Surface::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WO
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_Friction(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Friction(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -6057,10 +7188,17 @@ STDMETHODIMP Surface::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WO
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_Scatter(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Scatter(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -6077,10 +7215,17 @@ STDMETHODIMP Surface::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WO
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
-				hres = put_ReflectionEnabled(V_BOOL(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_ReflectionEnabled(V_BOOL(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -6104,10 +7249,17 @@ STDMETHODIMP Surface::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WO
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
-				hres = put_PhysicsMaterial(V_BSTR(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_PhysicsMaterial(V_BSTR(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -6124,10 +7276,17 @@ STDMETHODIMP Surface::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WO
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
-				hres = put_OverwritePhysics(V_BOOL(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_OverwritePhysics(V_BOOL(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -6328,10 +7487,17 @@ STDMETHODIMP Flipper::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WO
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_BaseRadius(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_BaseRadius(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -6348,10 +7514,17 @@ STDMETHODIMP Flipper::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WO
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_EndRadius(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_EndRadius(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -6368,10 +7541,17 @@ STDMETHODIMP Flipper::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WO
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_Length(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Length(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -6388,10 +7568,17 @@ STDMETHODIMP Flipper::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WO
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_StartAngle(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_StartAngle(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -6422,10 +7609,17 @@ STDMETHODIMP Flipper::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WO
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_EndAngle(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_EndAngle(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -6442,10 +7636,17 @@ STDMETHODIMP Flipper::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WO
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
-				hres = put_TimerEnabled(V_BOOL(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_TimerEnabled(V_BOOL(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -6462,10 +7663,17 @@ STDMETHODIMP Flipper::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WO
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_I4);
-				hres = put_TimerInterval(V_I4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_I4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_TimerInterval(V_I4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -6490,10 +7698,17 @@ STDMETHODIMP Flipper::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WO
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_X(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_X(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -6510,10 +7725,17 @@ STDMETHODIMP Flipper::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WO
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_Y(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Y(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -6530,10 +7752,17 @@ STDMETHODIMP Flipper::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WO
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
-				hres = put_Material(V_BSTR(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Material(V_BSTR(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -6550,10 +7779,17 @@ STDMETHODIMP Flipper::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WO
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_Mass(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Mass(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -6570,10 +7806,17 @@ STDMETHODIMP Flipper::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WO
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_I4);
-				hres = put_OverridePhysics((PhysicsSet)V_I4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_I4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_OverridePhysics((PhysicsSet)V_I4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -6590,10 +7833,17 @@ STDMETHODIMP Flipper::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WO
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
-				hres = put_RubberMaterial(V_BSTR(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_RubberMaterial(V_BSTR(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -6610,10 +7860,17 @@ STDMETHODIMP Flipper::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WO
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_RubberThickness(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_RubberThickness(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -6630,10 +7887,17 @@ STDMETHODIMP Flipper::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WO
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_Strength(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Strength(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -6650,10 +7914,17 @@ STDMETHODIMP Flipper::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WO
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
-				hres = put_Visible(V_BOOL(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Visible(V_BOOL(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -6670,10 +7941,17 @@ STDMETHODIMP Flipper::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WO
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
-				hres = put_Enabled(V_BOOL(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Enabled(V_BOOL(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -6690,10 +7968,17 @@ STDMETHODIMP Flipper::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WO
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_Elasticity(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Elasticity(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -6710,10 +7995,17 @@ STDMETHODIMP Flipper::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WO
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_Scatter(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Scatter(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -6730,10 +8022,17 @@ STDMETHODIMP Flipper::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WO
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_Return(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Return(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -6750,10 +8049,17 @@ STDMETHODIMP Flipper::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WO
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_RubberHeight(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_RubberHeight(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -6770,10 +8076,17 @@ STDMETHODIMP Flipper::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WO
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_RubberWidth(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_RubberWidth(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -6790,10 +8103,17 @@ STDMETHODIMP Flipper::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WO
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_Friction(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Friction(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -6810,10 +8130,17 @@ STDMETHODIMP Flipper::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WO
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_RampUp(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_RampUp(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -6830,10 +8157,17 @@ STDMETHODIMP Flipper::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WO
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_ElasticityFalloff(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_ElasticityFalloff(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -6850,10 +8184,17 @@ STDMETHODIMP Flipper::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WO
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
-				hres = put_Surface(V_BSTR(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Surface(V_BSTR(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -6870,10 +8211,17 @@ STDMETHODIMP Flipper::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WO
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
-				hres = put_Name(V_BSTR(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Name(V_BSTR(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -6889,10 +8237,17 @@ STDMETHODIMP Flipper::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WO
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantCopyInd(&var0, &pDispParams->rgvarg[--index]);
-				hres = put_UserValue(&var0);
+				if (SUCCEEDED(hrConv)) hrConv = VariantCopyInd(&var0, &pDispParams->rgvarg[--index]);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_UserValue(&var0);
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -6909,10 +8264,17 @@ STDMETHODIMP Flipper::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WO
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_Height(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Height(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -6929,10 +8291,17 @@ STDMETHODIMP Flipper::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WO
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_EOSTorque(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_EOSTorque(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -6949,10 +8318,17 @@ STDMETHODIMP Flipper::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WO
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_EOSTorqueAngle(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_EOSTorqueAngle(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -6969,10 +8345,17 @@ STDMETHODIMP Flipper::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WO
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_FlipperRadiusMin(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_FlipperRadiusMin(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -6989,10 +8372,17 @@ STDMETHODIMP Flipper::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WO
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
-				hres = put_Image(V_BSTR(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Image(V_BSTR(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -7009,10 +8399,17 @@ STDMETHODIMP Flipper::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WO
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
-				hres = put_ReflectionEnabled(V_BOOL(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_ReflectionEnabled(V_BOOL(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -7150,10 +8547,17 @@ STDMETHODIMP Timer::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WORD
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
-				hres = put_Enabled(V_BOOL(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Enabled(V_BOOL(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -7170,10 +8574,17 @@ STDMETHODIMP Timer::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WORD
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_I4);
-				hres = put_Interval(V_I4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_I4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Interval(V_I4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -7190,10 +8601,17 @@ STDMETHODIMP Timer::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WORD
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
-				hres = put_Name(V_BSTR(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Name(V_BSTR(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -7209,10 +8627,17 @@ STDMETHODIMP Timer::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WORD
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantCopyInd(&var0, &pDispParams->rgvarg[--index]);
-				hres = put_UserValue(&var0);
+				if (SUCCEEDED(hrConv)) hrConv = VariantCopyInd(&var0, &pDispParams->rgvarg[--index]);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_UserValue(&var0);
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -7429,10 +8854,17 @@ STDMETHODIMP Plunger::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WO
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_PullSpeed(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_PullSpeed(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -7449,10 +8881,17 @@ STDMETHODIMP Plunger::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WO
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_FireSpeed(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_FireSpeed(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -7500,10 +8939,17 @@ STDMETHODIMP Plunger::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WO
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
-				hres = put_TimerEnabled(V_BOOL(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_TimerEnabled(V_BOOL(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -7520,10 +8966,17 @@ STDMETHODIMP Plunger::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WO
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_I4);
-				hres = put_TimerInterval(V_I4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_I4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_TimerInterval(V_I4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -7540,10 +8993,17 @@ STDMETHODIMP Plunger::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WO
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_X(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_X(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -7560,10 +9020,17 @@ STDMETHODIMP Plunger::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WO
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_Y(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Y(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -7580,10 +9047,17 @@ STDMETHODIMP Plunger::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WO
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_Width(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Width(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -7600,10 +9074,17 @@ STDMETHODIMP Plunger::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WO
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_ZAdjust(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_ZAdjust(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -7620,10 +9101,17 @@ STDMETHODIMP Plunger::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WO
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
-				hres = put_Surface(V_BSTR(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Surface(V_BSTR(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -7640,10 +9128,17 @@ STDMETHODIMP Plunger::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WO
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
-				hres = put_Name(V_BSTR(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Name(V_BSTR(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -7659,10 +9154,17 @@ STDMETHODIMP Plunger::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WO
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantCopyInd(&var0, &pDispParams->rgvarg[--index]);
-				hres = put_UserValue(&var0);
+				if (SUCCEEDED(hrConv)) hrConv = VariantCopyInd(&var0, &pDispParams->rgvarg[--index]);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_UserValue(&var0);
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -7679,10 +9181,17 @@ STDMETHODIMP Plunger::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WO
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_I4);
-				hres = put_Type((PlungerType)V_I4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_I4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Type((PlungerType)V_I4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -7699,10 +9208,17 @@ STDMETHODIMP Plunger::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WO
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
-				hres = put_Material(V_BSTR(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Material(V_BSTR(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -7719,10 +9235,17 @@ STDMETHODIMP Plunger::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WO
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
-				hres = put_Image(V_BSTR(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Image(V_BSTR(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -7739,10 +9262,17 @@ STDMETHODIMP Plunger::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WO
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_I4);
-				hres = put_AnimFrames(V_I4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_I4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_AnimFrames(V_I4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -7759,10 +9289,17 @@ STDMETHODIMP Plunger::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WO
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
-				hres = put_TipShape(V_BSTR(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_TipShape(V_BSTR(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -7779,10 +9316,17 @@ STDMETHODIMP Plunger::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WO
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_RodDiam(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_RodDiam(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -7799,10 +9343,17 @@ STDMETHODIMP Plunger::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WO
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_RingGap(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_RingGap(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -7819,10 +9370,17 @@ STDMETHODIMP Plunger::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WO
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_RingDiam(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_RingDiam(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -7839,10 +9397,17 @@ STDMETHODIMP Plunger::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WO
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_RingWidth(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_RingWidth(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -7859,10 +9424,17 @@ STDMETHODIMP Plunger::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WO
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_SpringDiam(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_SpringDiam(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -7879,10 +9451,17 @@ STDMETHODIMP Plunger::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WO
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_SpringGauge(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_SpringGauge(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -7899,10 +9478,17 @@ STDMETHODIMP Plunger::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WO
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_SpringLoops(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_SpringLoops(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -7919,10 +9505,17 @@ STDMETHODIMP Plunger::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WO
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_SpringEndLoops(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_SpringEndLoops(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -7939,10 +9532,17 @@ STDMETHODIMP Plunger::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WO
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
-				hres = put_MechPlunger(V_BOOL(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_MechPlunger(V_BOOL(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -7959,10 +9559,17 @@ STDMETHODIMP Plunger::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WO
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
-				hres = put_AutoPlunger(V_BOOL(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_AutoPlunger(V_BOOL(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -7979,10 +9586,17 @@ STDMETHODIMP Plunger::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WO
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
-				hres = put_Visible(V_BOOL(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Visible(V_BOOL(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -7999,10 +9613,17 @@ STDMETHODIMP Plunger::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WO
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_MechStrength(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_MechStrength(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -8019,10 +9640,17 @@ STDMETHODIMP Plunger::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WO
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_ParkPosition(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_ParkPosition(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -8039,10 +9667,17 @@ STDMETHODIMP Plunger::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WO
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_Stroke(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Stroke(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -8059,10 +9694,17 @@ STDMETHODIMP Plunger::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WO
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_ScatterVelocity(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_ScatterVelocity(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -8079,10 +9721,17 @@ STDMETHODIMP Plunger::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WO
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_MomentumXfer(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_MomentumXfer(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -8099,10 +9748,17 @@ STDMETHODIMP Plunger::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WO
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
-				hres = put_ReflectionEnabled(V_BOOL(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_ReflectionEnabled(V_BOOL(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -8263,10 +9919,17 @@ STDMETHODIMP Textbox::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WO
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_UI4);
-				hres = put_BackColor((OLE_COLOR)V_UI4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_UI4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_BackColor((OLE_COLOR)V_UI4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -8283,10 +9946,17 @@ STDMETHODIMP Textbox::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WO
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_UI4);
-				hres = put_FontColor((OLE_COLOR)V_UI4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_UI4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_FontColor((OLE_COLOR)V_UI4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -8303,10 +9973,17 @@ STDMETHODIMP Textbox::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WO
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
-				hres = put_Text(V_BSTR(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Text(V_BSTR(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -8329,10 +10006,17 @@ STDMETHODIMP Textbox::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WO
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantCopyInd(&var0, &pDispParams->rgvarg[--index]);
-				hres = putref_Font((IFontDisp*)&var0);
+				if (SUCCEEDED(hrConv)) hrConv = VariantCopyInd(&var0, &pDispParams->rgvarg[--index]);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = putref_Font((IFontDisp*)&var0);
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -8349,10 +10033,17 @@ STDMETHODIMP Textbox::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WO
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_Width(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Width(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -8369,10 +10060,17 @@ STDMETHODIMP Textbox::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WO
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_Height(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Height(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -8389,10 +10087,17 @@ STDMETHODIMP Textbox::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WO
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_I4);
-				hres = put_Alignment((TextAlignment)V_I4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_I4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Alignment((TextAlignment)V_I4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -8409,10 +10114,17 @@ STDMETHODIMP Textbox::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WO
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
-				hres = put_IsTransparent(V_BOOL(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_IsTransparent(V_BOOL(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -8429,10 +10141,17 @@ STDMETHODIMP Textbox::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WO
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
-				hres = put_DMD(V_BOOL(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_DMD(V_BOOL(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -8449,10 +10168,17 @@ STDMETHODIMP Textbox::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WO
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
-				hres = put_TimerEnabled(V_BOOL(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_TimerEnabled(V_BOOL(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -8469,10 +10195,17 @@ STDMETHODIMP Textbox::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WO
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_I4);
-				hres = put_TimerInterval(V_I4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_I4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_TimerInterval(V_I4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -8489,10 +10222,17 @@ STDMETHODIMP Textbox::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WO
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_X(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_X(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -8509,10 +10249,17 @@ STDMETHODIMP Textbox::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WO
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_Y(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Y(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -8529,10 +10276,17 @@ STDMETHODIMP Textbox::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WO
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_IntensityScale(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_IntensityScale(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -8549,10 +10303,17 @@ STDMETHODIMP Textbox::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WO
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
-				hres = put_Name(V_BSTR(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Name(V_BSTR(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -8568,10 +10329,17 @@ STDMETHODIMP Textbox::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WO
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantCopyInd(&var0, &pDispParams->rgvarg[--index]);
-				hres = put_UserValue(&var0);
+				if (SUCCEEDED(hrConv)) hrConv = VariantCopyInd(&var0, &pDispParams->rgvarg[--index]);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_UserValue(&var0);
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -8588,10 +10356,17 @@ STDMETHODIMP Textbox::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WO
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
-				hres = put_Visible(V_BOOL(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Visible(V_BOOL(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -8778,10 +10553,17 @@ STDMETHODIMP Bumper::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WOR
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_Radius(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Radius(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -8798,10 +10580,17 @@ STDMETHODIMP Bumper::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WOR
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_X(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_X(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -8818,10 +10607,17 @@ STDMETHODIMP Bumper::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WOR
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_Y(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Y(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -8838,10 +10634,17 @@ STDMETHODIMP Bumper::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WOR
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
-				hres = put_BaseMaterial(V_BSTR(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_BaseMaterial(V_BSTR(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -8858,10 +10661,17 @@ STDMETHODIMP Bumper::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WOR
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
-				hres = put_SkirtMaterial(V_BSTR(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_SkirtMaterial(V_BSTR(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -8877,10 +10687,17 @@ STDMETHODIMP Bumper::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WOR
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantCopyInd(&var0, &pDispParams->rgvarg[--index]);
-				hres = put_UserValue(&var0);
+				if (SUCCEEDED(hrConv)) hrConv = VariantCopyInd(&var0, &pDispParams->rgvarg[--index]);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_UserValue(&var0);
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -8897,10 +10714,17 @@ STDMETHODIMP Bumper::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WOR
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
-				hres = put_Surface(V_BSTR(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Surface(V_BSTR(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -8917,10 +10741,17 @@ STDMETHODIMP Bumper::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WOR
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_Force(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Force(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -8937,10 +10768,17 @@ STDMETHODIMP Bumper::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WOR
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_Threshold(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Threshold(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -8957,10 +10795,17 @@ STDMETHODIMP Bumper::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WOR
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
-				hres = put_TimerEnabled(V_BOOL(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_TimerEnabled(V_BOOL(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -8977,10 +10822,17 @@ STDMETHODIMP Bumper::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WOR
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_I4);
-				hres = put_TimerInterval(V_I4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_I4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_TimerInterval(V_I4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -8997,10 +10849,17 @@ STDMETHODIMP Bumper::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WOR
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
-				hres = put_CapMaterial(V_BSTR(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_CapMaterial(V_BSTR(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -9017,10 +10876,17 @@ STDMETHODIMP Bumper::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WOR
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
-				hres = put_RingMaterial(V_BSTR(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_RingMaterial(V_BSTR(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -9037,10 +10903,17 @@ STDMETHODIMP Bumper::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WOR
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_HeightScale(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_HeightScale(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -9057,10 +10930,17 @@ STDMETHODIMP Bumper::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WOR
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_Orientation(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Orientation(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -9077,10 +10957,17 @@ STDMETHODIMP Bumper::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WOR
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_RingSpeed(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_RingSpeed(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -9097,10 +10984,17 @@ STDMETHODIMP Bumper::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WOR
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_RingDropOffset(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_RingDropOffset(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -9125,10 +11019,17 @@ STDMETHODIMP Bumper::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WOR
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
-				hres = put_Name(V_BSTR(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Name(V_BSTR(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -9145,10 +11046,17 @@ STDMETHODIMP Bumper::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WOR
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
-				hres = put_HasHitEvent(V_BOOL(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_HasHitEvent(V_BOOL(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -9165,10 +11073,17 @@ STDMETHODIMP Bumper::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WOR
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
-				hres = put_CapVisible(V_BOOL(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_CapVisible(V_BOOL(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -9185,10 +11100,17 @@ STDMETHODIMP Bumper::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WOR
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
-				hres = put_BaseVisible(V_BOOL(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_BaseVisible(V_BOOL(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -9205,10 +11127,17 @@ STDMETHODIMP Bumper::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WOR
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
-				hres = put_RingVisible(V_BOOL(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_RingVisible(V_BOOL(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -9225,10 +11154,17 @@ STDMETHODIMP Bumper::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WOR
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
-				hres = put_SkirtVisible(V_BOOL(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_SkirtVisible(V_BOOL(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -9245,10 +11181,17 @@ STDMETHODIMP Bumper::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WOR
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
-				hres = put_Collidable(V_BOOL(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Collidable(V_BOOL(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -9265,10 +11208,17 @@ STDMETHODIMP Bumper::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WOR
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
-				hres = put_ReflectionEnabled(V_BOOL(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_ReflectionEnabled(V_BOOL(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -9285,10 +11235,17 @@ STDMETHODIMP Bumper::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WOR
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_Scatter(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Scatter(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -9305,10 +11262,17 @@ STDMETHODIMP Bumper::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WOR
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
-				hres = put_EnableSkirtAnimation(V_BOOL(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_EnableSkirtAnimation(V_BOOL(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -9498,10 +11462,17 @@ STDMETHODIMP Trigger::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WO
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_Radius(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Radius(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -9518,10 +11489,17 @@ STDMETHODIMP Trigger::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WO
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
-				hres = put_TimerEnabled(V_BOOL(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_TimerEnabled(V_BOOL(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -9538,10 +11516,17 @@ STDMETHODIMP Trigger::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WO
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_I4);
-				hres = put_TimerInterval(V_I4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_I4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_TimerInterval(V_I4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -9558,10 +11543,17 @@ STDMETHODIMP Trigger::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WO
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_X(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_X(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -9578,10 +11570,17 @@ STDMETHODIMP Trigger::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WO
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_Y(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Y(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -9598,10 +11597,17 @@ STDMETHODIMP Trigger::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WO
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
-				hres = put_Enabled(V_BOOL(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Enabled(V_BOOL(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -9618,10 +11624,17 @@ STDMETHODIMP Trigger::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WO
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
-				hres = put_Visible(V_BOOL(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Visible(V_BOOL(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -9638,10 +11651,17 @@ STDMETHODIMP Trigger::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WO
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_I4);
-				hres = put_TriggerShape((TriggerShape)V_I4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_I4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_TriggerShape((TriggerShape)V_I4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -9658,10 +11678,17 @@ STDMETHODIMP Trigger::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WO
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
-				hres = put_Surface(V_BSTR(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Surface(V_BSTR(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -9678,10 +11705,17 @@ STDMETHODIMP Trigger::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WO
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
-				hres = put_Name(V_BSTR(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Name(V_BSTR(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -9697,10 +11731,17 @@ STDMETHODIMP Trigger::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WO
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantCopyInd(&var0, &pDispParams->rgvarg[--index]);
-				hres = put_UserValue(&var0);
+				if (SUCCEEDED(hrConv)) hrConv = VariantCopyInd(&var0, &pDispParams->rgvarg[--index]);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_UserValue(&var0);
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -9733,10 +11774,17 @@ STDMETHODIMP Trigger::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WO
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_HitHeight(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_HitHeight(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -9753,10 +11801,17 @@ STDMETHODIMP Trigger::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WO
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
-				hres = put_Material(V_BSTR(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Material(V_BSTR(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -9773,10 +11828,17 @@ STDMETHODIMP Trigger::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WO
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_Rotation(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Rotation(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -9793,10 +11855,17 @@ STDMETHODIMP Trigger::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WO
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_WireThickness(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_WireThickness(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -9813,10 +11882,17 @@ STDMETHODIMP Trigger::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WO
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_AnimSpeed(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_AnimSpeed(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -9841,10 +11917,17 @@ STDMETHODIMP Trigger::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WO
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
-				hres = put_ReflectionEnabled(V_BOOL(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_ReflectionEnabled(V_BOOL(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -10046,10 +12129,17 @@ STDMETHODIMP Light::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WORD
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_Falloff(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Falloff(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -10066,10 +12156,17 @@ STDMETHODIMP Light::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WORD
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_FalloffPower(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_FalloffPower(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -10086,10 +12183,17 @@ STDMETHODIMP Light::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WORD
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_State(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_State(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -10130,10 +12234,17 @@ STDMETHODIMP Light::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WORD
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_UI4);
-				hres = put_Color((OLE_COLOR)V_UI4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_UI4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Color((OLE_COLOR)V_UI4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -10150,10 +12261,17 @@ STDMETHODIMP Light::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WORD
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_UI4);
-				hres = put_ColorFull((OLE_COLOR)V_UI4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_UI4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_ColorFull((OLE_COLOR)V_UI4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -10170,10 +12288,17 @@ STDMETHODIMP Light::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WORD
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
-				hres = put_TimerEnabled(V_BOOL(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_TimerEnabled(V_BOOL(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -10190,10 +12315,17 @@ STDMETHODIMP Light::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WORD
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_I4);
-				hres = put_TimerInterval(V_I4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_I4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_TimerInterval(V_I4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -10210,10 +12342,17 @@ STDMETHODIMP Light::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WORD
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_X(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_X(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -10230,10 +12369,17 @@ STDMETHODIMP Light::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WORD
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_Y(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Y(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -10250,10 +12396,17 @@ STDMETHODIMP Light::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WORD
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
-				hres = put_BlinkPattern(V_BSTR(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_BlinkPattern(V_BSTR(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -10270,10 +12423,17 @@ STDMETHODIMP Light::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WORD
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_I4);
-				hres = put_BlinkInterval(V_I4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_I4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_BlinkInterval(V_I4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -10285,16 +12445,23 @@ STDMETHODIMP Light::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WORD
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
 				VARIANT var1;
 				V_VT(&var1) = VT_EMPTY;
-				VariantChangeType(&var1, &pDispParams->rgvarg[--index], 0, VT_I4);
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var1, &pDispParams->rgvarg[--index], 0, VT_I4);
 				VARIANT var2;
 				V_VT(&var2) = VT_EMPTY;
-				VariantChangeType(&var2, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = Duration(V_R4(&var0), V_I4(&var1), V_R4(&var2));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var2, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = Duration(V_R4(&var0), V_I4(&var1), V_R4(&var2));
+				}
 				VariantClear(&var0);
 				VariantClear(&var1);
 				VariantClear(&var2);
@@ -10313,10 +12480,17 @@ STDMETHODIMP Light::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WORD
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_Intensity(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Intensity(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -10333,10 +12507,17 @@ STDMETHODIMP Light::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WORD
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_TransmissionScale(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_TransmissionScale(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -10353,10 +12534,17 @@ STDMETHODIMP Light::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WORD
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_IntensityScale(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_IntensityScale(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -10373,10 +12561,17 @@ STDMETHODIMP Light::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WORD
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
-				hres = put_Surface(V_BSTR(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Surface(V_BSTR(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -10393,10 +12588,17 @@ STDMETHODIMP Light::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WORD
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
-				hres = put_Name(V_BSTR(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Name(V_BSTR(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -10412,10 +12614,17 @@ STDMETHODIMP Light::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WORD
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantCopyInd(&var0, &pDispParams->rgvarg[--index]);
-				hres = put_UserValue(&var0);
+				if (SUCCEEDED(hrConv)) hrConv = VariantCopyInd(&var0, &pDispParams->rgvarg[--index]);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_UserValue(&var0);
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -10432,10 +12641,17 @@ STDMETHODIMP Light::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WORD
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
-				hres = put_Image(V_BSTR(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Image(V_BSTR(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -10452,10 +12668,17 @@ STDMETHODIMP Light::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WORD
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
-				hres = put_ImageMode(V_BOOL(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_ImageMode(V_BOOL(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -10472,10 +12695,17 @@ STDMETHODIMP Light::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WORD
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_DepthBias(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_DepthBias(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -10492,10 +12722,17 @@ STDMETHODIMP Light::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WORD
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_FadeSpeedUp(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_FadeSpeedUp(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -10512,10 +12749,17 @@ STDMETHODIMP Light::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WORD
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_FadeSpeedDown(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_FadeSpeedDown(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -10532,10 +12776,17 @@ STDMETHODIMP Light::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WORD
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
-				hres = put_Bulb(V_BOOL(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Bulb(V_BOOL(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -10552,10 +12803,17 @@ STDMETHODIMP Light::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WORD
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
-				hres = put_ShowBulbMesh(V_BOOL(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_ShowBulbMesh(V_BOOL(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -10572,10 +12830,17 @@ STDMETHODIMP Light::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WORD
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
-				hres = put_StaticBulbMesh(V_BOOL(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_StaticBulbMesh(V_BOOL(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -10592,10 +12857,17 @@ STDMETHODIMP Light::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WORD
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
-				hres = put_ShowReflectionOnBall(V_BOOL(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_ShowReflectionOnBall(V_BOOL(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -10612,10 +12884,17 @@ STDMETHODIMP Light::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WORD
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_ScaleBulbMesh(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_ScaleBulbMesh(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -10632,10 +12911,17 @@ STDMETHODIMP Light::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WORD
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_BulbModulateVsAdd(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_BulbModulateVsAdd(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -10652,10 +12938,17 @@ STDMETHODIMP Light::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WORD
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_BulbHaloHeight(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_BulbHaloHeight(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -10672,10 +12965,17 @@ STDMETHODIMP Light::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WORD
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
-				hres = put_Visible(V_BOOL(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Visible(V_BOOL(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -10692,10 +12992,17 @@ STDMETHODIMP Light::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WORD
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_I4);
-				hres = put_Shadows(V_I4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_I4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Shadows(V_I4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -10712,10 +13019,17 @@ STDMETHODIMP Light::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WORD
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_I4);
-				hres = put_Fader(V_I4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_I4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Fader(V_I4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -10901,10 +13215,17 @@ STDMETHODIMP Kicker::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WOR
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
-				hres = put_Name(V_BSTR(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Name(V_BSTR(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -10924,11 +13245,18 @@ STDMETHODIMP Kicker::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WOR
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				V_VT(&res) = VT_DISPATCH;
-				hres = CreateSizedBall(V_R4(&var0), (IBall**)&V_DISPATCH(&res));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					V_VT(&res) = VT_DISPATCH;
+					hres = CreateSizedBall(V_R4(&var0), (IBall**)&V_DISPATCH(&res));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -10940,14 +13268,21 @@ STDMETHODIMP Kicker::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WOR
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
 				VARIANT var1;
 				V_VT(&var1) = VT_EMPTY;
-				VariantChangeType(&var1, &pDispParams->rgvarg[--index], 0, VT_R4);
-				V_VT(&res) = VT_DISPATCH;
-				hres = CreateSizedBallWithMass(V_R4(&var0), V_R4(&var1), (IBall**)&V_DISPATCH(&res));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var1, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					V_VT(&res) = VT_DISPATCH;
+					hres = CreateSizedBallWithMass(V_R4(&var0), V_R4(&var1), (IBall**)&V_DISPATCH(&res));
+				}
 				VariantClear(&var0);
 				VariantClear(&var1);
 			}
@@ -10973,10 +13308,17 @@ STDMETHODIMP Kicker::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WOR
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
-				hres = put_TimerEnabled(V_BOOL(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_TimerEnabled(V_BOOL(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -10993,10 +13335,17 @@ STDMETHODIMP Kicker::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WOR
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_I4);
-				hres = put_TimerInterval(V_I4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_I4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_TimerInterval(V_I4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -11008,17 +13357,24 @@ STDMETHODIMP Kicker::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WOR
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
 				VARIANT var1;
 				V_VT(&var1) = VT_EMPTY;
-				VariantChangeType(&var1, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var1, &pDispParams->rgvarg[--index], 0, VT_R4);
 				VARIANT var2;
 				V_VT(&var2) = VT_R4;
 				V_R4(&var2) = 0;
-				VariantChangeType(&var2, (index > 0) ? &pDispParams->rgvarg[--index] : &var2, 0, VT_R4);
-				hres = Kick(V_R4(&var0), V_R4(&var1), V_R4(&var2));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var2, OptionalArg(pDispParams, index, &var2), 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = Kick(V_R4(&var0), V_R4(&var1), V_R4(&var2));
+				}
 				VariantClear(&var0);
 				VariantClear(&var1);
 				VariantClear(&var2);
@@ -11032,25 +13388,32 @@ STDMETHODIMP Kicker::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WOR
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
 				VARIANT var1;
 				V_VT(&var1) = VT_EMPTY;
-				VariantChangeType(&var1, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var1, &pDispParams->rgvarg[--index], 0, VT_R4);
 				VARIANT var2;
 				V_VT(&var2) = VT_EMPTY;
-				VariantChangeType(&var2, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var2, &pDispParams->rgvarg[--index], 0, VT_R4);
 				VARIANT var3;
 				V_VT(&var3) = VT_EMPTY;
-				VariantChangeType(&var3, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var3, &pDispParams->rgvarg[--index], 0, VT_R4);
 				VARIANT var4;
 				V_VT(&var4) = VT_EMPTY;
-				VariantChangeType(&var4, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var4, &pDispParams->rgvarg[--index], 0, VT_R4);
 				VARIANT var5;
 				V_VT(&var5) = VT_EMPTY;
-				VariantChangeType(&var5, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = KickXYZ(V_R4(&var0), V_R4(&var1), V_R4(&var2), V_R4(&var3), V_R4(&var4), V_R4(&var5));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var5, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = KickXYZ(V_R4(&var0), V_R4(&var1), V_R4(&var2), V_R4(&var3), V_R4(&var4), V_R4(&var5));
+				}
 				VariantClear(&var0);
 				VariantClear(&var1);
 				VariantClear(&var2);
@@ -11067,19 +13430,26 @@ STDMETHODIMP Kicker::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WOR
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
 				VARIANT var1;
 				V_VT(&var1) = VT_EMPTY;
-				VariantChangeType(&var1, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var1, &pDispParams->rgvarg[--index], 0, VT_R4);
 				VARIANT var2;
 				V_VT(&var2) = VT_EMPTY;
-				VariantChangeType(&var2, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var2, &pDispParams->rgvarg[--index], 0, VT_R4);
 				VARIANT var3;
 				V_VT(&var3) = VT_EMPTY;
-				VariantChangeType(&var3, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = KickZ(V_R4(&var0), V_R4(&var1), V_R4(&var2), V_R4(&var3));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var3, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = KickZ(V_R4(&var0), V_R4(&var1), V_R4(&var2), V_R4(&var3));
+				}
 				VariantClear(&var0);
 				VariantClear(&var1);
 				VariantClear(&var2);
@@ -11099,10 +13469,17 @@ STDMETHODIMP Kicker::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WOR
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_X(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_X(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -11119,10 +13496,17 @@ STDMETHODIMP Kicker::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WOR
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_Y(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Y(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -11139,10 +13523,17 @@ STDMETHODIMP Kicker::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WOR
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
-				hres = put_Enabled(V_BOOL(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Enabled(V_BOOL(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -11159,10 +13550,17 @@ STDMETHODIMP Kicker::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WOR
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_I4);
-				hres = put_DrawStyle((KickerType)V_I4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_I4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_DrawStyle((KickerType)V_I4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -11179,10 +13577,17 @@ STDMETHODIMP Kicker::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WOR
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
-				hres = put_Material(V_BSTR(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Material(V_BSTR(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -11199,10 +13604,17 @@ STDMETHODIMP Kicker::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WOR
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
-				hres = put_Surface(V_BSTR(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Surface(V_BSTR(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -11218,10 +13630,17 @@ STDMETHODIMP Kicker::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WOR
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantCopyInd(&var0, &pDispParams->rgvarg[--index]);
-				hres = put_UserValue(&var0);
+				if (SUCCEEDED(hrConv)) hrConv = VariantCopyInd(&var0, &pDispParams->rgvarg[--index]);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_UserValue(&var0);
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -11246,10 +13665,17 @@ STDMETHODIMP Kicker::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WOR
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_Scatter(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Scatter(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -11266,10 +13692,17 @@ STDMETHODIMP Kicker::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WOR
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_HitAccuracy(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_HitAccuracy(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -11286,10 +13719,17 @@ STDMETHODIMP Kicker::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WOR
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_HitHeight(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_HitHeight(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -11306,10 +13746,17 @@ STDMETHODIMP Kicker::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WOR
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_Orientation(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Orientation(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -11326,10 +13773,17 @@ STDMETHODIMP Kicker::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WOR
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_Radius(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Radius(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -11346,10 +13800,17 @@ STDMETHODIMP Kicker::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WOR
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
-				hres = put_FallThrough(V_BOOL(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_FallThrough(V_BOOL(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -11366,10 +13827,17 @@ STDMETHODIMP Kicker::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WOR
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
-				hres = put_Legacy(V_BOOL(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Legacy(V_BOOL(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -11538,10 +14006,17 @@ STDMETHODIMP Decal::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WORD
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_Rotation(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Rotation(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -11558,10 +14033,17 @@ STDMETHODIMP Decal::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WORD
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
-				hres = put_Image(V_BSTR(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Image(V_BSTR(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -11578,10 +14060,17 @@ STDMETHODIMP Decal::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WORD
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_Width(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Width(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -11598,10 +14087,17 @@ STDMETHODIMP Decal::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WORD
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_Height(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Height(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -11618,10 +14114,17 @@ STDMETHODIMP Decal::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WORD
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_X(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_X(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -11638,10 +14141,17 @@ STDMETHODIMP Decal::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WORD
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_Y(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Y(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -11658,10 +14168,17 @@ STDMETHODIMP Decal::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WORD
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_I4);
-				hres = put_Type((DecalType)V_I4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_I4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Type((DecalType)V_I4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -11678,10 +14195,17 @@ STDMETHODIMP Decal::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WORD
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
-				hres = put_Text(V_BSTR(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Text(V_BSTR(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -11698,10 +14222,17 @@ STDMETHODIMP Decal::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WORD
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_I4);
-				hres = put_SizingType((SizingType)V_I4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_I4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_SizingType((SizingType)V_I4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -11718,10 +14249,17 @@ STDMETHODIMP Decal::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WORD
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_UI4);
-				hres = put_FontColor((OLE_COLOR)V_UI4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_UI4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_FontColor((OLE_COLOR)V_UI4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -11738,10 +14276,17 @@ STDMETHODIMP Decal::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WORD
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
-				hres = put_Material(V_BSTR(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Material(V_BSTR(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -11764,10 +14309,17 @@ STDMETHODIMP Decal::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WORD
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantCopyInd(&var0, &pDispParams->rgvarg[--index]);
-				hres = putref_Font((IFontDisp*)&var0);
+				if (SUCCEEDED(hrConv)) hrConv = VariantCopyInd(&var0, &pDispParams->rgvarg[--index]);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = putref_Font((IFontDisp*)&var0);
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -11784,10 +14336,17 @@ STDMETHODIMP Decal::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WORD
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
-				hres = put_HasVerticalText(V_BOOL(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_HasVerticalText(V_BOOL(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -11804,10 +14363,17 @@ STDMETHODIMP Decal::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WORD
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
-				hres = put_Surface(V_BSTR(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Surface(V_BSTR(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -12057,13 +14623,20 @@ STDMETHODIMP Primitive::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, 
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
 				VARIANT var1;
 				V_VT(&var1) = VT_EMPTY;
-				VariantChangeType(&var1, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = PlayAnim(V_R4(&var0), V_R4(&var1));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var1, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = PlayAnim(V_R4(&var0), V_R4(&var1));
+				}
 				VariantClear(&var0);
 				VariantClear(&var1);
 			}
@@ -12076,10 +14649,17 @@ STDMETHODIMP Primitive::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, 
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = PlayAnimEndless(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = PlayAnimEndless(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -12098,10 +14678,17 @@ STDMETHODIMP Primitive::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, 
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = ShowFrame(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = ShowFrame(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -12113,10 +14700,17 @@ STDMETHODIMP Primitive::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, 
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = ContinueAnim(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = ContinueAnim(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -12133,10 +14727,17 @@ STDMETHODIMP Primitive::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, 
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
-				hres = put_DisplayTexture(V_BOOL(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_DisplayTexture(V_BOOL(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -12153,10 +14754,17 @@ STDMETHODIMP Primitive::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, 
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_I4);
-				hres = put_Sides(V_I4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_I4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Sides(V_I4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -12173,10 +14781,17 @@ STDMETHODIMP Primitive::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, 
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
-				hres = put_Visible(V_BOOL(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Visible(V_BOOL(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -12193,10 +14808,17 @@ STDMETHODIMP Primitive::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, 
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
-				hres = put_Material(V_BSTR(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Material(V_BSTR(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -12213,10 +14835,17 @@ STDMETHODIMP Primitive::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, 
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_UI4);
-				hres = put_SideColor((OLE_COLOR)V_UI4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_UI4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_SideColor((OLE_COLOR)V_UI4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -12233,10 +14862,17 @@ STDMETHODIMP Primitive::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, 
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
-				hres = put_DrawTexturesInside(V_BOOL(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_DrawTexturesInside(V_BOOL(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -12252,10 +14888,17 @@ STDMETHODIMP Primitive::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, 
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantCopyInd(&var0, &pDispParams->rgvarg[--index]);
-				hres = put_UserValue(&var0);
+				if (SUCCEEDED(hrConv)) hrConv = VariantCopyInd(&var0, &pDispParams->rgvarg[--index]);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_UserValue(&var0);
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -12272,10 +14915,17 @@ STDMETHODIMP Primitive::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, 
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
-				hres = put_Image(V_BSTR(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Image(V_BSTR(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -12292,10 +14942,17 @@ STDMETHODIMP Primitive::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, 
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
-				hres = put_NormalMap(V_BSTR(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_NormalMap(V_BSTR(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -12312,10 +14969,17 @@ STDMETHODIMP Primitive::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, 
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_X(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_X(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -12332,10 +14996,17 @@ STDMETHODIMP Primitive::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, 
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_Y(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Y(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -12352,10 +15023,17 @@ STDMETHODIMP Primitive::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, 
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_Z(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Z(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -12372,10 +15050,17 @@ STDMETHODIMP Primitive::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, 
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_Size_X(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Size_X(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -12392,10 +15077,17 @@ STDMETHODIMP Primitive::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, 
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_Size_Y(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Size_Y(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -12412,10 +15104,17 @@ STDMETHODIMP Primitive::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, 
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_Size_Z(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Size_Z(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -12432,10 +15131,17 @@ STDMETHODIMP Primitive::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, 
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_RotAndTra0(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_RotAndTra0(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -12452,10 +15158,17 @@ STDMETHODIMP Primitive::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, 
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_RotX(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_RotX(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -12472,10 +15185,17 @@ STDMETHODIMP Primitive::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, 
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_RotAndTra1(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_RotAndTra1(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -12492,10 +15212,17 @@ STDMETHODIMP Primitive::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, 
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_RotY(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_RotY(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -12512,10 +15239,17 @@ STDMETHODIMP Primitive::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, 
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_RotAndTra2(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_RotAndTra2(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -12532,10 +15266,17 @@ STDMETHODIMP Primitive::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, 
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_RotZ(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_RotZ(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -12552,10 +15293,17 @@ STDMETHODIMP Primitive::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, 
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_RotAndTra3(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_RotAndTra3(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -12572,10 +15320,17 @@ STDMETHODIMP Primitive::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, 
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_TransX(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_TransX(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -12592,10 +15347,17 @@ STDMETHODIMP Primitive::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, 
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_RotAndTra4(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_RotAndTra4(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -12612,10 +15374,17 @@ STDMETHODIMP Primitive::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, 
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_TransY(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_TransY(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -12632,10 +15401,17 @@ STDMETHODIMP Primitive::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, 
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_RotAndTra5(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_RotAndTra5(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -12652,10 +15428,17 @@ STDMETHODIMP Primitive::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, 
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_TransZ(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_TransZ(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -12672,10 +15455,17 @@ STDMETHODIMP Primitive::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, 
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_RotAndTra6(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_RotAndTra6(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -12692,10 +15482,17 @@ STDMETHODIMP Primitive::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, 
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_ObjRotX(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_ObjRotX(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -12712,10 +15509,17 @@ STDMETHODIMP Primitive::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, 
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_RotAndTra7(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_RotAndTra7(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -12732,10 +15536,17 @@ STDMETHODIMP Primitive::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, 
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_ObjRotY(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_ObjRotY(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -12752,10 +15563,17 @@ STDMETHODIMP Primitive::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, 
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_RotAndTra8(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_RotAndTra8(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -12772,10 +15590,17 @@ STDMETHODIMP Primitive::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, 
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_ObjRotZ(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_ObjRotZ(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -12792,10 +15617,17 @@ STDMETHODIMP Primitive::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, 
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_EdgeFactorUI(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_EdgeFactorUI(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -12812,10 +15644,17 @@ STDMETHODIMP Primitive::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, 
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_CollisionReductionFactor(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_CollisionReductionFactor(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -12832,10 +15671,17 @@ STDMETHODIMP Primitive::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, 
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
-				hres = put_Name(V_BSTR(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Name(V_BSTR(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -12852,10 +15698,17 @@ STDMETHODIMP Primitive::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, 
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
-				hres = put_EnableStaticRendering(V_BOOL(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_EnableStaticRendering(V_BOOL(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -12872,10 +15725,17 @@ STDMETHODIMP Primitive::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, 
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_Elasticity(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Elasticity(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -12892,10 +15752,17 @@ STDMETHODIMP Primitive::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, 
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_ElasticityFalloff(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_ElasticityFalloff(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -12912,10 +15779,17 @@ STDMETHODIMP Primitive::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, 
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
-				hres = put_Collidable(V_BOOL(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Collidable(V_BOOL(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -12932,10 +15806,17 @@ STDMETHODIMP Primitive::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, 
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
-				hres = put_IsToy(V_BOOL(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_IsToy(V_BOOL(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -12952,10 +15833,17 @@ STDMETHODIMP Primitive::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, 
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
-				hres = put_BackfacesEnabled(V_BOOL(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_BackfacesEnabled(V_BOOL(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -12972,10 +15860,17 @@ STDMETHODIMP Primitive::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, 
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
-				hres = put_HasHitEvent(V_BOOL(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_HasHitEvent(V_BOOL(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -12992,10 +15887,17 @@ STDMETHODIMP Primitive::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, 
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_Threshold(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Threshold(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -13012,10 +15914,17 @@ STDMETHODIMP Primitive::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, 
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_Friction(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Friction(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -13032,10 +15941,17 @@ STDMETHODIMP Primitive::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, 
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_Scatter(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Scatter(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -13052,10 +15968,17 @@ STDMETHODIMP Primitive::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, 
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
-				hres = put_DisableLighting(V_BOOL(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_DisableLighting(V_BOOL(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -13072,10 +15995,17 @@ STDMETHODIMP Primitive::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, 
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_BlendDisableLighting(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_BlendDisableLighting(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -13092,10 +16022,17 @@ STDMETHODIMP Primitive::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, 
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_BlendDisableLightingFromBelow(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_BlendDisableLightingFromBelow(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -13112,10 +16049,17 @@ STDMETHODIMP Primitive::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, 
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
-				hres = put_ReflectionEnabled(V_BOOL(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_ReflectionEnabled(V_BOOL(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -13132,10 +16076,17 @@ STDMETHODIMP Primitive::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, 
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_Opacity(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Opacity(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -13152,10 +16103,17 @@ STDMETHODIMP Primitive::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, 
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
-				hres = put_AddBlend(V_BOOL(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_AddBlend(V_BOOL(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -13172,10 +16130,17 @@ STDMETHODIMP Primitive::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, 
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_UI4);
-				hres = put_Color((OLE_COLOR)V_UI4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_UI4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Color((OLE_COLOR)V_UI4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -13192,10 +16157,17 @@ STDMETHODIMP Primitive::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, 
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
-				hres = put_EnableDepthMask(V_BOOL(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_EnableDepthMask(V_BOOL(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -13212,10 +16184,17 @@ STDMETHODIMP Primitive::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, 
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
-				hres = put_ReflectionProbe(V_BSTR(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_ReflectionProbe(V_BSTR(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -13232,10 +16211,17 @@ STDMETHODIMP Primitive::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, 
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
-				hres = put_RefractionProbe(V_BSTR(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_RefractionProbe(V_BSTR(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -13252,10 +16238,17 @@ STDMETHODIMP Primitive::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, 
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_DepthBias(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_DepthBias(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -13272,10 +16265,17 @@ STDMETHODIMP Primitive::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, 
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
-				hres = put_PhysicsMaterial(V_BSTR(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_PhysicsMaterial(V_BSTR(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -13292,10 +16292,17 @@ STDMETHODIMP Primitive::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, 
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
-				hres = put_OverwritePhysics(V_BOOL(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_OverwritePhysics(V_BOOL(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -13320,10 +16327,17 @@ STDMETHODIMP Primitive::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, 
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
-				hres = put_ObjectSpaceNormalMap(V_BOOL(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_ObjectSpaceNormalMap(V_BOOL(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -13518,10 +16532,17 @@ STDMETHODIMP HitTarget::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, 
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
-				hres = put_TimerEnabled(V_BOOL(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_TimerEnabled(V_BOOL(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -13538,10 +16559,17 @@ STDMETHODIMP HitTarget::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, 
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_I4);
-				hres = put_TimerInterval(V_I4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_I4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_TimerInterval(V_I4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -13558,10 +16586,17 @@ STDMETHODIMP HitTarget::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, 
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
-				hres = put_Visible(V_BOOL(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Visible(V_BOOL(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -13578,10 +16613,17 @@ STDMETHODIMP HitTarget::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, 
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
-				hres = put_Material(V_BSTR(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Material(V_BSTR(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -13597,10 +16639,17 @@ STDMETHODIMP HitTarget::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, 
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantCopyInd(&var0, &pDispParams->rgvarg[--index]);
-				hres = put_UserValue(&var0);
+				if (SUCCEEDED(hrConv)) hrConv = VariantCopyInd(&var0, &pDispParams->rgvarg[--index]);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_UserValue(&var0);
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -13617,10 +16666,17 @@ STDMETHODIMP HitTarget::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, 
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
-				hres = put_Image(V_BSTR(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Image(V_BSTR(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -13637,10 +16693,17 @@ STDMETHODIMP HitTarget::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, 
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_X(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_X(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -13657,10 +16720,17 @@ STDMETHODIMP HitTarget::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, 
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_Y(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Y(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -13677,10 +16747,17 @@ STDMETHODIMP HitTarget::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, 
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_Z(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Z(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -13697,10 +16774,17 @@ STDMETHODIMP HitTarget::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, 
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_ScaleX(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_ScaleX(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -13717,10 +16801,17 @@ STDMETHODIMP HitTarget::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, 
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_ScaleY(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_ScaleY(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -13737,10 +16828,17 @@ STDMETHODIMP HitTarget::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, 
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_ScaleZ(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_ScaleZ(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -13757,10 +16855,17 @@ STDMETHODIMP HitTarget::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, 
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_Orientation(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Orientation(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -13777,10 +16882,17 @@ STDMETHODIMP HitTarget::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, 
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
-				hres = put_Name(V_BSTR(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Name(V_BSTR(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -13797,10 +16909,17 @@ STDMETHODIMP HitTarget::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, 
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_Elasticity(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Elasticity(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -13817,10 +16936,17 @@ STDMETHODIMP HitTarget::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, 
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_ElasticityFalloff(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_ElasticityFalloff(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -13837,10 +16963,17 @@ STDMETHODIMP HitTarget::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, 
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
-				hres = put_Collidable(V_BOOL(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Collidable(V_BOOL(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -13857,10 +16990,17 @@ STDMETHODIMP HitTarget::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, 
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
-				hres = put_HasHitEvent(V_BOOL(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_HasHitEvent(V_BOOL(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -13877,10 +17017,17 @@ STDMETHODIMP HitTarget::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, 
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_Threshold(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Threshold(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -13897,10 +17044,17 @@ STDMETHODIMP HitTarget::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, 
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_Friction(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Friction(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -13917,10 +17071,17 @@ STDMETHODIMP HitTarget::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, 
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_Scatter(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Scatter(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -13937,10 +17098,17 @@ STDMETHODIMP HitTarget::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, 
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
-				hres = put_DisableLighting(V_BOOL(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_DisableLighting(V_BOOL(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -13957,10 +17125,17 @@ STDMETHODIMP HitTarget::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, 
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_BlendDisableLighting(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_BlendDisableLighting(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -13977,10 +17152,17 @@ STDMETHODIMP HitTarget::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, 
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_BlendDisableLightingFromBelow(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_BlendDisableLightingFromBelow(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -13997,10 +17179,17 @@ STDMETHODIMP HitTarget::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, 
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
-				hres = put_ReflectionEnabled(V_BOOL(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_ReflectionEnabled(V_BOOL(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -14017,10 +17206,17 @@ STDMETHODIMP HitTarget::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, 
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_DepthBias(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_DepthBias(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -14037,10 +17233,17 @@ STDMETHODIMP HitTarget::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, 
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_DropSpeed(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_DropSpeed(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -14065,10 +17268,17 @@ STDMETHODIMP HitTarget::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, 
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
-				hres = put_IsDropped(V_BOOL(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_IsDropped(V_BOOL(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -14085,10 +17295,17 @@ STDMETHODIMP HitTarget::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, 
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_I4);
-				hres = put_DrawStyle((TargetType)V_I4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_I4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_DrawStyle((TargetType)V_I4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -14105,10 +17322,17 @@ STDMETHODIMP HitTarget::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, 
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
-				hres = put_LegacyMode(V_BOOL(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_LegacyMode(V_BOOL(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -14125,10 +17349,17 @@ STDMETHODIMP HitTarget::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, 
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_I4);
-				hres = put_RaiseDelay(V_I4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_I4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_RaiseDelay(V_I4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -14145,10 +17376,17 @@ STDMETHODIMP HitTarget::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, 
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
-				hres = put_PhysicsMaterial(V_BSTR(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_PhysicsMaterial(V_BSTR(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -14165,10 +17403,17 @@ STDMETHODIMP HitTarget::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, 
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
-				hres = put_OverwritePhysics(V_BOOL(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_OverwritePhysics(V_BOOL(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -14357,10 +17602,17 @@ STDMETHODIMP Gate::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WORD 
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
-				hres = put_Name(V_BSTR(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Name(V_BSTR(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -14377,10 +17629,17 @@ STDMETHODIMP Gate::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WORD 
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
-				hres = put_TimerEnabled(V_BOOL(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_TimerEnabled(V_BOOL(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -14397,10 +17656,17 @@ STDMETHODIMP Gate::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WORD 
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_I4);
-				hres = put_TimerInterval(V_I4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_I4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_TimerInterval(V_I4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -14417,10 +17683,17 @@ STDMETHODIMP Gate::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WORD 
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_Length(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Length(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -14437,10 +17710,17 @@ STDMETHODIMP Gate::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WORD 
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_Height(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Height(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -14457,10 +17737,17 @@ STDMETHODIMP Gate::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WORD 
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_Rotation(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Rotation(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -14477,10 +17764,17 @@ STDMETHODIMP Gate::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WORD 
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_X(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_X(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -14497,10 +17791,17 @@ STDMETHODIMP Gate::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WORD 
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_Y(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Y(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -14517,10 +17818,17 @@ STDMETHODIMP Gate::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WORD 
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
-				hres = put_Open(V_BOOL(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Open(V_BOOL(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -14537,10 +17845,17 @@ STDMETHODIMP Gate::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WORD 
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_Damping(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Damping(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -14557,10 +17872,17 @@ STDMETHODIMP Gate::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WORD 
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_GravityFactor(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_GravityFactor(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -14572,18 +17894,25 @@ STDMETHODIMP Gate::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WORD 
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_I4);
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_I4);
 				VARIANT var1;
 				V_VT(&var1) = VT_R4;
 				V_R4(&var1) = 0;
-				VariantChangeType(&var1, (index > 0) ? &pDispParams->rgvarg[--index] : &var1, 0, VT_R4);
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var1, OptionalArg(pDispParams, index, &var1), 0, VT_R4);
 				VARIANT var2;
 				V_VT(&var2) = VT_R4;
 				V_R4(&var2) = 0;
-				VariantChangeType(&var2, (index > 0) ? &pDispParams->rgvarg[--index] : &var2, 0, VT_R4);
-				hres = Move(V_I4(&var0), V_R4(&var1), V_R4(&var2));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var2, OptionalArg(pDispParams, index, &var2), 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = Move(V_I4(&var0), V_R4(&var1), V_R4(&var2));
+				}
 				VariantClear(&var0);
 				VariantClear(&var1);
 				VariantClear(&var2);
@@ -14602,10 +17931,17 @@ STDMETHODIMP Gate::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WORD 
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
-				hres = put_Material(V_BSTR(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Material(V_BSTR(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -14622,10 +17958,17 @@ STDMETHODIMP Gate::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WORD 
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_Elasticity(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Elasticity(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -14642,10 +17985,17 @@ STDMETHODIMP Gate::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WORD 
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
-				hres = put_Surface(V_BSTR(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Surface(V_BSTR(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -14661,10 +18011,17 @@ STDMETHODIMP Gate::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WORD 
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantCopyInd(&var0, &pDispParams->rgvarg[--index]);
-				hres = put_UserValue(&var0);
+				if (SUCCEEDED(hrConv)) hrConv = VariantCopyInd(&var0, &pDispParams->rgvarg[--index]);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_UserValue(&var0);
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -14681,10 +18038,17 @@ STDMETHODIMP Gate::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WORD 
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_CloseAngle(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_CloseAngle(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -14701,10 +18065,17 @@ STDMETHODIMP Gate::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WORD 
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_OpenAngle(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_OpenAngle(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -14721,10 +18092,17 @@ STDMETHODIMP Gate::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WORD 
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
-				hres = put_Collidable(V_BOOL(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Collidable(V_BOOL(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -14741,10 +18119,17 @@ STDMETHODIMP Gate::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WORD 
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_Friction(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Friction(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -14761,10 +18146,17 @@ STDMETHODIMP Gate::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WORD 
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
-				hres = put_Visible(V_BOOL(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Visible(V_BOOL(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -14781,10 +18173,17 @@ STDMETHODIMP Gate::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WORD 
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
-				hres = put_TwoWay(V_BOOL(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_TwoWay(V_BOOL(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -14801,10 +18200,17 @@ STDMETHODIMP Gate::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WORD 
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
-				hres = put_ShowBracket(V_BOOL(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_ShowBracket(V_BOOL(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -14829,10 +18235,17 @@ STDMETHODIMP Gate::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WORD 
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
-				hres = put_ReflectionEnabled(V_BOOL(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_ReflectionEnabled(V_BOOL(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -14849,10 +18262,17 @@ STDMETHODIMP Gate::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WORD 
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_I4);
-				hres = put_DrawStyle((GateType)V_I4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_I4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_DrawStyle((GateType)V_I4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -15021,10 +18441,17 @@ STDMETHODIMP Spinner::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WO
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
-				hres = put_Name(V_BSTR(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Name(V_BSTR(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -15041,10 +18468,17 @@ STDMETHODIMP Spinner::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WO
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
-				hres = put_TimerEnabled(V_BOOL(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_TimerEnabled(V_BOOL(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -15061,10 +18495,17 @@ STDMETHODIMP Spinner::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WO
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_I4);
-				hres = put_TimerInterval(V_I4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_I4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_TimerInterval(V_I4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -15081,10 +18522,17 @@ STDMETHODIMP Spinner::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WO
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_Length(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Length(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -15101,10 +18549,17 @@ STDMETHODIMP Spinner::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WO
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_Rotation(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Rotation(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -15121,10 +18576,17 @@ STDMETHODIMP Spinner::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WO
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_Height(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Height(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -15141,10 +18603,17 @@ STDMETHODIMP Spinner::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WO
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_Damping(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Damping(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -15161,10 +18630,17 @@ STDMETHODIMP Spinner::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WO
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
-				hres = put_Image(V_BSTR(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Image(V_BSTR(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -15181,10 +18657,17 @@ STDMETHODIMP Spinner::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WO
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
-				hres = put_Material(V_BSTR(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Material(V_BSTR(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -15201,10 +18684,17 @@ STDMETHODIMP Spinner::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WO
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_X(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_X(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -15221,10 +18711,17 @@ STDMETHODIMP Spinner::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WO
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_Y(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Y(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -15241,10 +18738,17 @@ STDMETHODIMP Spinner::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WO
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
-				hres = put_Surface(V_BSTR(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Surface(V_BSTR(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -15260,10 +18764,17 @@ STDMETHODIMP Spinner::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WO
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantCopyInd(&var0, &pDispParams->rgvarg[--index]);
-				hres = put_UserValue(&var0);
+				if (SUCCEEDED(hrConv)) hrConv = VariantCopyInd(&var0, &pDispParams->rgvarg[--index]);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_UserValue(&var0);
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -15280,10 +18791,17 @@ STDMETHODIMP Spinner::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WO
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
-				hres = put_ShowBracket(V_BOOL(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_ShowBracket(V_BOOL(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -15300,10 +18818,17 @@ STDMETHODIMP Spinner::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WO
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_AngleMax(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_AngleMax(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -15320,10 +18845,17 @@ STDMETHODIMP Spinner::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WO
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_AngleMin(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_AngleMin(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -15340,10 +18872,17 @@ STDMETHODIMP Spinner::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WO
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_Elasticity(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Elasticity(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -15360,10 +18899,17 @@ STDMETHODIMP Spinner::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WO
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
-				hres = put_Visible(V_BOOL(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Visible(V_BOOL(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -15380,10 +18926,17 @@ STDMETHODIMP Spinner::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WO
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
-				hres = put_ReflectionEnabled(V_BOOL(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_ReflectionEnabled(V_BOOL(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -15582,10 +19135,17 @@ STDMETHODIMP Ramp::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WORD 
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
-				hres = put_Name(V_BSTR(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Name(V_BSTR(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -15602,10 +19162,17 @@ STDMETHODIMP Ramp::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WORD 
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
-				hres = put_TimerEnabled(V_BOOL(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_TimerEnabled(V_BOOL(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -15622,10 +19189,17 @@ STDMETHODIMP Ramp::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WORD 
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_I4);
-				hres = put_TimerInterval(V_I4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_I4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_TimerInterval(V_I4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -15642,10 +19216,17 @@ STDMETHODIMP Ramp::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WORD 
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_HeightBottom(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_HeightBottom(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -15662,10 +19243,17 @@ STDMETHODIMP Ramp::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WORD 
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_HeightTop(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_HeightTop(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -15682,10 +19270,17 @@ STDMETHODIMP Ramp::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WORD 
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_WidthBottom(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_WidthBottom(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -15702,10 +19297,17 @@ STDMETHODIMP Ramp::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WORD 
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_WidthTop(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_WidthTop(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -15722,10 +19324,17 @@ STDMETHODIMP Ramp::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WORD 
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
-				hres = put_Material(V_BSTR(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Material(V_BSTR(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -15742,10 +19351,17 @@ STDMETHODIMP Ramp::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WORD 
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_I4);
-				hres = put_Type((RampType)V_I4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_I4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Type((RampType)V_I4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -15762,10 +19378,17 @@ STDMETHODIMP Ramp::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WORD 
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
-				hres = put_Image(V_BSTR(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Image(V_BSTR(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -15782,10 +19405,17 @@ STDMETHODIMP Ramp::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WORD 
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_I4);
-				hres = put_ImageAlignment((RampImageAlignment)V_I4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_I4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_ImageAlignment((RampImageAlignment)V_I4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -15802,10 +19432,17 @@ STDMETHODIMP Ramp::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WORD 
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
-				hres = put_HasWallImage(V_BOOL(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_HasWallImage(V_BOOL(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -15822,10 +19459,17 @@ STDMETHODIMP Ramp::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WORD 
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_LeftWallHeight(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_LeftWallHeight(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -15842,10 +19486,17 @@ STDMETHODIMP Ramp::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WORD 
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_RightWallHeight(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_RightWallHeight(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -15861,10 +19512,17 @@ STDMETHODIMP Ramp::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WORD 
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantCopyInd(&var0, &pDispParams->rgvarg[--index]);
-				hres = put_UserValue(&var0);
+				if (SUCCEEDED(hrConv)) hrConv = VariantCopyInd(&var0, &pDispParams->rgvarg[--index]);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_UserValue(&var0);
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -15881,10 +19539,17 @@ STDMETHODIMP Ramp::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WORD 
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_VisibleLeftWallHeight(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_VisibleLeftWallHeight(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -15901,10 +19566,17 @@ STDMETHODIMP Ramp::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WORD 
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_VisibleRightWallHeight(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_VisibleRightWallHeight(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -15921,10 +19593,17 @@ STDMETHODIMP Ramp::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WORD 
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_Elasticity(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Elasticity(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -15941,10 +19620,17 @@ STDMETHODIMP Ramp::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WORD 
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
-				hres = put_Collidable(V_BOOL(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Collidable(V_BOOL(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -15961,10 +19647,17 @@ STDMETHODIMP Ramp::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WORD 
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
-				hres = put_HasHitEvent(V_BOOL(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_HasHitEvent(V_BOOL(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -15981,10 +19674,17 @@ STDMETHODIMP Ramp::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WORD 
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_Threshold(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Threshold(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -16001,10 +19701,17 @@ STDMETHODIMP Ramp::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WORD 
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
-				hres = put_Visible(V_BOOL(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Visible(V_BOOL(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -16021,10 +19728,17 @@ STDMETHODIMP Ramp::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WORD 
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_Friction(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Friction(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -16041,10 +19755,17 @@ STDMETHODIMP Ramp::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WORD 
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_Scatter(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Scatter(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -16061,10 +19782,17 @@ STDMETHODIMP Ramp::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WORD 
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_DepthBias(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_DepthBias(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -16081,10 +19809,17 @@ STDMETHODIMP Ramp::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WORD 
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_WireDiameter(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_WireDiameter(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -16101,10 +19836,17 @@ STDMETHODIMP Ramp::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WORD 
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_WireDistanceX(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_WireDistanceX(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -16121,10 +19863,17 @@ STDMETHODIMP Ramp::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WORD 
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_WireDistanceY(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_WireDistanceY(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -16141,10 +19890,17 @@ STDMETHODIMP Ramp::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WORD 
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
-				hres = put_ReflectionEnabled(V_BOOL(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_ReflectionEnabled(V_BOOL(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -16161,10 +19917,17 @@ STDMETHODIMP Ramp::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WORD 
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
-				hres = put_PhysicsMaterial(V_BSTR(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_PhysicsMaterial(V_BSTR(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -16181,10 +19944,17 @@ STDMETHODIMP Ramp::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WORD 
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
-				hres = put_OverwritePhysics(V_BOOL(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_OverwritePhysics(V_BOOL(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -16338,10 +20108,17 @@ STDMETHODIMP Flasher::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WO
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
-				hres = put_Name(V_BSTR(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Name(V_BSTR(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -16358,10 +20135,17 @@ STDMETHODIMP Flasher::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WO
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_X(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_X(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -16378,10 +20162,17 @@ STDMETHODIMP Flasher::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WO
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_Y(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Y(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -16398,10 +20189,17 @@ STDMETHODIMP Flasher::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WO
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_I4);
-				hres = put_ImageAlignment((RampImageAlignment)V_I4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_I4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_ImageAlignment((RampImageAlignment)V_I4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -16418,10 +20216,17 @@ STDMETHODIMP Flasher::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WO
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_Height(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Height(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -16438,10 +20243,17 @@ STDMETHODIMP Flasher::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WO
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_RotZ(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_RotZ(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -16458,10 +20270,17 @@ STDMETHODIMP Flasher::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WO
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_RotY(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_RotY(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -16478,10 +20297,17 @@ STDMETHODIMP Flasher::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WO
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_RotX(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_RotX(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -16498,10 +20324,17 @@ STDMETHODIMP Flasher::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WO
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_UI4);
-				hres = put_Color((OLE_COLOR)V_UI4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_UI4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Color((OLE_COLOR)V_UI4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -16518,10 +20351,17 @@ STDMETHODIMP Flasher::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WO
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
-				hres = put_ImageA(V_BSTR(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_ImageA(V_BSTR(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -16538,10 +20378,17 @@ STDMETHODIMP Flasher::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WO
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
-				hres = put_ImageB(V_BSTR(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_ImageB(V_BSTR(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -16558,10 +20405,17 @@ STDMETHODIMP Flasher::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WO
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
-				hres = put_DisplayTexture(V_BOOL(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_DisplayTexture(V_BOOL(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -16578,10 +20432,17 @@ STDMETHODIMP Flasher::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WO
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_I4);
-				hres = put_Opacity(V_I4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_I4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Opacity(V_I4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -16598,10 +20459,17 @@ STDMETHODIMP Flasher::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WO
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_IntensityScale(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_IntensityScale(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -16618,10 +20486,17 @@ STDMETHODIMP Flasher::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WO
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_ModulateVsAdd(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_ModulateVsAdd(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -16637,10 +20512,17 @@ STDMETHODIMP Flasher::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WO
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantCopyInd(&var0, &pDispParams->rgvarg[--index]);
-				hres = put_UserValue(&var0);
+				if (SUCCEEDED(hrConv)) hrConv = VariantCopyInd(&var0, &pDispParams->rgvarg[--index]);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_UserValue(&var0);
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -16657,10 +20539,17 @@ STDMETHODIMP Flasher::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WO
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
-				hres = put_Visible(V_BOOL(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Visible(V_BOOL(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -16677,10 +20566,17 @@ STDMETHODIMP Flasher::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WO
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
-				hres = put_AddBlend(V_BOOL(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_AddBlend(V_BOOL(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -16697,10 +20593,17 @@ STDMETHODIMP Flasher::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WO
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_I4);
-				hres = put_AddBlendMode(V_I4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_I4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_AddBlendMode(V_I4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -16717,10 +20620,17 @@ STDMETHODIMP Flasher::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WO
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
-				hres = put_DMD(V_BOOL(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_DMD(V_BOOL(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -16732,10 +20642,17 @@ STDMETHODIMP Flasher::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WO
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_I4);
-				hres = put_DMDWidth(V_I4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_I4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_DMDWidth(V_I4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -16747,10 +20664,17 @@ STDMETHODIMP Flasher::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WO
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_I4);
-				hres = put_DMDHeight(V_I4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_I4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_DMDHeight(V_I4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -16762,10 +20686,17 @@ STDMETHODIMP Flasher::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WO
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantCopyInd(&var0, &pDispParams->rgvarg[--index]);
-				hres = put_DMDPixels(var0);
+				if (SUCCEEDED(hrConv)) hrConv = VariantCopyInd(&var0, &pDispParams->rgvarg[--index]);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_DMDPixels(var0);
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -16777,10 +20708,17 @@ STDMETHODIMP Flasher::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WO
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantCopyInd(&var0, &pDispParams->rgvarg[--index]);
-				hres = put_DMDColoredPixels(var0);
+				if (SUCCEEDED(hrConv)) hrConv = VariantCopyInd(&var0, &pDispParams->rgvarg[--index]);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_DMDColoredPixels(var0);
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -16792,10 +20730,17 @@ STDMETHODIMP Flasher::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WO
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_I4);
-				hres = put_VideoCapWidth(V_I4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_I4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_VideoCapWidth(V_I4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -16807,10 +20752,17 @@ STDMETHODIMP Flasher::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WO
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_I4);
-				hres = put_VideoCapHeight(V_I4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_I4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_VideoCapHeight(V_I4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -16822,10 +20774,17 @@ STDMETHODIMP Flasher::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WO
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
-				hres = put_VideoCapUpdate(V_BSTR(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_VideoCapUpdate(V_BSTR(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -16842,10 +20801,17 @@ STDMETHODIMP Flasher::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WO
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_DepthBias(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_DepthBias(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -16862,10 +20828,17 @@ STDMETHODIMP Flasher::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WO
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
-				hres = put_Filter(V_BSTR(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Filter(V_BSTR(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -16882,10 +20855,17 @@ STDMETHODIMP Flasher::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WO
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_I4);
-				hres = put_Amount(V_I4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_I4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Amount(V_I4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -16902,10 +20882,17 @@ STDMETHODIMP Flasher::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WO
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
-				hres = put_TimerEnabled(V_BOOL(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_TimerEnabled(V_BOOL(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -16922,10 +20909,17 @@ STDMETHODIMP Flasher::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WO
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_I4);
-				hres = put_TimerInterval(V_I4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_I4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_TimerInterval(V_I4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -17063,10 +21057,17 @@ STDMETHODIMP Rubber::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WOR
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
-				hres = put_Name(V_BSTR(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Name(V_BSTR(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -17083,10 +21084,17 @@ STDMETHODIMP Rubber::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WOR
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_Height(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Height(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -17103,10 +21111,17 @@ STDMETHODIMP Rubber::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WOR
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_HitHeight(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_HitHeight(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -17123,10 +21138,17 @@ STDMETHODIMP Rubber::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WOR
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
-				hres = put_HasHitEvent(V_BOOL(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_HasHitEvent(V_BOOL(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -17143,10 +21165,17 @@ STDMETHODIMP Rubber::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WOR
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_I4);
-				hres = put_Thickness(V_I4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_I4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Thickness(V_I4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -17163,10 +21192,17 @@ STDMETHODIMP Rubber::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WOR
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_RotX(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_RotX(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -17183,10 +21219,17 @@ STDMETHODIMP Rubber::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WOR
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_RotZ(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_RotZ(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -17203,10 +21246,17 @@ STDMETHODIMP Rubber::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WOR
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_RotY(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_RotY(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -17223,10 +21273,17 @@ STDMETHODIMP Rubber::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WOR
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
-				hres = put_Material(V_BSTR(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Material(V_BSTR(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -17243,10 +21300,17 @@ STDMETHODIMP Rubber::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WOR
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
-				hres = put_Image(V_BSTR(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Image(V_BSTR(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -17263,10 +21327,17 @@ STDMETHODIMP Rubber::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WOR
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_Elasticity(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Elasticity(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -17283,10 +21354,17 @@ STDMETHODIMP Rubber::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WOR
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_ElasticityFalloff(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_ElasticityFalloff(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -17303,10 +21381,17 @@ STDMETHODIMP Rubber::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WOR
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
-				hres = put_Collidable(V_BOOL(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Collidable(V_BOOL(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -17323,10 +21408,17 @@ STDMETHODIMP Rubber::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WOR
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
-				hres = put_Visible(V_BOOL(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Visible(V_BOOL(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -17343,10 +21435,17 @@ STDMETHODIMP Rubber::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WOR
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_Friction(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Friction(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -17363,10 +21462,17 @@ STDMETHODIMP Rubber::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WOR
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_Scatter(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Scatter(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -17383,10 +21489,17 @@ STDMETHODIMP Rubber::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WOR
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
-				hres = put_EnableStaticRendering(V_BOOL(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_EnableStaticRendering(V_BOOL(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -17403,10 +21516,17 @@ STDMETHODIMP Rubber::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WOR
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
-				hres = put_EnableShowInEditor(V_BOOL(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_EnableShowInEditor(V_BOOL(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -17423,10 +21543,17 @@ STDMETHODIMP Rubber::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WOR
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
-				hres = put_ReflectionEnabled(V_BOOL(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_ReflectionEnabled(V_BOOL(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -17443,10 +21570,17 @@ STDMETHODIMP Rubber::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WOR
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
-				hres = put_TimerEnabled(V_BOOL(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_TimerEnabled(V_BOOL(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -17463,10 +21597,17 @@ STDMETHODIMP Rubber::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WOR
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_I4);
-				hres = put_TimerInterval(V_I4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_I4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_TimerInterval(V_I4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -17482,10 +21623,17 @@ STDMETHODIMP Rubber::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WOR
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantCopyInd(&var0, &pDispParams->rgvarg[--index]);
-				hres = put_UserValue(&var0);
+				if (SUCCEEDED(hrConv)) hrConv = VariantCopyInd(&var0, &pDispParams->rgvarg[--index]);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_UserValue(&var0);
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -17502,10 +21650,17 @@ STDMETHODIMP Rubber::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WOR
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
-				hres = put_PhysicsMaterial(V_BSTR(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_PhysicsMaterial(V_BSTR(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -17522,10 +21677,17 @@ STDMETHODIMP Rubber::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WOR
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
-				hres = put_OverwritePhysics(V_BOOL(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_OverwritePhysics(V_BOOL(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -17669,10 +21831,17 @@ STDMETHODIMP Ball::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WORD 
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_X(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_X(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -17689,10 +21858,17 @@ STDMETHODIMP Ball::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WORD 
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_Y(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Y(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -17709,10 +21885,17 @@ STDMETHODIMP Ball::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WORD 
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_VelX(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_VelX(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -17729,10 +21912,17 @@ STDMETHODIMP Ball::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WORD 
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_VelY(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_VelY(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -17749,10 +21939,17 @@ STDMETHODIMP Ball::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WORD 
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_Z(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Z(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -17769,10 +21966,17 @@ STDMETHODIMP Ball::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WORD 
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_VelZ(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_VelZ(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -17789,10 +21993,17 @@ STDMETHODIMP Ball::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WORD 
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_AngVelX(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_AngVelX(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -17809,10 +22020,17 @@ STDMETHODIMP Ball::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WORD 
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_AngVelY(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_AngVelY(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -17829,10 +22047,17 @@ STDMETHODIMP Ball::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WORD 
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_AngVelZ(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_AngVelZ(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -17849,10 +22074,17 @@ STDMETHODIMP Ball::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WORD 
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_AngMomX(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_AngMomX(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -17869,10 +22101,17 @@ STDMETHODIMP Ball::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WORD 
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_AngMomY(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_AngMomY(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -17889,10 +22128,17 @@ STDMETHODIMP Ball::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WORD 
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_AngMomZ(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_AngMomZ(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -17909,10 +22155,17 @@ STDMETHODIMP Ball::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WORD 
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_UI4);
-				hres = put_Color((OLE_COLOR)V_UI4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_UI4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Color((OLE_COLOR)V_UI4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -17929,10 +22182,17 @@ STDMETHODIMP Ball::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WORD 
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
-				hres = put_Image(V_BSTR(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Image(V_BSTR(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -17949,10 +22209,17 @@ STDMETHODIMP Ball::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WORD 
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
-				hres = put_FrontDecal(V_BSTR(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_FrontDecal(V_BSTR(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -17969,10 +22236,17 @@ STDMETHODIMP Ball::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WORD 
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
-				hres = put_DecalMode(V_BOOL(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_DecalMode(V_BOOL(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -17988,10 +22262,17 @@ STDMETHODIMP Ball::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WORD 
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantCopyInd(&var0, &pDispParams->rgvarg[--index]);
-				hres = put_UserValue(&var0);
+				if (SUCCEEDED(hrConv)) hrConv = VariantCopyInd(&var0, &pDispParams->rgvarg[--index]);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_UserValue(&var0);
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -18008,10 +22289,17 @@ STDMETHODIMP Ball::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WORD 
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_Mass(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Mass(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -18028,10 +22316,17 @@ STDMETHODIMP Ball::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WORD 
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_Radius(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Radius(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -18048,10 +22343,17 @@ STDMETHODIMP Ball::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WORD 
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_I4);
-				hres = put_ID(V_I4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_I4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_ID(V_I4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -18068,10 +22370,17 @@ STDMETHODIMP Ball::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WORD 
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
-				hres = put_Name(V_BSTR(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Name(V_BSTR(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -18088,10 +22397,17 @@ STDMETHODIMP Ball::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WORD 
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_BulbIntensityScale(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_BulbIntensityScale(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -18108,10 +22424,17 @@ STDMETHODIMP Ball::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WORD 
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
-				hres = put_ReflectionEnabled(V_BOOL(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_ReflectionEnabled(V_BOOL(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -18128,10 +22451,17 @@ STDMETHODIMP Ball::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WORD 
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_PlayfieldReflectionScale(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_PlayfieldReflectionScale(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -18148,10 +22478,17 @@ STDMETHODIMP Ball::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WORD 
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
-				hres = put_ForceReflection(V_BOOL(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_ForceReflection(V_BOOL(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -18168,10 +22505,17 @@ STDMETHODIMP Ball::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, WORD 
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
-				hres = put_Visible(V_BOOL(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Visible(V_BOOL(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -18457,10 +22801,17 @@ STDMETHODIMP DispReel::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, W
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_UI4);
-				hres = put_BackColor((OLE_COLOR)V_UI4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_UI4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_BackColor((OLE_COLOR)V_UI4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -18477,10 +22828,17 @@ STDMETHODIMP DispReel::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, W
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
-				hres = put_Image(V_BSTR(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Image(V_BSTR(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -18497,10 +22855,17 @@ STDMETHODIMP DispReel::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, W
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_Reels(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Reels(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -18517,10 +22882,17 @@ STDMETHODIMP DispReel::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, W
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_Width(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Width(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -18537,10 +22909,17 @@ STDMETHODIMP DispReel::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, W
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_Height(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Height(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -18557,10 +22936,17 @@ STDMETHODIMP DispReel::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, W
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_Spacing(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Spacing(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -18577,10 +22963,17 @@ STDMETHODIMP DispReel::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, W
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
-				hres = put_IsTransparent(V_BOOL(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_IsTransparent(V_BOOL(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -18597,10 +22990,17 @@ STDMETHODIMP DispReel::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, W
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
-				hres = put_Sound(V_BSTR(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Sound(V_BSTR(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -18617,10 +23017,17 @@ STDMETHODIMP DispReel::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, W
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_Steps(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Steps(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -18637,10 +23044,17 @@ STDMETHODIMP DispReel::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, W
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
-				hres = put_TimerEnabled(V_BOOL(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_TimerEnabled(V_BOOL(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -18657,10 +23071,17 @@ STDMETHODIMP DispReel::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, W
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_I4);
-				hres = put_TimerInterval(V_I4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_I4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_TimerInterval(V_I4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -18677,10 +23098,17 @@ STDMETHODIMP DispReel::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, W
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_X(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_X(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -18697,10 +23125,17 @@ STDMETHODIMP DispReel::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, W
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_Y(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Y(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -18717,10 +23152,17 @@ STDMETHODIMP DispReel::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, W
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_Range(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Range(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -18737,10 +23179,17 @@ STDMETHODIMP DispReel::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, W
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
-				hres = put_Name(V_BSTR(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Name(V_BSTR(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -18757,10 +23206,17 @@ STDMETHODIMP DispReel::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, W
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_I4);
-				hres = put_UpdateInterval(V_I4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_I4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_UpdateInterval(V_I4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -18776,10 +23232,17 @@ STDMETHODIMP DispReel::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, W
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantCopyInd(&var0, &pDispParams->rgvarg[--index]);
-				hres = put_UserValue(&var0);
+				if (SUCCEEDED(hrConv)) hrConv = VariantCopyInd(&var0, &pDispParams->rgvarg[--index]);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_UserValue(&var0);
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -18796,10 +23259,17 @@ STDMETHODIMP DispReel::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, W
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
-				hres = put_UseImageGrid(V_BOOL(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_UseImageGrid(V_BOOL(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -18816,10 +23286,17 @@ STDMETHODIMP DispReel::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, W
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
-				hres = put_Visible(V_BOOL(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Visible(V_BOOL(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -18836,10 +23313,17 @@ STDMETHODIMP DispReel::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, W
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_I4);
-				hres = put_ImagesPerGridRow(V_I4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_I4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_ImagesPerGridRow(V_I4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -18851,10 +23335,17 @@ STDMETHODIMP DispReel::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, W
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_I4);
-				hres = AddValue(V_I4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_I4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = AddValue(V_I4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -18873,13 +23364,20 @@ STDMETHODIMP DispReel::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, W
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_I4);
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_I4);
 				VARIANT var1;
 				V_VT(&var1) = VT_EMPTY;
-				VariantChangeType(&var1, &pDispParams->rgvarg[--index], 0, VT_I4);
-				hres = SpinReel(V_I4(&var0), V_I4(&var1));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var1, &pDispParams->rgvarg[--index], 0, VT_I4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = SpinReel(V_I4(&var0), V_I4(&var1));
+				}
 				VariantClear(&var0);
 				VariantClear(&var1);
 			}
@@ -18892,10 +23390,17 @@ STDMETHODIMP DispReel::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, W
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_I4);
-				hres = SetValue(V_I4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_I4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = SetValue(V_I4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -19029,10 +23534,17 @@ STDMETHODIMP PartGroup::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, 
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
-				hres = put_TimerEnabled(V_BOOL(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_TimerEnabled(V_BOOL(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -19049,10 +23561,17 @@ STDMETHODIMP PartGroup::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, 
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_I4);
-				hres = put_TimerInterval(V_I4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_I4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_TimerInterval(V_I4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -19069,10 +23588,17 @@ STDMETHODIMP PartGroup::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, 
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
-				hres = put_Name(V_BSTR(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Name(V_BSTR(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -19088,10 +23614,17 @@ STDMETHODIMP PartGroup::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, 
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantCopyInd(&var0, &pDispParams->rgvarg[--index]);
-				hres = put_UserValue(&var0);
+				if (SUCCEEDED(hrConv)) hrConv = VariantCopyInd(&var0, &pDispParams->rgvarg[--index]);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_UserValue(&var0);
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -19236,10 +23769,17 @@ STDMETHODIMP LightSeq::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, W
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
-				hres = put_Name(V_BSTR(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Name(V_BSTR(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -19256,10 +23796,17 @@ STDMETHODIMP LightSeq::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, W
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
-				hres = put_Collection(V_BSTR(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BSTR);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_Collection(V_BSTR(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -19276,10 +23823,17 @@ STDMETHODIMP LightSeq::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, W
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_CenterX(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_CenterX(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -19296,10 +23850,17 @@ STDMETHODIMP LightSeq::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, W
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
-				hres = put_CenterY(V_R4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_R4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_CenterY(V_R4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -19316,10 +23877,17 @@ STDMETHODIMP LightSeq::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, W
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_I4);
-				hres = put_UpdateInterval(V_I4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_I4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_UpdateInterval(V_I4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -19336,10 +23904,17 @@ STDMETHODIMP LightSeq::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, W
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
-				hres = put_TimerEnabled(V_BOOL(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_BOOL);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_TimerEnabled(V_BOOL(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -19356,10 +23931,17 @@ STDMETHODIMP LightSeq::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, W
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_I4);
-				hres = put_TimerInterval(V_I4(&var0));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_I4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_TimerInterval(V_I4(&var0));
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -19375,10 +23957,17 @@ STDMETHODIMP LightSeq::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, W
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantCopyInd(&var0, &pDispParams->rgvarg[--index]);
-				hres = put_UserValue(&var0);
+				if (SUCCEEDED(hrConv)) hrConv = VariantCopyInd(&var0, &pDispParams->rgvarg[--index]);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = put_UserValue(&var0);
+				}
 				VariantClear(&var0);
 			}
 			break;
@@ -19390,22 +23979,29 @@ STDMETHODIMP LightSeq::Invoke(DISPID dispIdMember, REFIID /*riid*/, LCID lcid, W
 					hres = DISP_E_BADPARAMCOUNT;
 					break;
 				}
+				HRESULT hrConv = S_OK;
 				VARIANT var0;
 				V_VT(&var0) = VT_EMPTY;
-				VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_I4);
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var0, &pDispParams->rgvarg[--index], 0, VT_I4);
 				VARIANT var1;
 				V_VT(&var1) = VT_I4;
 				V_I4(&var1) = 0;
-				VariantChangeType(&var1, (index > 0) ? &pDispParams->rgvarg[--index] : &var1, 0, VT_I4);
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var1, OptionalArg(pDispParams, index, &var1), 0, VT_I4);
 				VARIANT var2;
 				V_VT(&var2) = VT_I4;
 				V_I4(&var2) = 1;
-				VariantChangeType(&var2, (index > 0) ? &pDispParams->rgvarg[--index] : &var2, 0, VT_I4);
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var2, OptionalArg(pDispParams, index, &var2), 0, VT_I4);
 				VARIANT var3;
 				V_VT(&var3) = VT_I4;
 				V_I4(&var3) = 0;
-				VariantChangeType(&var3, (index > 0) ? &pDispParams->rgvarg[--index] : &var3, 0, VT_I4);
-				hres = Play((SequencerState)V_I4(&var0), V_I4(&var1), V_I4(&var2), V_I4(&var3));
+				if (SUCCEEDED(hrConv)) hrConv = VariantChangeType(&var3, OptionalArg(pDispParams, index, &var3), 0, VT_I4);
+				if (FAILED(hrConv)) {
+					hres = hrConv;
+					if (puArgErr) *puArgErr = (UINT)index;
+				}
+				else {
+					hres = Play((SequencerState)V_I4(&var0), V_I4(&var1), V_I4(&var2), V_I4(&var3));
+				}
 				VariantClear(&var0);
 				VariantClear(&var1);
 				VariantClear(&var2);
